@@ -242,3 +242,44 @@ test('generateLegalMoves excludes king moves into check', () => {
   assert.ok(!dests.includes('d1'), 'king may not step onto the attacked d-file square');
   assert.ok(!dests.includes('d2'));
 });
+
+test('deriveStatus detects checkmate: ladder mate with two rooks', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'h7', type: 'R', color: 'w' },
+    { at: 'h1', type: 'K', color: 'w' },
+  ], 'b');
+  assert.equal(OukEngine.isInCheck(state, 'b'), true);
+  assert.equal(OukEngine.generateLegalMoves(state, 'b').length, 0);
+  const status = OukEngine.deriveStatus(state);
+  assert.equal(status.status, 'checkmate');
+  assert.equal(status.winner, 'w');
+});
+
+test('deriveStatus detects stalemate as a draw (no winner)', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'c6', type: 'N', color: 'w' },
+  ], 'b');
+  assert.equal(OukEngine.isInCheck(state, 'b'), false, 'must not be in check for a true stalemate test');
+  assert.equal(OukEngine.generateLegalMoves(state, 'b').length, 0, 'no legal moves');
+  const status = OukEngine.deriveStatus(state);
+  assert.equal(status.status, 'stalemate');
+  assert.equal(status.winner, null);
+});
+
+test('applyMove wires deriveStatus in automatically', () => {
+  const state = placedState([
+    { at: 'a1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'h7', type: 'R', color: 'w' },
+    { at: 'e8', type: 'R', color: 'w' },
+  ], 'w');
+  const mv = OukEngine.generateLegalMoves(state, 'w')
+    .find((m) => m.piece.type === 'R' && OukEngine.squareName(m.from.rank, m.from.file) === 'e8' && OukEngine.squareName(m.to.rank, m.to.file) === 'h8');
+  const next = OukEngine.applyMove(state, mv);
+  assert.equal(next.status, 'checkmate');
+  assert.equal(next.winner, 'w');
+});

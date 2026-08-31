@@ -140,7 +140,14 @@
     return board.map(function (p) { return p ? { type: p.type, color: p.color } : null; });
   }
 
-  function applyMove(state, move) {
+  // Board/bookkeeping transition only — deliberately does NOT compute
+  // status or counting. generateLegalMoves calls this (via isInCheck) once
+  // per candidate move to test king safety; if it called the full applyMove
+  // instead, computing one move's status would recursively require
+  // computing every future ply's status too (deriveStatus ->
+  // generateLegalMoves -> applyMove -> deriveStatus -> ...), which never
+  // terminates. Only the public applyMove (below) finalizes status.
+  function applyMoveRaw(state, move) {
     var board = cloneBoard(state.board);
     var fromIdx = move.from.rank * 8 + move.from.file;
     var toIdx = move.to.rank * 8 + move.to.file;
@@ -164,6 +171,14 @@
     };
     if (move.piece.type === 'K') next.kingHasMoved[mover] = true;
     if (move.piece.type === 'Q') next.queenHasMoved[mover] = true;
+    return next;
+  }
+
+  function applyMove(state, move) {
+    var next = applyMoveRaw(state, move);
+    var derived = deriveStatus(next);
+    next.status = derived.status;
+    next.winner = derived.winner;
     return next;
   }
 
@@ -236,12 +251,21 @@
         if (!p || p.color !== color) continue;
         var candidates = generatePseudoMoves(state, r, f);
         for (var i = 0; i < candidates.length; i++) {
-          var resulting = applyMove(state, candidates[i]);
+          var resulting = applyMoveRaw(state, candidates[i]);
           if (!isInCheck(resulting, color)) legal.push(candidates[i]);
         }
       }
     }
     return legal;
+  }
+
+  function deriveStatus(state) {
+    var sideToMove = state.turn;
+    var inCheck = isInCheck(state, sideToMove);
+    var hasMoves = generateLegalMoves(state, sideToMove).length > 0;
+    if (!hasMoves && inCheck) return { status: 'checkmate', winner: opposite(sideToMove) };
+    if (!hasMoves && !inCheck) return { status: 'stalemate', winner: null };
+    return { status: 'active', winner: null };
   }
 
   var api = {
@@ -258,7 +282,8 @@
     isInCheck: isInCheck,
     generatePseudoMoves: generatePseudoMoves,
     generateLegalMoves: generateLegalMoves,
-    findKing: findKing
+    findKing: findKing,
+    deriveStatus: deriveStatus
   };
 
   if (typeof module !== 'undefined' && module.exports) {
