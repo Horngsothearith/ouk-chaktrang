@@ -31,6 +31,36 @@
     }
   }
 
+  function prefersReducedMotion() {
+    return typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // Where the move list has to scroll to show the active move. The answer is
+  // always the list's own scrollTop - the page is never part of it.
+  //
+  // scrollIntoView() is the one-liner, but it scrolls every scrollable ancestor
+  // up to the viewport. In the single-column phone layout the move list sits
+  // below the board, so appending a move scrolled the board - the thing the
+  // player is actually looking at - off the top of the screen.
+  //
+  // `view` is the list's client rect plus its scroll metrics, `item` the active
+  // row's client rect. `edge` names the two rows that are an end of the list
+  // rather than a position in it - the newest move and the first - which run to
+  // the very bottom and top, so the list ends flush with its own padding
+  // instead of with the row jammed against the border.
+  function moveListScrollTop(view, item, edge) {
+    var max = Math.max(0, view.scrollHeight - view.clientHeight);
+    if (edge === 'last') return max;
+    if (edge === 'first') return 0;
+    var below = item.bottom - view.bottom;
+    if (below > 0) return Math.min(max, view.scrollTop + below);
+    var above = view.top - item.top;
+    if (above > 0) return Math.max(0, view.scrollTop - above);
+    return view.scrollTop;
+  }
+
   function loadSetting(key, fallback) {
     try {
       var val = localStorage.getItem(key);
@@ -277,9 +307,43 @@
           '</div>';
       }).join('');
 
-      var selectedEl = els.moves.querySelector('.oc-move-item.selected');
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      keepActiveMoveInView(activeIndex, history.length);
+    }
+
+    // Chasing the active move on every render would fight a player who has
+    // scrolled up to reread an earlier one, so only follow when the list or the
+    // selection actually changed under them - not when a re-render lands for
+    // some other reason, such as a review badge arriving.
+    var movesScrollKey = null;
+
+    function listEdge(activeIndex, total) {
+      if (activeIndex === total - 1) return 'last';
+      if (activeIndex === 0) return 'first';
+      return null;
+    }
+
+    function keepActiveMoveInView(activeIndex, total) {
+      var key = activeIndex + '/' + total;
+      if (key === movesScrollKey) return;
+      movesScrollKey = key;
+
+      var item = els.moves.querySelector('.oc-move-item.selected');
+      if (!item || typeof els.moves.getBoundingClientRect !== 'function') return;
+
+      var rect = els.moves.getBoundingClientRect();
+      var top = moveListScrollTop({
+        top: rect.top,
+        bottom: rect.bottom,
+        scrollTop: els.moves.scrollTop,
+        scrollHeight: els.moves.scrollHeight,
+        clientHeight: els.moves.clientHeight
+      }, item.getBoundingClientRect(), listEdge(activeIndex, total));
+
+      if (top === els.moves.scrollTop) return;
+      if (typeof els.moves.scrollTo === 'function') {
+        els.moves.scrollTo({ top: top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      } else {
+        els.moves.scrollTop = top;
       }
     }
 
@@ -1349,7 +1413,7 @@
     };
   }
 
-  var api = { renderBoard: renderBoard, createApp: createApp };
+  var api = { renderBoard: renderBoard, createApp: createApp, moveListScrollTop: moveListScrollTop };
   root.OukUI = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 

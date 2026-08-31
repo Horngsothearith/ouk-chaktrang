@@ -610,6 +610,11 @@ body {
 .oc-moves {
   max-height: 180px;
   overflow-y: auto;
+  /* The list follows the newest move by scrolling itself (see
+     keepActiveMoveInView in src/ui.js). Containment keeps that - and a flick
+     past either end - inside the list rather than chaining to the document,
+     which on a phone would carry the board off screen. */
+  overscroll-behavior: contain;
   font-variant-numeric: tabular-nums;
   font-size: 0.88rem;
   background: var(--surface);
@@ -1324,11 +1329,11 @@ body {
     padding: 9px 14px;
   }
 
-  /* Keep the move list from growing into a second page, and stop its scroll
-     from chaining to the document once it hits the end. */
+  /* Keep the move list from growing into a second page: past this height a
+     long game scrolls inside the list, which follows the newest move on its
+     own, instead of pushing the controls below it further down every move. */
   .oc-moves {
     max-height: 30vh;
-    overscroll-behavior: contain;
   }
 
   /* New Game / Undo / Hint: three across is right, but the desktop padding
@@ -3398,6 +3403,36 @@ body {
     }
   }
 
+  function prefersReducedMotion() {
+    return typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // Where the move list has to scroll to show the active move. The answer is
+  // always the list's own scrollTop - the page is never part of it.
+  //
+  // scrollIntoView() is the one-liner, but it scrolls every scrollable ancestor
+  // up to the viewport. In the single-column phone layout the move list sits
+  // below the board, so appending a move scrolled the board - the thing the
+  // player is actually looking at - off the top of the screen.
+  //
+  // `view` is the list's client rect plus its scroll metrics, `item` the active
+  // row's client rect. `edge` names the two rows that are an end of the list
+  // rather than a position in it - the newest move and the first - which run to
+  // the very bottom and top, so the list ends flush with its own padding
+  // instead of with the row jammed against the border.
+  function moveListScrollTop(view, item, edge) {
+    var max = Math.max(0, view.scrollHeight - view.clientHeight);
+    if (edge === 'last') return max;
+    if (edge === 'first') return 0;
+    var below = item.bottom - view.bottom;
+    if (below > 0) return Math.min(max, view.scrollTop + below);
+    var above = view.top - item.top;
+    if (above > 0) return Math.max(0, view.scrollTop - above);
+    return view.scrollTop;
+  }
+
   function loadSetting(key, fallback) {
     try {
       var val = localStorage.getItem(key);
@@ -3644,9 +3679,43 @@ body {
           '</div>';
       }).join('');
 
-      var selectedEl = els.moves.querySelector('.oc-move-item.selected');
-      if (selectedEl) {
-        selectedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      keepActiveMoveInView(activeIndex, history.length);
+    }
+
+    // Chasing the active move on every render would fight a player who has
+    // scrolled up to reread an earlier one, so only follow when the list or the
+    // selection actually changed under them - not when a re-render lands for
+    // some other reason, such as a review badge arriving.
+    var movesScrollKey = null;
+
+    function listEdge(activeIndex, total) {
+      if (activeIndex === total - 1) return 'last';
+      if (activeIndex === 0) return 'first';
+      return null;
+    }
+
+    function keepActiveMoveInView(activeIndex, total) {
+      var key = activeIndex + '/' + total;
+      if (key === movesScrollKey) return;
+      movesScrollKey = key;
+
+      var item = els.moves.querySelector('.oc-move-item.selected');
+      if (!item || typeof els.moves.getBoundingClientRect !== 'function') return;
+
+      var rect = els.moves.getBoundingClientRect();
+      var top = moveListScrollTop({
+        top: rect.top,
+        bottom: rect.bottom,
+        scrollTop: els.moves.scrollTop,
+        scrollHeight: els.moves.scrollHeight,
+        clientHeight: els.moves.clientHeight
+      }, item.getBoundingClientRect(), listEdge(activeIndex, total));
+
+      if (top === els.moves.scrollTop) return;
+      if (typeof els.moves.scrollTo === 'function') {
+        els.moves.scrollTo({ top: top, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      } else {
+        els.moves.scrollTop = top;
       }
     }
 
@@ -4716,7 +4785,7 @@ body {
     };
   }
 
-  var api = { renderBoard: renderBoard, createApp: createApp };
+  var api = { renderBoard: renderBoard, createApp: createApp, moveListScrollTop: moveListScrollTop };
   root.OukUI = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 

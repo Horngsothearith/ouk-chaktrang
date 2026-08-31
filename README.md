@@ -37,7 +37,7 @@ The image runs as the unprivileged `node` user and ships a healthcheck.
 node --test
 ```
 
-84 tests, `node:test` only — no framework, no install. In Docker:
+91 tests, `node:test` only — no framework, no install. In Docker:
 `docker compose run --rm test`.
 
 ## The rules it implements

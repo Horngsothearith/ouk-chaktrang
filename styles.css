@@ -599,6 +599,11 @@ body {
 .oc-moves {
   max-height: 180px;
   overflow-y: auto;
+  /* The list follows the newest move by scrolling itself (see
+     keepActiveMoveInView in src/ui.js). Containment keeps that - and a flick
+     past either end - inside the list rather than chaining to the document,
+     which on a phone would carry the board off screen. */
+  overscroll-behavior: contain;
   font-variant-numeric: tabular-nums;
   font-size: 0.88rem;
   background: var(--surface);
@@ -1313,11 +1318,11 @@ body {
     padding: 9px 14px;
   }
 
-  /* Keep the move list from growing into a second page, and stop its scroll
-     from chaining to the document once it hits the end. */
+  /* Keep the move list from growing into a second page: past this height a
+     long game scrolls inside the list, which follows the newest move on its
+     own, instead of pushing the controls below it further down every move. */
   .oc-moves {
     max-height: 30vh;
-    overscroll-behavior: contain;
   }
 
   /* New Game / Undo / Hint: three across is right, but the desktop padding
