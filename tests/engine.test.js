@@ -434,3 +434,32 @@ test('hasPawns reflects whether a color has any unpromoted pawn on the board', (
   assert.equal(OukEngine.hasPawns(state, 'w'), true);
   assert.equal(OukEngine.hasPawns(state, 'b'), false);
 });
+
+function perft(state, depth) {
+  if (depth === 0) return 1;
+  const moves = OukEngine.generateLegalMoves(state, state.turn);
+  if (depth === 1) return moves.length;
+  let nodes = 0;
+  for (let i = 0; i < moves.length; i++) {
+    nodes += perft(OukEngine.applyMove(state, moves[i]), depth - 1);
+  }
+  return nodes;
+}
+
+test('perft depth 1 from the start position matches a hand count of every piece\'s moves', () => {
+  const state = OukEngine.createInitialState();
+  const moves = OukEngine.generateLegalMoves(state, 'w');
+  // Hand count: 8 pawns (1 fwd step each) + 2 rooks (1 each, to a2/h2) +
+  // 2 knights (1 each, to d2/e2) + 2 bishops (3 each: 2 diag + 1 fwd) +
+  // queen (2 diag; double-step blocked by own pawn on e3) + king (3 normal
+  // steps + 2 extra via the first-move knight-jump, to b2/f2, not in check)
+  // = 8 + 2 + 2 + 6 + 2 + 5 = 25.
+  assert.equal(moves.length, 25);
+  assert.equal(moves.length, perft(state, 1));
+});
+
+test('perft depth 2 from the start position is a stable regression guard', () => {
+  const state = OukEngine.createInitialState();
+  const n2 = perft(state, 2);
+  assert.equal(n2, 625);
+});
