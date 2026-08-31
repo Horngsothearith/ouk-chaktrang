@@ -3,13 +3,16 @@ services:
     build: .
     image: ouk-chaktrong:latest
     container_name: ouk-chaktrong
-    # /api/proxy now refuses any target that is not on the allowlist in
-    # scripts/proxy-guard.js, so it is no longer an open relay and this may be
-    # widened to "${PORT:-5173}:5173" when the app should be reachable from
-    # elsewhere. Loopback stays the default because that is the right default
-    # for a service with no authentication of its own.
+    # Published on all interfaces, so the app is reachable from other machines
+    # on the network. /api/proxy refuses any target that is not on the
+    # allowlist in scripts/proxy-guard.js, so it is not an open relay - but the
+    # service still has no authentication of its own, and anyone who can reach
+    # this port can browse the app and use the proxy against the allowlisted
+    # hosts with their own credentials. Put it behind a reverse proxy or a
+    # firewall rule if that is not wanted; "127.0.0.1:${PORT:-5173}:5173"
+    # restores loopback-only.
     ports:
-      - "127.0.0.1:${PORT:-5173}:5173"
+      - "0.0.0.0:${PORT:-5173}:5173"
     environment:
       PORT: 5173
       # Hosts the proxy may forward to, on top of the built-in public API

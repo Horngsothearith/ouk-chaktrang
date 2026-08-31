@@ -18,14 +18,15 @@ With Docker:
 docker compose up
 ```
 
-The compose file publishes the port on loopback only — see
-[Proxy security](#proxy-security) before widening it. It also bind-mounts the
-working tree read-only so edits show up without a rebuild, which means the
+The compose file publishes the port on **all interfaces**, so the app is
+reachable from other machines on the network — see
+[Network exposure](#network-exposure) for what that means. It also bind-mounts
+the working tree read-only so edits show up without a rebuild, which means the
 container serves *your files*, not the image's. For a self-contained
 deployment, run the image on its own:
 
 ```bash
-docker run -d -p 127.0.0.1:5173:5173 ouk-chaktrong:latest
+docker run -d -p 0.0.0.0:5173:5173 ouk-chaktrong:latest
 ```
 
 The image runs as the unprivileged `node` user and ships a healthcheck.
@@ -100,6 +101,23 @@ PROXY_ALLOWED_HOSTS=localhost,127.0.0.1 node scripts/dev-server.js
 Inside a container, a loopback address points at the container itself, so
 allowlisting one there is rarely what you want. The allowlist is the whole
 control: whatever is on it is reachable, so add to it deliberately.
+
+### Network exposure
+
+The server binds all interfaces and **has no authentication of its own**.
+Anyone who can reach the port can browse the app and use `/api/proxy` against
+the allowlisted hosts — with their own credentials, not yours, since the key
+travels in the caller's own `Authorization` header. Nothing here is a secret:
+the sources are public and the container mounts them read-only.
+
+Still, an unauthenticated relay is worth bounding. On an untrusted network, put
+it behind a reverse proxy that requires auth, restrict the port with a firewall
+rule, or go back to loopback-only:
+
+```yaml
+ports:
+  - "127.0.0.1:${PORT:-5173}:5173"
+```
 
 ## Layout
 
