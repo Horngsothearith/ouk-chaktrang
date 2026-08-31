@@ -47,12 +47,76 @@
     return state.board[rank * 8 + file];
   }
 
+  function opposite(color) { return color === 'w' ? 'b' : 'w'; }
+
+  var KING_STEPS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  var KNIGHT_STEPS = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+  var DIAGONAL_DIRS = [[1,1],[-1,1],[-1,-1],[1,-1]];
+  var ORTHOGONAL_DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+
+  function addStepMoves(state, rank, file, steps, piece, out) {
+    steps.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      if (!inBounds(r2, f2)) return;
+      var occ = pieceAt(state, r2, f2);
+      if (occ && occ.color === piece.color) return;
+      out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: null });
+    });
+  }
+
+  function addSlideMoves(state, rank, file, dirs, piece, out) {
+    dirs.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      while (inBounds(r2, f2)) {
+        var occ = pieceAt(state, r2, f2);
+        if (occ && occ.color === piece.color) break;
+        out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: null });
+        if (occ) break;
+        r2 += d[0]; f2 += d[1];
+      }
+    });
+  }
+
+  function bishopSteps(color) {
+    var forward = color === 'w' ? [1, 0] : [-1, 0];
+    return DIAGONAL_DIRS.concat([forward]);
+  }
+
+  function generateBaseMoves(state, rank, file) {
+    var piece = pieceAt(state, rank, file);
+    if (!piece) return [];
+    var out = [];
+    switch (piece.type) {
+      case 'K':
+        addStepMoves(state, rank, file, KING_STEPS, piece, out);
+        break;
+      case 'Q':
+        addStepMoves(state, rank, file, DIAGONAL_DIRS, piece, out);
+        break;
+      case 'B':
+        addStepMoves(state, rank, file, bishopSteps(piece.color), piece, out);
+        break;
+      case 'N':
+        addStepMoves(state, rank, file, KNIGHT_STEPS, piece, out);
+        break;
+      case 'R':
+        addSlideMoves(state, rank, file, ORTHOGONAL_DIRS, piece, out);
+        break;
+      case 'P':
+        // pawn handled in Task 3
+        break;
+    }
+    return out;
+  }
+
   var api = {
     squareName: squareName,
     parseSquare: parseSquare,
     inBounds: inBounds,
     createInitialState: createInitialState,
-    pieceAt: pieceAt
+    pieceAt: pieceAt,
+    generateBaseMoves: generateBaseMoves,
+    opposite: opposite
   };
 
   if (typeof module !== 'undefined' && module.exports) {
