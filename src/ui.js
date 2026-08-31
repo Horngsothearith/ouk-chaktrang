@@ -33,8 +33,56 @@
       legalMovesForSelected: []
     };
 
+    function statusText(state) {
+      if (state.status === 'checkmate') return (state.winner === 'w' ? 'White' : 'Black') + ' wins by checkmate';
+      if (state.status === 'stalemate') return 'Draw by stalemate';
+      if (state.status === 'draw-counting') return 'Draw — counting limit reached';
+      if (state.status === 'draw-noprogress') return 'Draw — no progress for 64 moves';
+      var turnName = state.turn === 'w' ? 'White' : 'Black';
+      return (OukEngine.isInCheck(state, state.turn) ? turnName + ' is in check — ' : '') + turnName + ' to move';
+    }
+
+    function renderCounting(state) {
+      if (!state.counting.active) { els.counting.hidden = true; return; }
+      els.counting.hidden = false;
+      var remaining = state.counting.budget - state.counting.elapsed;
+      var side = state.counting.trigger === 'bareKing'
+        ? (state.counting.disadvantagedColor === 'w' ? 'Black' : 'White') + ' must deliver checkmate'
+        : 'Either side must make progress';
+      els.counting.textContent = 'Counting rule active: ' + side + ' within ' + remaining + ' more move(s), or it is a draw.';
+    }
+
+    function renderCaptured(state) {
+      var byWhite = [], byBlack = [];
+      state.history.forEach(function (mv) {
+        if (!mv.captured) return;
+        (mv.piece.color === 'w' ? byWhite : byBlack).push(mv.captured);
+      });
+      els.capturedByWhite.innerHTML = byWhite.map(function (p) { return OukPieces.svgFor(p.type, p.color); }).join('');
+      els.capturedByBlack.innerHTML = byBlack.map(function (p) { return OukPieces.svgFor(p.type, p.color); }).join('');
+    }
+
+    function renderMoves(state) {
+      els.moves.innerHTML = state.history.map(function (mv, i) {
+        var text = OukEngine.squareName(mv.from.rank, mv.from.file) + (mv.captured ? 'x' : '-') + OukEngine.squareName(mv.to.rank, mv.to.file) + (mv.special === 'promotion' ? '=Q' : '');
+        return '<div>' + (i + 1) + '. ' + text + '</div>';
+      }).join('');
+      els.moves.scrollTop = els.moves.scrollHeight;
+    }
+
     function render() {
       renderBoard(appState.gameState, els.board);
+      els.status.textContent = statusText(appState.gameState);
+      renderCounting(appState.gameState);
+      renderCaptured(appState.gameState);
+      renderMoves(appState.gameState);
+      if (OukEngine.isInCheck(appState.gameState, appState.gameState.turn)) {
+        var king = OukEngine.findKing(appState.gameState, appState.gameState.turn);
+        if (king) {
+          var kingEl = els.board.querySelector('.oc-square[data-rank="' + king.rank + '"][data-file="' + king.file + '"]');
+          if (kingEl) kingEl.classList.add('in-check');
+        }
+      }
       if (appState.selectedSquare) {
         var selEl = els.board.querySelector(
           '.oc-square[data-rank="' + appState.selectedSquare.rank + '"][data-file="' + appState.selectedSquare.file + '"]'

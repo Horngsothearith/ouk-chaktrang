@@ -26,7 +26,14 @@
 <script src="src/pieces.js"></script>
 <script src="src/ui.js"></script>
 <script>
-  var app = OukUI.createApp({ board: document.getElementById('board') });
+  var app = OukUI.createApp({
+    board: document.getElementById('board'),
+    status: document.getElementById('status'),
+    counting: document.getElementById('counting'),
+    capturedByWhite: document.getElementById('captured-by-white'),
+    capturedByBlack: document.getElementById('captured-by-black'),
+    moves: document.getElementById('moves')
+  });
 </script>
 </body>
 </html>
