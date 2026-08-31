@@ -1078,21 +1078,53 @@
       }
     }
 
-    // Fills the datalist behind the model field. The text input is left alone:
+    // Fills the two halves of the model picker. The text input is left alone:
     // it is the setting, and an endpoint that will not list its models - or a
     // model released since the list was fetched - must still be typeable.
+    //
+    // Both halves exist because neither is sufficient on its own. The datalist
+    // gives type-ahead while editing the field, but browsers filter its
+    // suggestions against whatever the field already holds - and the field is
+    // never empty, so a freshly loaded list can be filtered down to nothing
+    // before the user ever sees it. The select is the half that always shows
+    // every model, whatever is typed.
     //
     // Built through the DOM rather than innerHTML: these ids are whatever a
     // remote endpoint chose to send, so they go in as values, never as markup.
     function setModelOptions(ids) {
       var list = document.getElementById('oc-model-options');
-      if (!list) return;
-      list.innerHTML = '';
+      if (list) {
+        list.innerHTML = '';
+        ids.forEach(function (id) {
+          var opt = document.createElement('option');
+          opt.value = String(id);
+          list.appendChild(opt);
+        });
+      }
+
+      var select = document.getElementById('oc-setting-model-list');
+      if (!select) return;
+      select.innerHTML = '';
+      select.hidden = ids.length === 0;
+      if (ids.length === 0) return;
+
+      var placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'Choose from ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + '...';
+      select.appendChild(placeholder);
+
       ids.forEach(function (id) {
         var opt = document.createElement('option');
         opt.value = String(id);
-        list.appendChild(opt);
+        opt.textContent = String(id);
+        select.appendChild(opt);
       });
+
+      // If what is already in the field is one of the offered models, show it
+      // as the current choice rather than making the user find it again.
+      var modelInput = document.getElementById('oc-setting-model');
+      var current = modelInput ? modelInput.value.trim() : '';
+      select.value = ids.indexOf(current) === -1 ? '' : current;
     }
 
     function setModelHint(text) {
@@ -1148,9 +1180,9 @@
       OukReview.listModels(probeSettings)
         .then(function (ids) {
           setModelOptions(ids);
-          setModelHint('Click the Model field to pick from ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + ', or keep typing.');
+          setModelHint(ids.length + ' model' + (ids.length === 1 ? '' : 's') + ' offered — pick one from the list, or type any name.');
           var via = probeSettings.useProxy ? ' (via Dev Proxy)' : '';
-          say('success', '✅ Loaded ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + via + '. Click the Model field to choose one.');
+          say('success', '✅ Loaded ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + via + '.');
           // listModels turns on the proxy itself when the direct call is
           // blocked; reflect that so the checkbox matches what just worked.
           if (pCheck && probeSettings.useProxy) pCheck.checked = true;
@@ -1295,6 +1327,16 @@
       if (openSettingsBtn) openSettingsBtn.addEventListener('click', function () { openSettingsDialog(); });
       var loadModelsBtn = document.getElementById('oc-load-models');
       if (loadModelsBtn) loadModelsBtn.addEventListener('click', loadModelList);
+      var modelListSelect = document.getElementById('oc-setting-model-list');
+      if (modelListSelect) {
+        modelListSelect.addEventListener('change', function (evt) {
+          var chosen = evt.target.value;
+          if (!chosen) return; // the "Choose from N models..." placeholder
+          var mInput = document.getElementById('oc-setting-model');
+          if (mInput) mInput.value = chosen;
+          setModelHint('Using ' + chosen + '. Pick another below, or type any name.');
+        });
+      }
       if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettingsDialog);
       if (togglePwBtn && apiKeyInput) {
         togglePwBtn.addEventListener('click', function () {

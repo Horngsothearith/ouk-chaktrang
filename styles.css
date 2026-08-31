@@ -1253,6 +1253,15 @@ body {
   opacity: 0.55;
   cursor: progress;
 }
+/* The browsable half of the model picker. A datalist alone is not enough: the
+   Model field always holds a value, and browsers filter suggestions against
+   it, so a loaded list can be filtered to nothing before the user sees it. */
+.oc-model-select {
+  margin-top: 6px;
+}
+.oc-settings-form select[hidden] {
+  display: none;
+}
 .oc-field-hint {
   font-size: 0.76rem;
   font-weight: 400;
