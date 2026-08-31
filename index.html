@@ -131,7 +131,12 @@
       </label>
       <label>
         <span>Model Name:</span>
-        <input type="text" id="oc-setting-model" placeholder="gpt-4o-mini" required>
+        <div class="oc-input-with-action">
+          <input type="text" id="oc-setting-model" placeholder="gpt-4o-mini" list="oc-model-options" autocomplete="off" required>
+          <button type="button" class="oc-load-models" id="oc-load-models" title="Ask the endpoint above which models it offers">Load models</button>
+        </div>
+        <datalist id="oc-model-options"></datalist>
+        <span class="oc-field-hint" id="oc-model-hint">Type a model name, or load the list the endpoint offers and pick from it.</span>
       </label>
       <label>
         <span>Explanation Language:</span>

@@ -37,7 +37,7 @@ The image runs as the unprivileged `node` user and ships a healthcheck.
 node --test
 ```
 
-106 tests, `node:test` only — no framework, no install. In Docker:
+117 tests, `node:test` only — no framework, no install. In Docker:
 `docker compose run --rm test`.
 
 ## The rules it implements
@@ -83,6 +83,14 @@ your browser's `localStorage` and sent only to the endpoint you configure.** It
 never reaches this repository's server unless you tick *Use Local Dev Server
 Proxy*, which exists to get around browsers refusing cross-origin requests to
 endpoints that send no CORS headers.
+
+**Load models** asks the endpoint which models it offers (`GET /models`) and
+fills the Model field's picker with the answer, so the name does not have to be
+typed from memory. The field stays free text: an endpoint that will not list
+its models, or a model released since you last loaded, is still typeable. The
+list belongs to the endpoint it came from, so changing preset or reopening the
+dialog clears it. Loading goes through the same allowlist as everything else on
+the proxy path.
 
 ### Playing against the model
 
