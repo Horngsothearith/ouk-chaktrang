@@ -167,6 +167,83 @@
     return next;
   }
 
+  // Attack detection deliberately does NOT reuse pawnMoves()'s forward-step
+  // logic: a pawn's forward move requires an empty destination and is not a
+  // threat, while its diagonal squares are threatened regardless of whether
+  // anything currently occupies them. Reusing generateBaseMoves verbatim for
+  // pawns would report the empty square ahead as "attacked", which is wrong.
+  function pawnAttackSquares(rank, file, color) {
+    var dir = color === 'w' ? 1 : -1;
+    var r1 = rank + dir;
+    var squares = [];
+    [-1, 1].forEach(function (df) {
+      var f2 = file + df;
+      if (inBounds(r1, f2)) squares.push({ rank: r1, file: f2 });
+    });
+    return squares;
+  }
+
+  function isSquareAttacked(state, rank, file, byColor) {
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (!p || p.color !== byColor) continue;
+        if (p.type === 'P') {
+          var attacks = pawnAttackSquares(r, f, byColor);
+          for (var k = 0; k < attacks.length; k++) {
+            if (attacks[k].rank === rank && attacks[k].file === file) return true;
+          }
+          continue;
+        }
+        // Base patterns only: the first-move exceptions (Task 6) are move
+        // options, not standing threats, and including them here would make
+        // isInCheck depend circularly on their own eligibility check.
+        var moves = generateBaseMoves(state, r, f);
+        for (var i = 0; i < moves.length; i++) {
+          if (moves[i].to.rank === rank && moves[i].to.file === file) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function findKing(state, color) {
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (p && p.color === color && p.type === 'K') return { rank: r, file: f };
+      }
+    }
+    return null;
+  }
+
+  function isInCheck(state, color) {
+    var king = findKing(state, color);
+    if (!king) return false;
+    return isSquareAttacked(state, king.rank, king.file, opposite(color));
+  }
+
+  function generatePseudoMoves(state, rank, file) {
+    // Task 6 extends this with the two Cambodia-specific first-move options.
+    return generateBaseMoves(state, rank, file);
+  }
+
+  function generateLegalMoves(state, color) {
+    var legal = [];
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (!p || p.color !== color) continue;
+        var candidates = generatePseudoMoves(state, r, f);
+        for (var i = 0; i < candidates.length; i++) {
+          var resulting = applyMove(state, candidates[i]);
+          if (!isInCheck(resulting, color)) legal.push(candidates[i]);
+        }
+      }
+    }
+    return legal;
+  }
+
   var api = {
     squareName: squareName,
     parseSquare: parseSquare,
@@ -176,7 +253,12 @@
     generateBaseMoves: generateBaseMoves,
     opposite: opposite,
     applyMove: applyMove,
-    promotionRankFor: promotionRankFor
+    promotionRankFor: promotionRankFor,
+    isSquareAttacked: isSquareAttacked,
+    isInCheck: isInCheck,
+    generatePseudoMoves: generatePseudoMoves,
+    generateLegalMoves: generateLegalMoves,
+    findKing: findKing
   };
 
   if (typeof module !== 'undefined' && module.exports) {

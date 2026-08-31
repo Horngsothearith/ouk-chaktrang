@@ -194,3 +194,51 @@ test('applyMove flips turn, records capture, and tracks anyCaptureYet', () => {
   assert.equal(OukEngine.pieceAt(next, 5, 3).type, 'R');
   assert.equal(state.anyCaptureYet, false, 'original state untouched (immutable apply)');
 });
+
+test('isSquareAttacked detects rook attack along a clear file', () => {
+  const state = placedState([{ at: 'd1', type: 'R', color: 'w' }], 'w');
+  assert.equal(OukEngine.isSquareAttacked(state, 5, 3, 'w'), true); // d6
+  assert.equal(OukEngine.isSquareAttacked(state, 5, 4, 'w'), false); // e6, off the file
+});
+
+test('isSquareAttacked for pawn only covers diagonal-forward squares, not the square ahead', () => {
+  const state = placedState([{ at: 'd4', type: 'P', color: 'w' }], 'w');
+  const ahead = OukEngine.parseSquare('d5');
+  const diag = OukEngine.parseSquare('e5');
+  assert.equal(OukEngine.isSquareAttacked(state, ahead.rank, ahead.file, 'w'), false);
+  assert.equal(OukEngine.isSquareAttacked(state, diag.rank, diag.file, 'w'), true);
+});
+
+test('isInCheck is true when the king square is attacked', () => {
+  const state = placedState([
+    { at: 'e1', type: 'K', color: 'w' },
+    { at: 'e8', type: 'R', color: 'b' },
+    { at: 'a1', type: 'K', color: 'b' },
+  ], 'w');
+  assert.equal(OukEngine.isInCheck(state, 'w'), true);
+});
+
+test('generateLegalMoves excludes moves that leave own king in check (pin)', () => {
+  const state = placedState([
+    { at: 'e1', type: 'K', color: 'w' },
+    { at: 'e4', type: 'R', color: 'w' }, // pinned: same file as king, enemy rook behind it
+    { at: 'e8', type: 'R', color: 'b' },
+    { at: 'a1', type: 'K', color: 'b' },
+  ], 'w');
+  const rookMoves = OukEngine.generateLegalMoves(state, 'w').filter((m) => m.piece.type === 'R');
+  const dests = destSet(rookMoves);
+  assert.ok(dests.every((d) => d[0] === 'e'), 'pinned rook restricted to the pinning file: ' + dests.join(','));
+  assert.ok(dests.includes('e5') && dests.includes('e6') && dests.includes('e7'));
+});
+
+test('generateLegalMoves excludes king moves into check', () => {
+  const state = placedState([
+    { at: 'e1', type: 'K', color: 'w' },
+    { at: 'd8', type: 'R', color: 'b' },
+    { at: 'a1', type: 'K', color: 'b' },
+  ], 'w');
+  const kingMoves = OukEngine.generateLegalMoves(state, 'w').filter((m) => m.piece.type === 'K');
+  const dests = destSet(kingMoves);
+  assert.ok(!dests.includes('d1'), 'king may not step onto the attacked d-file square');
+  assert.ok(!dests.includes('d2'));
+});
