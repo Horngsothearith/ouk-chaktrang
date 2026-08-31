@@ -17,6 +17,15 @@
   </div>
   <div class="oc-board-wrap">
     <div class="oc-board" id="board"></div>
+    <div class="oc-board-legend">
+      <div class="oc-legend-item" title="Click any piece to select it"><span class="oc-legend-indicator oc-legend-selected"></span><span>Selected</span></div>
+      <div class="oc-legend-item" title="Move to empty square"><span class="oc-legend-indicator oc-legend-target"></span><span>Quiet Move</span></div>
+      <div class="oc-legend-item" title="Capture enemy piece"><span class="oc-legend-indicator oc-legend-capture"></span><span>Capture</span></div>
+      <div class="oc-legend-item" title="King Jump, Queen 2-step, or Trey Promotion"><span class="oc-legend-indicator oc-legend-special">★</span><span>Special</span></div>
+      <div class="oc-legend-item" title="Last moved squares"><span class="oc-legend-indicator oc-legend-lastmove"></span><span>Last Move</span></div>
+      <div class="oc-legend-item" title="King under attack"><span class="oc-legend-indicator oc-legend-check"></span><span>Check</span></div>
+      <div class="oc-legend-item" title="Move the engine recommends instead"><span class="oc-legend-indicator oc-legend-recommend"></span><span>AI Suggestion</span></div>
+    </div>
   </div>
   <div class="oc-panel">
     <div class="oc-status" id="status">White to move</div>
@@ -33,10 +42,122 @@
     </div>
     <div class="oc-controls" id="controls"></div>
   </div>
+  <div class="oc-review-panel" id="review-panel">
+    <div class="oc-review-header">
+      <div class="oc-review-title-group">
+        <span class="oc-review-title-km">ការវិភាគ AI</span>
+        <span class="oc-review-title">AI Move Review</span>
+      </div>
+      <button class="oc-icon-btn" id="oc-open-settings" title="AI Settings" aria-label="Open AI Settings">⚙️</button>
+    </div>
+
+    <div class="oc-review-actions">
+      <button class="oc-btn-accent" id="oc-review-game-btn">Review Full Game</button>
+      <button class="oc-btn-secondary" id="oc-explain-current-btn">Explain Selected Move</button>
+      <button class="oc-btn-secondary" id="oc-simulate-current-btn" title="Simulate AI recommendation without API key">🎮 Simulate</button>
+    </div>
+
+    <div class="oc-review-progress-wrap" id="oc-review-progress-wrap" hidden>
+      <div class="oc-review-progress-bar"><div class="oc-review-progress-fill" id="oc-review-progress-fill"></div></div>
+      <span class="oc-review-progress-text" id="oc-review-progress-text">Analyzing move 1 of 10...</span>
+      <button class="oc-btn-text" id="oc-cancel-review-btn">Cancel</button>
+    </div>
+
+    <div class="oc-nav-bar" id="oc-nav-bar">
+      <button class="oc-nav-btn" id="oc-nav-first" title="First Move" aria-label="First Move">&laquo;</button>
+      <button class="oc-nav-btn" id="oc-nav-prev" title="Previous Move" aria-label="Previous Move">&lsaquo;</button>
+      <span class="oc-nav-label" id="oc-nav-label">Move 0 / 0</span>
+      <button class="oc-nav-btn" id="oc-nav-next" title="Next Move" aria-label="Next Move">&rsaquo;</button>
+      <button class="oc-nav-btn" id="oc-nav-last" title="Current / Last Move" aria-label="Current Move">&raquo;</button>
+    </div>
+
+    <div class="oc-review-card" id="oc-review-card">
+      <div class="oc-review-placeholder" id="oc-review-placeholder">
+        <div class="oc-review-placeholder-icon">🪷</div>
+        <p>Make a move or click <strong>Review Full Game</strong> for Grandmaster-level Ouk Chaktrang insights powered by AI.</p>
+      </div>
+      <div class="oc-review-content" id="oc-review-content" hidden>
+        <div class="oc-review-badge-row">
+          <span class="oc-badge" id="oc-move-badge">1. e3-e4</span>
+          <span class="oc-badge oc-badge-quality" id="oc-quality-badge">🟢 Best Move</span>
+          <span class="oc-eval-badge" id="oc-eval-badge">Eval: 0.0</span>
+        </div>
+        <h3 class="oc-review-card-title" id="oc-review-title">Solid Center Trey Push</h3>
+        <p class="oc-review-explanation" id="oc-review-explanation"></p>
+        <div class="oc-better-move" id="oc-better-move" hidden>
+          <span class="oc-better-label">💡 Better Line:</span>
+          <span class="oc-rec-source" id="oc-rec-source" hidden></span>
+          <span id="oc-better-move-text"></span>
+          <button type="button" class="oc-show-on-board-btn" id="oc-show-on-board-btn" aria-pressed="false" hidden>👁 Show on board</button>
+        </div>
+        <div class="oc-review-tags" id="oc-review-tags"></div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- AI Review Settings Dialog -->
+<dialog class="oc-dialog" id="oc-settings-dialog">
+  <div class="oc-dialog-content">
+    <div class="oc-dialog-header">
+      <h2>AI Review Configuration</h2>
+      <button class="oc-dialog-close" id="oc-close-settings" aria-label="Close settings">&times;</button>
+    </div>
+    <p class="oc-dialog-desc">Connect any OpenAI-compatible endpoint (OpenAI, OpenRouter, Groq, Ollama, LM Studio, DeepSeek).</p>
+    
+    <div class="oc-presets">
+      <span class="oc-preset-label">Quick Presets:</span>
+      <div class="oc-preset-btns">
+        <button type="button" class="oc-preset-btn oc-preset-sim" data-preset="simulation" style="font-weight:600;color:var(--laterite)">🎮 Simulation (No Key)</button>
+        <button type="button" class="oc-preset-btn" data-preset="openai">OpenAI</button>
+        <button type="button" class="oc-preset-btn" data-preset="openrouter">OpenRouter</button>
+        <button type="button" class="oc-preset-btn" data-preset="groq">Groq</button>
+        <button type="button" class="oc-preset-btn" data-preset="ollama">Ollama (Local)</button>
+        <button type="button" class="oc-preset-btn" data-preset="lmstudio">LM Studio (Local)</button>
+      </div>
+    </div>
+
+    <form class="oc-settings-form" id="oc-settings-form" method="dialog">
+      <label>
+        <span>API Base URL:</span>
+        <input type="text" id="oc-setting-base-url" placeholder="https://api.openai.com/v1" required>
+      </label>
+      <label>
+        <span>API Key (Stored locally in browser):</span>
+        <div class="oc-input-password-wrap">
+          <input type="password" id="oc-setting-api-key" placeholder="sk-...">
+          <button type="button" class="oc-toggle-password" id="oc-toggle-api-key" title="Toggle visibility">👁️</button>
+        </div>
+      </label>
+      <label>
+        <span>Model Name:</span>
+        <input type="text" id="oc-setting-model" placeholder="gpt-4o-mini" required>
+      </label>
+      <label>
+        <span>Explanation Language:</span>
+        <select id="oc-setting-lang">
+          <option value="en">English (with Khmer chess terms)</option>
+          <option value="km">ភាសាខ្មែរ (Khmer)</option>
+          <option value="both">Bilingual (English + Khmer)</option>
+        </select>
+      </label>
+      <label class="oc-checkbox-label">
+        <input type="checkbox" id="oc-setting-use-proxy">
+        <span>Use Local Dev Server Proxy (Bypass CORS for local / tunnel endpoints)</span>
+      </label>
+      <div class="oc-dialog-status" id="oc-dialog-status"></div>
+      <div class="oc-dialog-actions">
+        <button type="button" class="oc-btn-secondary" id="oc-test-connection">Test Connection</button>
+        <button type="submit" class="oc-btn-accent" id="oc-save-settings">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
 <script src="src/engine.js"></script>
 <script src="src/ai.js"></script>
 <script src="src/pieces.js"></script>
+<script src="src/review.js"></script>
 <script src="src/ui.js"></script>
 <script>
   var app = OukUI.createApp({
@@ -46,7 +167,8 @@
     capturedByWhite: document.getElementById('captured-by-white'),
     capturedByBlack: document.getElementById('captured-by-black'),
     moves: document.getElementById('moves'),
-    controls: document.getElementById('controls')
+    controls: document.getElementById('controls'),
+    reviewPanel: document.getElementById('review-panel')
   });
 </script>
 </body>

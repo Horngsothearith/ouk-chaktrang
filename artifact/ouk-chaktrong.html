@@ -19,52 +19,190 @@
   --warning: #8a5a12;
   --warning-bg: #f0dfae;
 
-  --bg: var(--parchment-light);
+  /* App Theme Tokens (Light default) */
+  --bg: #f2e8c8;
   --surface: #fbf6e6;
-  --text: var(--ink);
+  --surface-alt: #f0e3bf;
+  --text: #241811;
   --text-muted: #6b5a40;
-  --border: var(--teak);
-  --square-light: var(--parchment);
-  --square-dark: var(--laterite);
-  --accent: var(--gilt);
+  --border: #3c2a1c;
+  --accent: #a8823a;
+  --header-title: #b5542a;
+
+  /* Board Theme Tokens (Angkor Classic default) */
+  --square-light: #e4d5a8;
+  --square-dark: #b5542a;
+  --board-border: #3c2a1c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+
+  /* Recommendation overlay. Deliberately defined once rather than per board
+     theme: the played-vs-recommended contrast has to read identically on every
+     board so the comparison never depends on which theme is active. */
+  --arrow-played: #d97706;
+  --arrow-recommend: #16a34a;
+  --played-sq-bg: rgba(217, 119, 6, 0.28);
+  --played-sq-border: rgba(217, 119, 6, 0.9);
+  --recommend-sq-bg: rgba(22, 163, 74, 0.32);
+  --recommend-sq-border: rgba(22, 163, 74, 0.95);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: var(--teak-deep);
+  :root:not([data-theme="light"]):not([data-theme="obsidian"]) {
+    --bg: #1f1610;
     --surface: #2c2015;
+    --surface-alt: #382a1d;
     --text: #ecdfc0;
     --text-muted: #b6a482;
-    --border: var(--gilt);
-    --square-light: #5a4530;
-    --square-dark: #7a3a22;
+    --border: #a8823a;
+    --accent: #d4aa50;
+    --header-title: #e07248;
     --warning-bg: #4a3a14;
     --warning: #e0b354;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: var(--teak-deep);
+  --bg: #1f1610;
   --surface: #2c2015;
+  --surface-alt: #382a1d;
   --text: #ecdfc0;
   --text-muted: #b6a482;
-  --border: var(--gilt);
-  --square-light: #5a4530;
-  --square-dark: #7a3a22;
+  --border: #a8823a;
+  --accent: #d4aa50;
+  --header-title: #e07248;
   --warning-bg: #4a3a14;
   --warning: #e0b354;
 }
 
+:root[data-theme="obsidian"] {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-alt: #21262d;
+  --text: #f0f6fc;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --accent: #d29922;
+  --header-title: #e3b341;
+  --warning-bg: #341a04;
+  --warning: #f2cc60;
+}
+
+/* Board Skins */
+:root[data-board="angkor"], [data-board="angkor"] {
+  --square-light: #e4d5a8;
+  --square-dark: #b5542a;
+  --board-border: #3c2a1c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="teak"], [data-board="teak"] {
+  --square-light: #dfc8a0;
+  --square-dark: #5c391f;
+  --board-border: #8b5a2b;
+  --target-dot: #22c55e;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.55);
+  --capture-ring: #f87171;
+  --selected-bg: rgba(250, 204, 21, 0.45);
+  --selected-border: #eab308;
+  --selected-glow: rgba(234, 179, 8, 0.5);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(202, 138, 4, 0.85);
+}
+
+:root[data-board="jade"], [data-board="jade"] {
+  --square-light: #d4e2d9;
+  --square-dark: #3b634e;
+  --board-border: #234433;
+  --target-dot: #00d2ff;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.55);
+  --capture-ring: #f43f5e;
+  --selected-bg: rgba(251, 191, 36, 0.46);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.5);
+  --last-move-bg: rgba(245, 158, 11, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="sandstone"], [data-board="sandstone"] {
+  --square-light: #ded5c8;
+  --square-dark: #625749;
+  --board-border: #3f362c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="obsidian"], [data-board="obsidian"] {
+  --square-light: #4c5663;
+  --square-dark: #1b1e22;
+  --board-border: #b89758;
+  --target-dot: #34d399;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.6);
+  --capture-ring: #f87171;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #fbbf24;
+  --selected-glow: rgba(251, 191, 36, 0.55);
+  --last-move-bg: rgba(234, 179, 8, 0.45);
+  --last-move-border: rgba(250, 204, 21, 0.9);
+}
+
+:root[data-board="saffron"], [data-board="saffron"] {
+  --square-light: #faeee2;
+  --square-dark: #cc6d36;
+  --board-border: #883516;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(234, 179, 8, 0.45);
+  --selected-border: #eab308;
+  --selected-glow: rgba(234, 179, 8, 0.5);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(202, 138, 4, 0.85);
+}
+
 * { box-sizing: border-box; }
+
+/* Several panel elements are toggled with the `hidden` attribute but carry an
+   author `display` rule, which outranks the user-agent rule `display: none`
+   and leaves them rendering while "hidden". Restore the attribute's meaning
+   once, globally, rather than per component. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .oc-square::after, button, select { transition: opacity 0.15s ease, box-shadow 0.15s ease; }
+  .oc-square, .oc-square::after, button, select { transition: opacity 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
 }
 
 .oc-app {
@@ -88,7 +226,7 @@ body {
   font-family: "Noto Serif Khmer", serif;
   font-size: 2rem;
   font-weight: 600;
-  color: var(--laterite);
+  color: var(--header-title, var(--laterite));
   margin: 0;
 }
 .oc-title-en {
@@ -102,28 +240,288 @@ body {
 .oc-board-wrap { display: flex; flex-direction: column; gap: 10px; }
 
 .oc-board {
+  position: relative; /* containing block for .oc-arrow-layer */
   display: grid;
   grid-template-columns: repeat(8, minmax(36px, 64px));
   grid-template-rows: repeat(8, minmax(36px, 64px));
-  border: 4px solid var(--border);
-  border-radius: 2px;
+  border: 4px solid var(--board-border, var(--border));
+  border-radius: 4px;
   width: min(90vw, 512px);
   aspect-ratio: 1;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
-.oc-square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.oc-board-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  width: min(90vw, 512px);
+}
+.oc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.oc-legend-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.oc-legend-selected {
+  background: #f59e0b;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+.oc-legend-target {
+  background: #10b981;
+  border: 2px solid #34d399;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+.oc-legend-capture {
+  background: rgba(239, 68, 68, 0.3);
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+.oc-legend-special {
+  background: rgba(168, 85, 247, 0.3);
+  border: 2px dashed #a855f7;
+  color: #c084fc;
+  font-weight: bold;
+}
+.oc-legend-lastmove {
+  background: rgba(234, 179, 8, 0.5);
+  border: 2px solid #eab308;
+}
+.oc-legend-check {
+  background: #ef4444;
+  border: 2px solid #f87171;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+.oc-legend-recommend {
+  background: var(--recommend-sq-bg);
+  border: 2px solid var(--recommend-sq-border);
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.6);
+}
+
+/* --- AI recommendation overlay ------------------------------------------
+   Shown only while "Show on board" is active. The board is rewound to the
+   position before the reviewed move so both arrows start from squares whose
+   pieces are actually there. */
+
+.oc-arrow-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3; /* above .oc-piece (z-index 1) */
+  overflow: visible;
+}
+.oc-arrow {
+  stroke-linecap: round;
+  /* Stroke widths are in board units (1 = one square) because of the 8x8
+     viewBox, so the arrows scale with the board instead of needing media
+     queries. */
+  fill: none;
+}
+.oc-arrow-played-line {
+  stroke: var(--arrow-played);
+  stroke-width: 0.1;
+  stroke-dasharray: 0.22 0.16;
+  opacity: 0.75;
+}
+.oc-arrow-recommend-line {
+  stroke: var(--arrow-recommend);
+  stroke-width: 0.15;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.45));
+}
+
+.oc-square.played-from,
+.oc-square.played-to {
+  background-image: linear-gradient(var(--played-sq-bg), var(--played-sq-bg));
+  box-shadow: inset 0 0 0 2px var(--played-sq-border);
+}
+/* The live-board hint reuses the review overlay's green so "what the engine
+   would play" reads the same wherever it is shown. */
+.oc-square.recommend-from,
+.oc-square.recommend-to,
+.oc-square.hint-from,
+.oc-square.hint-to {
+  background-image: linear-gradient(var(--recommend-sq-bg), var(--recommend-sq-bg));
+  box-shadow: inset 0 0 0 3px var(--recommend-sq-border), inset 0 0 14px rgba(22, 163, 74, 0.35);
+}
+/* A square can be both the played origin and the recommended origin (same
+   piece, different destination) - the recommendation wins the border. */
+.oc-square.played-from.recommend-from,
+.oc-square.played-to.recommend-to,
+.oc-square.played-from.recommend-to,
+.oc-square.played-to.recommend-from {
+  box-shadow: inset 0 0 0 3px var(--recommend-sq-border), inset 0 0 0 6px var(--played-sq-border);
+}
+.oc-square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
 .oc-square.light { background: var(--square-light); }
 .oc-square.dark { background: var(--square-dark); }
-.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--accent); }
-.oc-square.legal-target::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--jade); opacity: 0.85; }
-.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--jade); }
-.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--danger); }
-/* Uses the square's own box-shadow (not ::after, already used by the rules
-   above) so it composes independently - a square can be both the previous
-   move's destination and the current selection at once. */
-.oc-square.last-move { box-shadow: inset 0 0 0 999px rgba(168, 130, 58, 0.32); }
+
+/* 1. Last Move: highlights both origin (from) and destination (to) squares */
+.oc-square.last-move {
+  background-image: linear-gradient(var(--last-move-bg), var(--last-move-bg));
+  box-shadow: inset 0 0 0 2.5px var(--last-move-border), inset 0 0 14px rgba(234, 179, 8, 0.35);
+}
+
+/* 2. Selected Square: rich luminous golden highlight wash */
+.oc-square.selected {
+  background-image: linear-gradient(var(--selected-bg), var(--selected-bg)) !important;
+  box-shadow: inset 0 0 0 3.5px var(--selected-border), 0 0 18px var(--selected-glow) !important;
+  z-index: 2;
+}
+
+/* 3. In Check: radiant danger glow behind King */
+.oc-square.in-check {
+  background-image: radial-gradient(circle at center, rgba(239, 68, 68, 0.92) 0%, rgba(220, 38, 38, 0.6) 50%, rgba(185, 28, 28, 0.25) 80%, transparent 100%) !important;
+  box-shadow: inset 0 0 0 3.5px #ef4444, 0 0 18px rgba(239, 68, 68, 0.75) !important;
+  animation: oc-check-pulse 1.6s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* 4. Legal Move Target: prominent luminous emerald dot */
+.oc-square.legal-target::after {
+  content: '';
+  position: absolute;
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: var(--target-dot, #10b981);
+  border: 2px solid var(--target-dot-border, rgba(255, 255, 255, 0.9));
+  box-shadow: 0 2px 8px var(--target-dot-shadow, rgba(0, 0, 0, 0.5)), 0 0 12px var(--target-dot, #10b981);
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 3;
+  transform: scale(1);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.oc-square.legal-target:hover::after {
+  transform: scale(1.3);
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65), 0 0 16px var(--target-dot, #10b981);
+}
+
+/* 5. Legal Capture Target: distinct ruby target reticle ring framing the enemy piece */
+.oc-square.legal-capture::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 4px solid var(--capture-ring, #ef4444);
+  background: rgba(239, 68, 68, 0.22);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6), inset 0 0 10px rgba(239, 68, 68, 0.35);
+  pointer-events: none;
+  z-index: 3;
+  animation: oc-capture-pulse 1.8s ease-in-out infinite;
+  transition: border-width 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.oc-square.legal-capture:hover::after {
+  border-width: 5px;
+  background: rgba(239, 68, 68, 0.32);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.8), inset 0 0 14px rgba(239, 68, 68, 0.5);
+}
+
+/* 6. Special Move Target: King Jump, Queen Double-step, Trey Promotion */
+.oc-square.legal-special::after {
+  content: '★';
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset: 6px;
+  border-radius: 50%;
+  border: 3.5px dashed #a855f7;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(147, 51, 234, 0.15) 70%, transparent 100%);
+  color: #f3e8ff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.75), inset 0 0 10px rgba(168, 85, 247, 0.4);
+  pointer-events: none;
+  z-index: 3;
+  animation: oc-special-pulse 1.8s ease-in-out infinite;
+}
+.oc-square.legal-special:hover::after {
+  border-width: 4.5px;
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.9), inset 0 0 14px rgba(168, 85, 247, 0.6);
+}
+
+/* Moveable piece hover indicator */
+.oc-square.can-move {
+  cursor: pointer;
+}
+.oc-square.can-move:hover {
+  filter: brightness(1.08);
+}
+.oc-square.can-move .oc-piece {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.oc-square.can-move:hover .oc-piece {
+  transform: scale(1.08) translateY(-2px);
+}
+
 .oc-square:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
-.oc-piece { width: 82%; height: 82%; pointer-events: none; }
+.oc-piece { width: 82%; height: 82%; pointer-events: none; z-index: 1; position: relative; }
+
+/* Pulse Keyframes */
+@keyframes oc-capture-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+}
+
+@keyframes oc-special-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(0.96) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+@keyframes oc-check-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3.5px #ef4444, 0 0 12px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: inset 0 0 0 4px #f87171, 0 0 22px rgba(239, 68, 68, 0.85);
+  }
+}
 
 .oc-panel {
   min-width: 260px;
@@ -189,8 +587,600 @@ body {
 }
 .oc-controls button:hover, .oc-controls select:hover { border-color: var(--accent); }
 .oc-controls button:focus-visible, .oc-controls select:focus-visible,
-.oc-controls input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#oc-new-game { background: var(--laterite); color: var(--parchment-light); border-color: var(--laterite); font-weight: 600; }
+.oc-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.oc-btn-row button {
+  flex: 1;
+}
+#oc-new-game {
+  background: var(--laterite);
+  color: var(--parchment-light);
+  border-color: var(--laterite);
+  font-weight: 600;
+}
+#oc-hint-btn[aria-pressed="true"] {
+  border-color: var(--recommend-sq-border);
+  box-shadow: inset 0 0 0 1px var(--recommend-sq-border);
+}
+#oc-undo-btn {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+#oc-undo-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.12);
+  color: var(--accent);
+}
+#oc-undo-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Theme & Appearance Customization */
+.oc-theme-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.oc-theme-card-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 2px;
+}
+.oc-theme-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.oc-theme-row label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-theme-row select {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.oc-theme-row select:hover {
+  border-color: var(--accent);
+}
+.oc-theme-row select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Move list interactive items & badges */
+.oc-move-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.oc-move-item:hover {
+  background: rgba(168, 130, 58, 0.15);
+}
+.oc-move-item.selected {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.oc-move-badge-dot {
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+/* AI Review Panel */
+.oc-review-panel {
+  min-width: 280px;
+  max-width: 380px;
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.oc-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(168, 130, 58, 0.25);
+  padding-bottom: 10px;
+}
+
+.oc-review-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oc-review-title-km {
+  font-family: "Noto Serif Khmer", serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--laterite);
+}
+.oc-review-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.oc-icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.oc-icon-btn:hover {
+  background: rgba(168, 130, 58, 0.2);
+  border-color: var(--accent);
+  transform: rotate(15deg);
+}
+
+.oc-review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.oc-btn-accent {
+  flex: 1;
+  background: var(--laterite);
+  color: var(--parchment-light);
+  border: 1px solid var(--laterite);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.oc-btn-accent:hover {
+  background: #9c4521;
+}
+.oc-btn-accent:active {
+  transform: scale(0.98);
+}
+.oc-btn-secondary {
+  flex: 1;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: border-color 0.15s ease;
+}
+.oc-btn-secondary:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.08);
+}
+.oc-btn-text {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  padding: 2px 4px;
+}
+
+/* Progress bar */
+.oc-review-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(168, 130, 58, 0.1);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.oc-review-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.oc-review-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--jade);
+  transition: width 0.2s ease;
+}
+.oc-review-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Navigation step bar */
+.oc-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  background: rgba(168, 130, 58, 0.08);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 130, 58, 0.2);
+}
+.oc-nav-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--text);
+  line-height: 1;
+}
+.oc-nav-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.oc-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.oc-nav-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Review Card */
+.oc-review-card {
+  min-height: 180px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(168, 130, 58, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+:root[data-theme="dark"] .oc-review-card,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .oc-review-card {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.oc-review-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: auto;
+}
+.oc-review-placeholder-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.oc-review-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.oc-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.oc-badge-quality {
+  border-color: var(--accent);
+}
+.oc-eval-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.oc-review-card-title {
+  margin: 4px 0 8px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--laterite);
+}
+.oc-review-explanation {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+
+.oc-better-move {
+  background: rgba(16, 185, 129, 0.12);
+  border-left: 3px solid var(--jade);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+.oc-better-label {
+  font-weight: 600;
+  color: var(--jade);
+  margin-right: 4px;
+}
+/* Says whether the drawn arrow came from the language model or the fallback
+   local search, so the advice is never anonymous. */
+.oc-rec-source {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(120, 120, 120, 0.18);
+  border: 1px solid rgba(120, 120, 120, 0.45);
+  color: var(--text-muted, var(--text));
+}
+.oc-rec-source.is-llm {
+  background: rgba(22, 163, 74, 0.18);
+  border-color: var(--recommend-sq-border);
+  color: var(--jade);
+}
+
+.oc-show-on-board-btn {
+  display: block;
+  margin-top: 8px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--jade);
+  background: transparent;
+  border: 1.5px solid var(--jade);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.oc-show-on-board-btn:hover {
+  background: rgba(22, 163, 74, 0.15);
+}
+.oc-show-on-board-btn.active {
+  background: var(--jade);
+  color: var(--surface);
+}
+.oc-show-on-board-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.oc-review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.oc-tag-pill {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(168, 130, 58, 0.15);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Settings Dialog */
+.oc-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  background: transparent;
+  max-width: 520px;
+  width: 90vw;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+.oc-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+.oc-dialog-content {
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.oc-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-dialog-header h2 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.25rem;
+  color: var(--laterite);
+}
+.oc-dialog-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.oc-dialog-close:hover {
+  color: var(--text);
+}
+.oc-dialog-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.oc-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(168, 130, 58, 0.08);
+  padding: 10px;
+  border-radius: 8px;
+}
+.oc-preset-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.oc-preset-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.oc-preset-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text);
+}
+.oc-preset-btn:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.15);
+}
+
+.oc-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.oc-settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.oc-settings-form label.oc-checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.oc-settings-form label.oc-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--laterite);
+}
+.oc-settings-form input,
+.oc-settings-form select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+.oc-settings-form input:focus,
+.oc-settings-form select:focus {
+  outline: 2px solid var(--accent);
+}
+
+.oc-input-password-wrap {
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.oc-input-password-wrap input {
+  flex: 1;
+  padding-right: 36px;
+}
+.oc-toggle-password {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.9rem;
+}
+
+.oc-dialog-status {
+  font-size: 0.85rem;
+  min-height: 20px;
+  font-weight: 500;
+}
+.oc-dialog-status.success { color: var(--jade); }
+.oc-dialog-status.error { color: var(--danger); }
+.oc-dialog-status.loading { color: var(--warning); }
+
+.oc-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
 
 </style>
 </head>
@@ -203,6 +1193,15 @@ body {
   </div>
   <div class="oc-board-wrap">
     <div class="oc-board" id="board"></div>
+    <div class="oc-board-legend">
+      <div class="oc-legend-item" title="Click any piece to select it"><span class="oc-legend-indicator oc-legend-selected"></span><span>Selected</span></div>
+      <div class="oc-legend-item" title="Move to empty square"><span class="oc-legend-indicator oc-legend-target"></span><span>Quiet Move</span></div>
+      <div class="oc-legend-item" title="Capture enemy piece"><span class="oc-legend-indicator oc-legend-capture"></span><span>Capture</span></div>
+      <div class="oc-legend-item" title="King Jump, Queen 2-step, or Trey Promotion"><span class="oc-legend-indicator oc-legend-special">★</span><span>Special</span></div>
+      <div class="oc-legend-item" title="Last moved squares"><span class="oc-legend-indicator oc-legend-lastmove"></span><span>Last Move</span></div>
+      <div class="oc-legend-item" title="King under attack"><span class="oc-legend-indicator oc-legend-check"></span><span>Check</span></div>
+      <div class="oc-legend-item" title="Move the engine recommends instead"><span class="oc-legend-indicator oc-legend-recommend"></span><span>AI Suggestion</span></div>
+    </div>
   </div>
   <div class="oc-panel">
     <div class="oc-status" id="status">White to move</div>
@@ -219,7 +1218,118 @@ body {
     </div>
     <div class="oc-controls" id="controls"></div>
   </div>
+  <div class="oc-review-panel" id="review-panel">
+    <div class="oc-review-header">
+      <div class="oc-review-title-group">
+        <span class="oc-review-title-km">ការវិភាគ AI</span>
+        <span class="oc-review-title">AI Move Review</span>
+      </div>
+      <button class="oc-icon-btn" id="oc-open-settings" title="AI Settings" aria-label="Open AI Settings">⚙️</button>
+    </div>
+
+    <div class="oc-review-actions">
+      <button class="oc-btn-accent" id="oc-review-game-btn">Review Full Game</button>
+      <button class="oc-btn-secondary" id="oc-explain-current-btn">Explain Selected Move</button>
+      <button class="oc-btn-secondary" id="oc-simulate-current-btn" title="Simulate AI recommendation without API key">🎮 Simulate</button>
+    </div>
+
+    <div class="oc-review-progress-wrap" id="oc-review-progress-wrap" hidden>
+      <div class="oc-review-progress-bar"><div class="oc-review-progress-fill" id="oc-review-progress-fill"></div></div>
+      <span class="oc-review-progress-text" id="oc-review-progress-text">Analyzing move 1 of 10...</span>
+      <button class="oc-btn-text" id="oc-cancel-review-btn">Cancel</button>
+    </div>
+
+    <div class="oc-nav-bar" id="oc-nav-bar">
+      <button class="oc-nav-btn" id="oc-nav-first" title="First Move" aria-label="First Move">&laquo;</button>
+      <button class="oc-nav-btn" id="oc-nav-prev" title="Previous Move" aria-label="Previous Move">&lsaquo;</button>
+      <span class="oc-nav-label" id="oc-nav-label">Move 0 / 0</span>
+      <button class="oc-nav-btn" id="oc-nav-next" title="Next Move" aria-label="Next Move">&rsaquo;</button>
+      <button class="oc-nav-btn" id="oc-nav-last" title="Current / Last Move" aria-label="Current Move">&raquo;</button>
+    </div>
+
+    <div class="oc-review-card" id="oc-review-card">
+      <div class="oc-review-placeholder" id="oc-review-placeholder">
+        <div class="oc-review-placeholder-icon">🪷</div>
+        <p>Make a move or click <strong>Review Full Game</strong> for Grandmaster-level Ouk Chaktrang insights powered by AI.</p>
+      </div>
+      <div class="oc-review-content" id="oc-review-content" hidden>
+        <div class="oc-review-badge-row">
+          <span class="oc-badge" id="oc-move-badge">1. e3-e4</span>
+          <span class="oc-badge oc-badge-quality" id="oc-quality-badge">🟢 Best Move</span>
+          <span class="oc-eval-badge" id="oc-eval-badge">Eval: 0.0</span>
+        </div>
+        <h3 class="oc-review-card-title" id="oc-review-title">Solid Center Trey Push</h3>
+        <p class="oc-review-explanation" id="oc-review-explanation"></p>
+        <div class="oc-better-move" id="oc-better-move" hidden>
+          <span class="oc-better-label">💡 Better Line:</span>
+          <span class="oc-rec-source" id="oc-rec-source" hidden></span>
+          <span id="oc-better-move-text"></span>
+          <button type="button" class="oc-show-on-board-btn" id="oc-show-on-board-btn" aria-pressed="false" hidden>👁 Show on board</button>
+        </div>
+        <div class="oc-review-tags" id="oc-review-tags"></div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- AI Review Settings Dialog -->
+<dialog class="oc-dialog" id="oc-settings-dialog">
+  <div class="oc-dialog-content">
+    <div class="oc-dialog-header">
+      <h2>AI Review Configuration</h2>
+      <button class="oc-dialog-close" id="oc-close-settings" aria-label="Close settings">&times;</button>
+    </div>
+    <p class="oc-dialog-desc">Connect any OpenAI-compatible endpoint (OpenAI, OpenRouter, Groq, Ollama, LM Studio, DeepSeek).</p>
+    
+    <div class="oc-presets">
+      <span class="oc-preset-label">Quick Presets:</span>
+      <div class="oc-preset-btns">
+        <button type="button" class="oc-preset-btn oc-preset-sim" data-preset="simulation" style="font-weight:600;color:var(--laterite)">🎮 Simulation (No Key)</button>
+        <button type="button" class="oc-preset-btn" data-preset="openai">OpenAI</button>
+        <button type="button" class="oc-preset-btn" data-preset="openrouter">OpenRouter</button>
+        <button type="button" class="oc-preset-btn" data-preset="groq">Groq</button>
+        <button type="button" class="oc-preset-btn" data-preset="ollama">Ollama (Local)</button>
+        <button type="button" class="oc-preset-btn" data-preset="lmstudio">LM Studio (Local)</button>
+      </div>
+    </div>
+
+    <form class="oc-settings-form" id="oc-settings-form" method="dialog">
+      <label>
+        <span>API Base URL:</span>
+        <input type="text" id="oc-setting-base-url" placeholder="https://api.openai.com/v1" required>
+      </label>
+      <label>
+        <span>API Key (Stored locally in browser):</span>
+        <div class="oc-input-password-wrap">
+          <input type="password" id="oc-setting-api-key" placeholder="sk-...">
+          <button type="button" class="oc-toggle-password" id="oc-toggle-api-key" title="Toggle visibility">👁️</button>
+        </div>
+      </label>
+      <label>
+        <span>Model Name:</span>
+        <input type="text" id="oc-setting-model" placeholder="gpt-4o-mini" required>
+      </label>
+      <label>
+        <span>Explanation Language:</span>
+        <select id="oc-setting-lang">
+          <option value="en">English (with Khmer chess terms)</option>
+          <option value="km">ភាសាខ្មែរ (Khmer)</option>
+          <option value="both">Bilingual (English + Khmer)</option>
+        </select>
+      </label>
+      <label class="oc-checkbox-label">
+        <input type="checkbox" id="oc-setting-use-proxy">
+        <span>Use Local Dev Server Proxy (Bypass CORS for local / tunnel endpoints)</span>
+      </label>
+      <div class="oc-dialog-status" id="oc-dialog-status"></div>
+      <div class="oc-dialog-actions">
+        <button type="button" class="oc-btn-secondary" id="oc-test-connection">Test Connection</button>
+        <button type="submit" class="oc-btn-accent" id="oc-save-settings">Save Settings</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
 
 <script>
 (function (root) {
@@ -636,8 +1746,19 @@ body {
     materialTier: materialTier,
     countAllPieces: countAllPieces,
     hasPawns: hasPawns,
-    isBareKing: isBareKing
+    isBareKing: isBareKing,
+    undoMove: undoMove
   };
+
+  function undoMove(state) {
+    if (!state || !state.history || state.history.length === 0) return state;
+    var targetLength = state.history.length - 1;
+    var nextState = createInitialState();
+    for (var i = 0; i < targetLength; i++) {
+      nextState = applyMove(nextState, state.history[i]);
+    }
+    return nextState;
+  }
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
@@ -715,12 +1836,13 @@ body {
     });
   }
 
-  function searchRoot(state, depth) {
+  function searchRoot(state, depth, deadline) {
     var moves = orderMoves(OukEngine.generateLegalMoves(state, state.turn));
     var bestMove = moves[0];
     var bestScore = -Infinity;
     var alpha = -Infinity, beta = Infinity;
     for (var i = 0; i < moves.length; i++) {
+      if (deadline && i > 0 && Date.now() >= deadline) break;
       var child = OukEngine.applyMove(state, moves[i]);
       var score = -negamax(child, depth - 1, 1, -beta, -alpha);
       if (score > bestScore) {
@@ -740,7 +1862,8 @@ body {
     var best = null;
 
     for (var depth = 1; depth <= maxDepth; depth++) {
-      var result = searchRoot(state, depth);
+      if (depth > 1 && Date.now() >= deadline) break;
+      var result = searchRoot(state, depth, deadline);
       best = result.move;
       if (Date.now() >= deadline) break;
       if (result.score >= MATE_SCORE - 100) break;
@@ -748,8 +1871,21 @@ body {
     return best;
   }
 
+  // A hint is advice to the human player, so it always searches at one fixed
+  // strength rather than the opponent's difficulty setting - a hint from the
+  // "easy" engine would be bad advice.
+  var HINT_OPTIONS = { timeLimitMs: 800, maxDepth: 5 };
+
+  function suggestMove(state) {
+    // searchRoot takes moves[0] of an empty move list, so asking a finished
+    // position for a move yields undefined. Say null instead, once, here.
+    if (state.status !== 'active') return null;
+    return chooseMove(state, HINT_OPTIONS);
+  }
+
   var api = {
     evaluate: evaluate,
+    suggestMove: suggestMove,
     negamax: negamax,
     MATE_SCORE: MATE_SCORE,
     chooseMove: chooseMove
@@ -765,31 +1901,274 @@ body {
 (function (root) {
   'use strict';
 
-  // Original glyphs (not copied from any source): flat geometric shapes
-  // evoking the traditional bulbous Makruk/Ouk piece silhouettes, one per
-  // type, colored via inline style so a single path works for both sides.
-  var PATHS = {
-    K: '<circle cx="50" cy="34" r="16"/><path d="M28 90 Q50 58 72 90 Z"/><rect x="44" y="14" width="12" height="14"/>',
-    Q: '<circle cx="50" cy="40" r="14"/><path d="M30 90 Q50 64 70 90 Z"/>',
-    B: '<circle cx="50" cy="42" r="13"/><path d="M32 90 Q50 66 68 90 Z"/><circle cx="50" cy="20" r="5"/>',
-    N: '<path d="M35 90 L40 50 Q30 40 38 22 Q55 18 62 34 L58 50 L68 90 Z"/>',
-    R: '<rect x="32" y="26" width="36" height="14"/><path d="M30 90 Q50 62 70 90 Z"/><rect x="32" y="26" width="8" height="8"/><rect x="60" y="26" width="8" height="8"/>',
-    // Kun (កូន) - a flat disc/ring token, distinct from the taller carved
-    // pieces above, like a coin or cowrie-shell counter laid on the square.
-    P: '<circle cx="50" cy="52" r="30" style="stroke-width:7"/>'
+  // Ouk Chaktrang (Khmer Chess) piece glyphs.
+  // Each piece is carefully sculpted with authentic Southeast Asian silhouettes:
+  // - K (King / Ang / Sdaach): Majestic tiered stupa spire & Mokot crown
+  // - Q (Queen / Neang / Met): Noble lotus dome & pearl finial
+  // - B (Bishop / Koul / Thom): Angkorian stepped pillar & flared shoulders
+  // - N (Knight / Shes): Sculpted Khmer steed with arched neck & notched mane
+  // - R (Rook / Touk): Royal barge boat hull with central pavilion canopy
+  // - P (Pawn / Kun / Trey): Embossed circular cowrie-shell / lotus token
+
+  var PIECES = {
+    // King (Ang / Sdaach) - Tiered royal spire
+    K: function (c) {
+      return [
+        // Base foundation tiers
+        '<path d="M18 88 Q50 94 82 88 L79 81 Q50 86 21 81 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        '<path d="M24 81 Q50 86 76 81 L73 74 Q50 78 27 74 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Lower throne waist
+        '<path d="M29 74 Q50 78 71 74 L67 58 Q50 62 33 58 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Spire tier 1 (mid collar)
+        '<path d="M34 58 Q50 62 66 58 L62 45 Q50 48 38 45 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Spire tier 2 (upper collar)
+        '<path d="M39 45 Q50 48 61 45 L57 33 Q50 36 43 33 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Spire tier 3 & finial spire
+        '<path d="M44 33 Q50 35 56 33 L54 22 L46 22 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Pointed crown lotus bud peak
+        '<path d="M50 8 C45 14 43 18 45 22 L55 22 C57 18 55 14 50 8 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        '<circle cx="50" cy="8" r="2" fill="' + c.detail + '"/>',
+        // Shading and depth accents
+        '<path d="M50 10 L50 88" stroke="' + c.detail + '" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>',
+        '<path d="M36 66 Q50 70 64 66" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.75"/>',
+        '<path d="M41 52 Q50 55 59 52" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.75"/>',
+        '<path d="M44 39 Q50 41 56 39" stroke="' + c.detail + '" stroke-width="1.5" fill="none" opacity="0.75"/>'
+      ].join('');
+    },
+
+    // Queen (Neang / Met) - Noble lotus dome & pearl finial
+    Q: function (c) {
+      return [
+        // Base foundation
+        '<path d="M22 88 Q50 94 78 88 L75 80 Q50 85 25 80 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Flared lower bell
+        '<path d="M27 80 C30 67 36 56 40 48 L60 48 C64 56 70 67 73 80 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Rounded Lotus Dome
+        '<path d="M35 48 C35 32 42 22 50 22 C58 22 65 32 65 48 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Lotus Pearl finial
+        '<circle cx="50" cy="16" r="4.5" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5"/>',
+        '<path d="M50 9 L52 12 L48 12 Z" fill="' + c.detail + '"/>',
+        // Inner petal engravings & highlights
+        '<path d="M50 22 C45 30 42 39 42 48" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.75"/>',
+        '<path d="M50 22 C55 30 58 39 58 48" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.75"/>',
+        '<path d="M37 48 Q50 52 63 48" stroke="' + c.detail + '" stroke-width="2" fill="none" opacity="0.8"/>',
+        '<path d="M33 66 Q50 71 67 66" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.75"/>'
+      ].join('');
+    },
+
+    // Bishop (Koul / Thom) - Stepped Angkorian pillar & elephant tusk shoulders
+    B: function (c) {
+      return [
+        // Base foundation
+        '<path d="M20 88 Q50 94 80 88 L77 80 Q50 85 23 80 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Upright fluted pillar
+        '<path d="M26 80 L30 52 Q50 56 70 52 L74 80 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Flared shoulder wings & notched crown
+        '<path d="M30 52 C22 44 24 33 36 30 L38 22 Q50 20 62 22 L64 30 C76 33 78 44 70 52 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Pointed crown apex
+        '<path d="M43 22 L50 12 L57 22 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        '<circle cx="50" cy="11" r="2.2" fill="' + c.detail + '"/>',
+        // Pillar fluting & collar details
+        '<path d="M37 54 L35 79" stroke="' + c.detail + '" stroke-width="1.8" opacity="0.7"/>',
+        '<path d="M50 55 L50 80" stroke="' + c.detail + '" stroke-width="1.8" opacity="0.7"/>',
+        '<path d="M63 54 L65 79" stroke="' + c.detail + '" stroke-width="1.8" opacity="0.7"/>',
+        '<path d="M32 52 Q50 56 68 52" stroke="' + c.detail + '" stroke-width="2" fill="none" opacity="0.8"/>',
+        '<circle cx="50" cy="36" r="3.5" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="1.8"/>'
+      ].join('');
+    },
+
+    // Knight (Shes) - Carved Khmer steed with flowing mane
+    N: function (c) {
+      return [
+        // Base foundation
+        '<path d="M22 88 Q50 94 78 88 L75 81 Q50 86 25 81 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Steed silhouette with arched neck and notched mane
+        '<path d="M28 81 C27 71 21 60 21 47 C21 38 25 33 30 33 C34 33 37 36 41 34 C44 32 45 26 43 17 C47 18 51 22 52 26 C55 21 58 17 61 14 C62 19 61 24 60 28 C67 31 72 38 73 48 C75 58 73 70 69 81 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Scalloped mane ridges along the neck crest
+        '<path d="M60 28 Q67 32 63 38 Q71 43 66 50 Q74 56 68 64 Q74 72 69 81" fill="none" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Facial carvings (eye, brow, muzzle, chest harness)
+        '<circle cx="34" cy="39" r="2.5" fill="' + c.detail + '"/>',
+        '<path d="M22 45 Q26 47 31 44" stroke="' + c.stroke + '" stroke-width="2" fill="none" stroke-linecap="round"/>',
+        '<path d="M25 61 Q37 67 48 62" stroke="' + c.detail + '" stroke-width="2.2" fill="none" opacity="0.85"/>',
+        '<path d="M43 34 C48 42 53 52 54 66" stroke="' + c.detail + '" stroke-width="1.8" fill="none" opacity="0.7"/>'
+      ].join('');
+    },
+
+    // Rook (Touk) - Royal barge boat hull & fortress temple canopy
+    R: function (c) {
+      return [
+        // Swept royal boat hull
+        '<path d="M12 66 C20 78 33 88 50 88 C67 88 80 78 88 66 C76 73 63 77 50 77 C37 77 24 73 12 66 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Lower deck platform
+        '<path d="M20 66 L80 66 L77 57 L23 57 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Temple pavilion tower walls
+        '<path d="M29 57 L29 36 L71 36 L71 57 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Crenellated temple canopy & stepped eaves
+        '<path d="M25 36 L25 24 L33 24 L33 30 L43 30 L43 24 L57 24 L57 30 L67 30 L67 24 L75 24 L75 36 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        // Central pavilion spire peak
+        '<path d="M43 24 L50 14 L57 24 Z" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5" stroke-linejoin="round"/>',
+        '<circle cx="50" cy="12" r="2.2" fill="' + c.detail + '"/>',
+        // Pavilion window arch & hull planking lines
+        '<path d="M43 42 C43 37 50 34 50 34 C50 34 57 37 57 42 L57 53 L43 53 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="1.8"/>',
+        '<path d="M22 72 Q50 81 78 72" stroke="' + c.detail + '" stroke-width="2" fill="none" opacity="0.85"/>'
+      ].join('');
+    },
+
+    // Pawn (Kun / Trey) - Embossed Cowrie-shell / Lotus token
+    P: function (c) {
+      return [
+        // Outer medallion drop base
+        '<circle cx="50" cy="54" r="33" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2.5"/>',
+        // Main raised token face
+        '<circle cx="50" cy="50" r="33" fill="' + c.base + '" stroke="' + c.stroke + '" stroke-width="2.5"/>',
+        // Stepped inner bevel ring
+        '<circle cx="50" cy="50" r="25" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2" opacity="0.9"/>',
+        '<circle cx="50" cy="50" r="19" fill="' + c.base + '" stroke="' + c.detail + '" stroke-width="1.8"/>',
+        // Central Cowrie-shell / Lotus motif
+        '<path d="M50 36 C43 36 39 42 39 50 C39 58 43 64 50 64 C57 64 61 58 61 50 C61 42 57 36 50 36 Z" fill="' + c.shade + '" stroke="' + c.stroke + '" stroke-width="2" stroke-linejoin="round"/>',
+        // Cowrie tooth slit & ridges
+        '<path d="M50 37 Q48 50 50 63" stroke="' + c.detail + '" stroke-width="2" fill="none"/>',
+        '<path d="M43 45 L57 45 M42 50 L58 50 M43 55 L57 55" stroke="' + c.detail + '" stroke-width="1.8" stroke-linecap="round"/>',
+        // Outer cardinal decorative bead accents
+        '<circle cx="50" cy="23" r="2" fill="' + c.detail + '"/>',
+        '<circle cx="50" cy="77" r="2" fill="' + c.detail + '"/>',
+        '<circle cx="23" cy="50" r="2" fill="' + c.detail + '"/>',
+        '<circle cx="77" cy="50" r="2" fill="' + c.detail + '"/>'
+      ].join('');
+    }
   };
 
-  function svgFor(type, color) {
-    var body = PATHS[type] || '';
-    // Fixed light/dark wood tones regardless of page theme, like real game
-    // pieces - carved from pale vs. dark-stained wood, matching the
-    // parchment/teak palette.
-    var fill = color === 'w' ? '#f1e4bf' : '#3c2a1c';
-    var stroke = color === 'w' ? '#a8823a' : '#1a0f08';
-    return '<svg viewBox="0 0 100 100" class="oc-piece" style="fill:' + fill + ';stroke:' + stroke + ';stroke-width:3">' + body + '</svg>';
+  // Handcrafted piece skins tailored for contrast and authentic Southeast Asian aesthetic.
+  var SKINS = {
+    'ivory-teak': {
+      id: 'ivory-teak',
+      name: 'Ivory & Teak',
+      nameKm: 'ភ្លុក & ឈើប្រណិត',
+      w: {
+        base: '#fbf4df',    // Warm ivory / light boxwood
+        shade: '#e6d3a5',   // Warm honey shadow tone
+        stroke: '#6e4c16',  // Deep antique gold / bronze outline
+        detail: '#8f6826'   // Engraved accent tone
+      },
+      b: {
+        base: '#3c2719',    // Polished dark teak / ebony
+        shade: '#23150c',   // Deep charred wood shadow
+        stroke: '#100804',  // Midnight charcoal outline
+        detail: '#c8a27a'   // Warm sandalwood/copper rim highlight
+      }
+    },
+    'gold-bronze': {
+      id: 'gold-bronze',
+      name: 'Gold & Antique Bronze',
+      nameKm: 'មាស & សំរឹទ្ធ',
+      w: {
+        base: '#ffe99c',    // Gleaming royal gold
+        shade: '#d6b038',   // Rich gold shadow
+        stroke: '#6b4d0e',  // Deep bronze boundary
+        detail: '#946f1e'   // Gilt luster accents
+      },
+      b: {
+        base: '#2f3b35',    // Patinated antique bronze
+        shade: '#1c2420',   // Deep oxidized green-black
+        stroke: '#0e1411',  // Obsidian rim
+        detail: '#7da38d'   // Ancient verdigris highlight
+      }
+    },
+    'jade-ruby': {
+      id: 'jade-ruby',
+      name: 'Imperial Jade & Ruby',
+      nameKm: 'ត្បូងមរកត & ត្បូងទទឹម',
+      w: {
+        base: '#e3f5ed',    // Celadon pale white jade
+        shade: '#b5e0ca',   // Soft mint jade contour
+        stroke: '#215c3c',  // Deep pine jade outline
+        detail: '#3f875f'   // Imperial emerald carvings
+      },
+      b: {
+        base: '#4f141f',    // Deep polished ruby stone
+        shade: '#2c080f',   // Dark burgundy shadow
+        stroke: '#170307',  // Crimson soot contour
+        detail: '#e66b7c'   // Bright ruby glint
+      }
+    },
+    'sandstone': {
+      id: 'sandstone',
+      name: 'Bayon Sandstone & Basalt',
+      nameKm: 'ថ្មភក់ & ថ្មបាសាល់',
+      w: {
+        base: '#f6ecdd',    // Sunlit Angkor sandstone
+        shade: '#dbcaa9',   // Weathered porous stone shadow
+        stroke: '#66533a',  // Earthy ochre outline
+        detail: '#927956'   // Carved relief lines
+      },
+      b: {
+        base: '#303236',    // Ancient volcanic basalt
+        shade: '#1c1d20',   // Dark charcoal cavity
+        stroke: '#0b0c0e',  // Basalt edge
+        detail: '#9ea2aa'   // Light mineral dusting
+      }
+    },
+    'modern': {
+      id: 'modern',
+      name: 'Modern Minimalist',
+      nameKm: 'ស & ខ្មៅ ទំនើប',
+      w: {
+        base: '#ffffff',    // Crisp ceramic white
+        shade: '#e2e8f0',   // Cool steel shadow
+        stroke: '#334155',  // Slate contour
+        detail: '#64748b'   // Clean metallic accents
+      },
+      b: {
+        base: '#1e293b',    // Matte midnight carbon
+        shade: '#0f172a',   // Deep carbon shadow
+        stroke: '#020617',  // Pitch rim
+        detail: '#94a3b8'   // Sharp titanium highlight
+      }
+    }
+  };
+
+  var currentSkin = 'ivory-teak';
+  var PALETTES = SKINS['ivory-teak'];
+
+  function setSkin(skinId) {
+    if (SKINS[skinId]) {
+      currentSkin = skinId;
+      PALETTES = SKINS[skinId];
+      return true;
+    }
+    return false;
   }
 
-  var api = { svgFor: svgFor };
+  function getSkin() {
+    return currentSkin;
+  }
+
+  function getAvailableSkins() {
+    return Object.keys(SKINS).map(function (key) {
+      return {
+        id: SKINS[key].id,
+        name: SKINS[key].name,
+        nameKm: SKINS[key].nameKm
+      };
+    });
+  }
+
+  function svgFor(type, color, customSkin) {
+    var renderer = PIECES[type];
+    if (!renderer) return '';
+    var activeSkin = (customSkin && SKINS[customSkin]) ? SKINS[customSkin] : (SKINS[currentSkin] || SKINS['ivory-teak']);
+    var palette = activeSkin[color] || activeSkin.w;
+    var innerContent = renderer(palette);
+    return '<svg viewBox="0 0 100 100" class="oc-piece" xmlns="http://www.w3.org/2000/svg">' + innerContent + '</svg>';
+  }
+
+  var api = {
+    svgFor: svgFor,
+    setSkin: setSkin,
+    getSkin: getSkin,
+    getAvailableSkins: getAvailableSkins,
+    SKINS: SKINS
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
@@ -801,8 +2180,854 @@ body {
 (function (root) {
   'use strict';
 
+  var OukEngine = (typeof module !== 'undefined' && module.exports) ? require('./engine.js') : root.OukEngine;
+  var OukAI = (typeof module !== 'undefined' && module.exports) ? require('./ai.js') : root.OukAI;
+
+  var PIECE_NAMES = {
+    K: { km: 'ស្ដេច / អង (Sdaach / Ang)', en: 'King' },
+    Q: { km: 'នាង / ម៉ែត្រ (Neang / Met)', en: 'Queen' },
+    B: { km: 'គោល / ធំ (Koul / Thom)', en: 'Bishop' },
+    N: { km: 'សេះ (Shes)', en: 'Knight / Horse' },
+    R: { km: 'ទូក (Touk)', en: 'Rook / Boat' },
+    P: { km: 'ត្រី / កូន (Trey / Kun)', en: 'Pawn / Fish' }
+  };
+
+  var DEFAULT_SETTINGS = {
+    baseURL: 'https://api.openai.com/v1',
+    apiKey: '',
+    model: 'gpt-4o-mini',
+    language: 'en', // 'en' | 'km' | 'both'
+    temperature: 0.3,
+    useProxy: false
+  };
+
+  var STORAGE_KEY = 'ouk_chaktrang_ai_review_settings';
+
+  function loadSettings() {
+    if (typeof localStorage === 'undefined') return Object.assign({}, DEFAULT_SETTINGS);
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Failed to load review settings from localStorage:', e);
+    }
+    return Object.assign({}, DEFAULT_SETTINGS);
+  }
+
+  function saveSettings(settings) {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Failed to save review settings to localStorage:', e);
+    }
+  }
+
+  function formatMoveText(move, index) {
+    var from = OukEngine.squareName(move.from.rank, move.from.file);
+    var to = OukEngine.squareName(move.to.rank, move.to.file);
+    var sep = move.captured ? 'x' : '-';
+    var special = '';
+    if (move.special === 'promotion') special = '=Q (Promoted to Trey/Met)';
+    else if (move.special === 'kingJump') special = ' (King Jump)';
+    else if (move.special === 'queenDoubleStep') special = ' (Queen 2-Step)';
+    var prefix = typeof index === 'number' ? (index + 1) + '. ' : '';
+    return prefix + move.piece.type + from + sep + to + special;
+  }
+
+  function renderAsciiBoard(state) {
+    var lines = ['  a b c d e f g h'];
+    for (var r = 7; r >= 0; r--) {
+      var row = (r + 1) + ' ';
+      for (var f = 0; f < 8; f++) {
+        var p = OukEngine.pieceAt(state, r, f);
+        if (!p) {
+          row += '. ';
+        } else {
+          var char = p.color === 'w' ? p.type.toUpperCase() : p.type.toLowerCase();
+          row += char + ' ';
+        }
+      }
+      row += (r + 1);
+      lines.push(row);
+    }
+    lines.push('  a b c d e f g h');
+    return lines.join('\n');
+  }
+
+  function replayToMoveIndex(history, moveIndex) {
+    var state = OukEngine.createInitialState();
+    for (var i = 0; i <= moveIndex && i < history.length; i++) {
+      state = OukEngine.applyMove(state, history[i]);
+    }
+    return state;
+  }
+
+  function stateBeforeMoveIndex(history, moveIndex) {
+    var state = OukEngine.createInitialState();
+    for (var i = 0; i < moveIndex && i < history.length; i++) {
+      state = OukEngine.applyMove(state, history[i]);
+    }
+    return state;
+  }
+
+  function classifyMoveByEval(evalBefore, evalAfter, isPlayerWhite, isBestMove) {
+    // Evaluation is from White's perspective (+ = White advantage, - = Black advantage)
+    var diff = isPlayerWhite ? (evalAfter - evalBefore) : (evalBefore - evalAfter);
+
+    if (isBestMove && diff >= 0.5) return { key: 'brilliant', label: 'Brilliant', symbol: '✨', color: '#10b981' };
+    if (isBestMove || diff >= -0.2) return { key: 'best', label: 'Best Move', symbol: '🟢', color: '#22c55e' };
+    if (diff >= -0.6) return { key: 'good', label: 'Good', symbol: '🔵', color: '#3b82f6' };
+    if (diff >= -1.3) return { key: 'inaccuracy', label: 'Inaccuracy', symbol: '🟡', color: '#eab308' };
+    if (diff >= -2.5) return { key: 'mistake', label: 'Mistake', symbol: '🟠', color: '#f97316' };
+    return { key: 'blunder', label: 'Blunder', symbol: '🔴', color: '#ef4444' };
+  }
+
+  function buildPromptContext(history, moveIndex) {
+    var stateBefore = stateBeforeMoveIndex(history, moveIndex);
+    var move = history[moveIndex];
+    var stateAfter = OukEngine.applyMove(stateBefore, move);
+    var moverColor = move.piece.color;
+    var moverName = moverColor === 'w' ? 'White' : 'Black';
+    var pieceInfo = PIECE_NAMES[move.piece.type] || { km: move.piece.type, en: move.piece.type };
+
+    // Engine evaluations
+    var evalBefore = OukAI.evaluate(stateBefore);
+    var evalAfter = OukAI.evaluate(stateAfter);
+
+    // Compute best alternative move from stateBefore
+    var bestEngineMove = OukAI.chooseMove(stateBefore, { timeLimitMs: 250, maxDepth: 4 });
+    var isBestMove = false;
+    var bestMoveText = '';
+    if (bestEngineMove) {
+      bestMoveText = formatMoveText(bestEngineMove);
+      isBestMove = (bestEngineMove.from.rank === move.from.rank &&
+                    bestEngineMove.from.file === move.from.file &&
+                    bestEngineMove.to.rank === move.to.rank &&
+                    bestEngineMove.to.file === move.to.file);
+    }
+
+    // Raw coordinates alongside the notation text: the review card prints the
+    // text, but the board overlay needs squares it can highlight and connect
+    // with an arrow without re-parsing algebraic notation. Null when the played
+    // move already was the engine's pick - there is nothing to recommend.
+    var bestMoveCoords = (bestEngineMove && !isBestMove) ? {
+      from: { rank: bestEngineMove.from.rank, file: bestEngineMove.from.file },
+      to: { rank: bestEngineMove.to.rank, file: bestEngineMove.to.file },
+      special: bestEngineMove.special || null,
+      captured: !!bestEngineMove.captured
+    } : null;
+
+    var classification = classifyMoveByEval(evalBefore, evalAfter, moverColor === 'w', isBestMove);
+
+    var moveNotation = formatMoveText(move, moveIndex);
+    var fromSq = OukEngine.squareName(move.from.rank, move.from.file);
+    var toSq = OukEngine.squareName(move.to.rank, move.to.file);
+
+    var inCheckBefore = OukEngine.isInCheck(stateBefore, moverColor);
+    var opponentColor = OukEngine.opposite(moverColor);
+    var inCheckAfterOpponent = OukEngine.isInCheck(stateAfter, opponentColor);
+
+    var contextData = {
+      moveNumber: moveIndex + 1,
+      mover: moverName,
+      moverColor: moverColor,
+      moveNotation: moveNotation,
+      from: fromSq,
+      to: toSq,
+      pieceType: move.piece.type,
+      pieceNameEn: pieceInfo.en,
+      pieceNameKm: pieceInfo.km,
+      captured: move.captured ? (PIECE_NAMES[move.captured.type] ? PIECE_NAMES[move.captured.type].en : move.captured.type) : null,
+      special: move.special,
+      inCheckBefore: inCheckBefore,
+      deliveredCheck: inCheckAfterOpponent,
+      evalBefore: Number(evalBefore.toFixed(2)),
+      evalAfter: Number(evalAfter.toFixed(2)),
+      evalDiff: Number((moverColor === 'w' ? evalAfter - evalBefore : evalBefore - evalAfter).toFixed(2)),
+      bestEngineMove: bestMoveText,
+      bestEngineMoveCoords: bestMoveCoords,
+      playedMoveCoords: {
+        from: { rank: move.from.rank, file: move.from.file },
+        to: { rank: move.to.rank, file: move.to.file },
+        special: move.special || null,
+        captured: !!move.captured
+      },
+      isBestMove: isBestMove,
+      classification: classification,
+      statusAfter: stateAfter.status,
+      countingActive: stateAfter.counting.active,
+      countingDetails: stateAfter.counting.active ? {
+        trigger: stateAfter.counting.trigger,
+        remaining: stateAfter.counting.budget - stateAfter.counting.elapsed
+      } : null,
+      boardBeforeAscii: renderAsciiBoard(stateBefore),
+      boardAfterAscii: renderAsciiBoard(stateAfter)
+    };
+
+    return {
+      contextData: contextData,
+      stateBefore: stateBefore,
+      stateAfter: stateAfter,
+      move: move
+    };
+  }
+
+  var SYSTEM_PROMPT = [
+    'You are an expert Grandmaster and Master Instructor of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess).',
+    'Your goal is to provide concise, instructive, and engaging move explanations and game review commentary.',
+    '',
+    '### Rules & Pieces of Ouk Chaktrang:',
+    '- **Sdaach / Ang (ស្ដេច / K - King)**: 1 step in all 8 directions. First-move exception: King may jump like a Knight on its first move if not in check and no pieces have been captured yet anywhere.',
+    '- **Neang / Met (នាង / ម៉ែត្រ / Q - Queen/General)**: Moves exactly 1 step diagonally in 4 directions. First-move exception: Queen may move 2 squares straight forward on its first move if path is clear and no pieces captured yet.',
+    '- **Koul / Thom (គោល / ធំ / B - Bishop/Noble)**: Moves 1 step in the 4 diagonal directions OR 1 step straight forward (5 directions total). Never backward orthogonally.',
+    '- **Shes (សេះ / N - Knight/Horse)**: Moves exactly like a chess Knight (L-shape).',
+    '- **Touk (ទូក / R - Rook/Boat)**: Moves any number of unblocked squares orthogonally.',
+    '- **Trey / Kun (ត្រី / កូន / P - Pawn/Fish)**: Starts on Rank 3 (White rank index 2) and Rank 6 (Black rank index 5). Moves 1 step forward, captures 1 step diagonally forward. Promotes to Trey Promoted (moves like Neang/Met) upon reaching the opponent\'s pawn starting rank (Rank 6 for White, Rank 3 for Black).',
+    '- **Counting Rules (Daeul)**: When one side has only a bare king, or when both sides are pawnless (64-move rule), a countdown rule triggers to enforce a draw if mate is not delivered within the move limit.',
+    '',
+    '### Your Task:',
+    'Analyze the played move given the exact game state, engine evaluations, and context.',
+    'Explain the tactical purpose, strategic plan, piece activity, threats created or defended, and give constructive feedback.',
+    'Always respond in valid JSON format with the following structure:',
+    '{',
+    '  "classification": "brilliant" | "best" | "good" | "inaccuracy" | "mistake" | "blunder",',
+    '  "title": "A short 4-8 word descriptive punchy title",',
+    '  "explanation": "2-4 sentences explaining the move\'s intent, tactical strengths/weaknesses, piece dynamics, and what the opponent or player should watch for. Mention Khmer piece names when relevant.",',
+    '  "tags": ["Center Control", "Trey Advance", "Tactical Threat", "King Safety", "Promotion Race"],',
+    '  "betterMove": "Optional alternative move notation if the move was an inaccuracy/mistake/blunder, with brief reason, or null if best move"',
+    '  "betterMoveFrom": "Origin square of your recommended alternative in algebraic form (e.g. \\"b1\\"), or null",',
+    '  "betterMoveTo": "Destination square of your recommended alternative (e.g. \\"c3\\"), or null"',
+    '}',
+    '',
+    'betterMoveFrom/betterMoveTo are drawn as an arrow on the player\'s board, so they must be a single legal Ouk Chaktrang move for the side that moved, in the position BEFORE the played move.',
+    'Remember this is Ouk Chaktrang, not international chess: the Neang steps one square diagonally, the Koul has five directions, and there is no castling or en passant.',
+    'If you are not confident the move is legal, set both to null rather than guessing.'
+  ].join('\n');
+
+  function buildUserPrompt(contextData, language) {
+    var langInstruction = '';
+    if (language === 'km') {
+      langInstruction = 'Provide the explanation, title, and tags in Khmer language (ភាសាខ្មែរ).';
+    } else if (language === 'both') {
+      langInstruction = 'Provide the explanation in English with Khmer piece terms and a brief Khmer summary.';
+    } else {
+      langInstruction = 'Provide the explanation in English, naturally incorporating traditional Khmer terms (e.g. Trey, Koul, Touk, Shes, Neang, Sdaach).';
+    }
+
+    return [
+      'Analyze Move #' + contextData.moveNumber + ': ' + contextData.mover + ' played ' + contextData.moveNotation + '.',
+      '',
+      '--- Move Details ---',
+      '- Piece: ' + contextData.pieceNameEn + ' (' + contextData.pieceNameKm + ')',
+      '- From: ' + contextData.from + ' -> To: ' + contextData.to,
+      '- Captured: ' + (contextData.captured ? contextData.captured : 'None'),
+      '- Special: ' + (contextData.special ? contextData.special : 'None'),
+      '- Checks: ' + (contextData.deliveredCheck ? 'DELIVERS CHECK!' : (contextData.inCheckBefore ? 'Escapes check' : 'None')),
+      '- Engine Eval Before: ' + contextData.evalBefore + ' | After: ' + contextData.evalAfter + ' (Swing for ' + contextData.mover + ': ' + (contextData.evalDiff >= 0 ? '+' : '') + contextData.evalDiff + ')',
+      '- Engine Suggested Best Move: ' + (contextData.bestEngineMove || 'N/A') + ' (Played move is best: ' + contextData.isBestMove + ')',
+      '- Counting Rule Status: ' + (contextData.countingActive ? JSON.stringify(contextData.countingDetails) : 'Inactive'),
+      '',
+      '--- Board State (Lowercase = Black, Uppercase = White, . = Empty) ---',
+      'Board Before Move:',
+      contextData.boardBeforeAscii,
+      '',
+      'Board After Move:',
+      contextData.boardAfterAscii,
+      '',
+      langInstruction,
+      'Output strictly the JSON response.'
+    ].join('\n');
+  }
+
+  function generateSimulatedReview(contextData, language) {
+    var isKhmer = (language === 'km');
+    var isBilingual = (language === 'both');
+    var piece = contextData.pieceType;
+    var qual = contextData.classification ? contextData.classification.key : 'good';
+    var mover = contextData.mover;
+    var pieceEn = contextData.pieceNameEn;
+    var pieceKm = contextData.pieceNameKm;
+    var fromSq = contextData.from;
+    var toSq = contextData.to;
+
+    var title = '';
+    var explanation = '';
+    var tags = [];
+    var betterMove = null;
+
+    if (isKhmer) {
+      if (contextData.special === 'promotion') {
+        title = 'ការប្តូរកូនត្រីជាត្រីឡើង (Neang)';
+        explanation = mover + ' បានរុញ ' + pieceKm + ' ទៅកាន់ក្រឡា ' + toSq + ' ហើយឡើងជាត្រីប្តូរ ដោយទទួលបានសមត្ថភាពដើរដូចនាង។';
+        tags = ['ការប្តូរត្រី', 'ការគ្រប់គ្រងផ្ទៃកណ្ដាល'];
+      } else if (contextData.special === 'kingJump') {
+        title = 'ការលោតស្ដេចលើកទីមួយ (King Jump)';
+        explanation = mover + ' ប្រើប្រាស់សិទ្ធិពិសេសនៃការលោតស្ដេចជំហានសេះ ដើម្បីពង្រឹងសុវត្ថិភាពស្ដេចនៅពីក្រោយខ្សែត្រី។';
+        tags = ['ការលោតស្ដេច', 'សុវត្ថិភាពស្ដេច'];
+      } else if (contextData.special === 'queenDoubleStep') {
+        title = 'ការបោះជំហាននាង ២ ក្រឡា (Queen 2-Step)';
+        explanation = mover + ' ប្រើប្រាស់ជំហានពីរដំបូងរបស់នាង ដើម្បីដណ្តើមផ្ទៃកណ្ដាលតាំងពីបើកឆាក។';
+        tags = ['ជំហានពីរនាង', 'ការបើកឆាក'];
+      } else if (contextData.deliveredCheck) {
+        title = 'ការគំរាមកំហែង និងចាក់អុកស្ដេច!';
+        explanation = mover + ' ដើរ ' + pieceKm + ' ទៅ ' + toSq + ' និងធ្វើការចាក់អុកស្ដេចគូប្រកួត ដោយបង្ខំឱ្យគេការពារ។';
+        tags = ['ចាក់អុក', 'ការវាយប្រហារ'];
+      } else if (contextData.captured) {
+        title = 'ការស៊ីកូនអុក ' + contextData.captured;
+        explanation = mover + ' ប្រើ ' + pieceKm + ' ស៊ីកូនអុក ' + contextData.captured + ' របស់គូប្រកួតនៅ ' + toSq + ' ដោយទទួលបានប្រៀបកម្លាំង។';
+        tags = ['ការស៊ីកូន', 'ប្រៀបកម្លាំង'];
+      } else {
+        if (piece === 'P') {
+          title = 'ការរុញត្រីគ្រប់គ្រងផ្ទៃកណ្ដាល';
+          explanation = mover + ' រុញ ' + pieceKm + ' ទៅ ' + toSq + ' ដើម្បីបង្កើតខ្សែការពារ និងទប់ស្កាត់ការឈ្លានពានរបស់គូប្រកួត។';
+          tags = ['រចនាសម្ព័ន្ធត្រី', 'ការគ្រប់គ្រងផ្ទៃកណ្ដាល'];
+        } else if (piece === 'N') {
+          title = 'ការអភិវឌ្ឍសេះយ៉ាងសកម្ម';
+          explanation = mover + ' ដាក់ ' + pieceKm + ' នៅលើក្រឡា ' + toSq + ' ដើម្បីត្រួតត្រាក្រឡាសំខាន់ៗ និងការពារត្រីជិតខាង។';
+          tags = ['អភិវឌ្ឍសេះ', 'ការគ្រប់គ្រងក្រឡា'];
+        } else if (piece === 'B') {
+          title = 'ការចល័តគោល ៥ ទិស';
+          explanation = mover + ' រំកិល ' + pieceKm + ' ទៅ ' + toSq + ' ក្នុងទិសដៅយុទ្ធសាស្ត្រ ដើម្បីត្រៀមប្រយុទ្ធនិងការពារ។';
+          tags = ['ការចល័តគោល', 'យុទ្ធសាស្ត្រ'];
+        } else if (piece === 'R') {
+          title = 'ការគ្រប់គ្រងខ្សែទូក';
+          explanation = mover + ' បញ្ជា ' + pieceKm + ' ឱ្យគ្រប់គ្រងខ្សែបើកចំហរ ' + toSq[0] + ' បង្កើតសម្ពាធយ៉ាងខ្លាំងទៅលើបន្ទាយគូប្រកួត។';
+          tags = ['ខ្សែទូក', 'សម្ពាធខ្សែបើក'];
+        } else {
+          title = 'ការដើរយុទ្ធសាស្ត្រដ៏រឹងមាំ';
+          explanation = mover + ' ដើរ ' + pieceKm + ' ទៅ ' + toSq + ' ដោយរក្សាលំនឹង និងសុវត្ថិភាពទ័ព។';
+          tags = ['យុទ្ធសាស្ត្រ', 'លំនឹងទ័ព'];
+        }
+      }
+
+      if (qual === 'inaccuracy' || qual === 'mistake' || qual === 'blunder') {
+        if (contextData.bestEngineMove) {
+          betterMove = 'ការដើរល្អជាងនេះគឺ ' + contextData.bestEngineMove + ' ដែលផ្តល់ប្រៀបយុទ្ធសាស្ត្ររឹងមាំជាង។';
+        }
+      }
+    } else {
+      if (contextData.special === 'promotion') {
+        title = 'Trey Promotion to Neang';
+        explanation = mover + ' advances the Trey (Pawn) to ' + toSq + ', successfully promoting to Trey Promoted (Neang) with diagonal mobility.';
+        tags = ['Trey Promotion', 'Endgame Power', 'Center Pressure'];
+      } else if (contextData.special === 'kingJump') {
+        title = 'Traditional Sdaach King Jump';
+        explanation = mover + ' activates the traditional first-move King Jump exception, tucking the Sdaach into safety behind the pawn phalanx.';
+        tags = ['King Jump', 'Traditional Rule', 'King Safety'];
+      } else if (contextData.special === 'queenDoubleStep') {
+        title = 'Neang Opening Double Step';
+        explanation = mover + ' plays the classic Neang (Queen) 2-step opening move to ' + toSq + ', immediately staking a claim in the center.';
+        tags = ['Queen 2-Step', 'Center Control', 'Opening Initiative'];
+      } else if (contextData.deliveredCheck) {
+        title = 'Aggressive Check to the Sdaach!';
+        explanation = mover + ' delivers direct check with the ' + pieceEn + ' (' + pieceKm + ') on ' + toSq + ', seizing tempo and forcing defensive maneuvers.';
+        tags = ['Check', 'Tactical Threat', 'Initiative'];
+      } else if (contextData.captured) {
+        title = 'Tactical Capture of ' + contextData.captured;
+        explanation = mover + ' captures the enemy ' + contextData.captured + ' on ' + toSq + ' with the ' + pieceEn + ', winning material and fracturing enemy coordination.';
+        tags = ['Capture', 'Material Advantage', 'Tactical Strike'];
+      } else {
+        if (piece === 'P') {
+          title = 'Classical Trey Advance to ' + toSq;
+          explanation = mover + ' marches the Trey (Pawn) from ' + fromSq + ' to ' + toSq + ', contesting space and preparing infiltration lines for the Koul (Noble/Bishop).';
+          tags = ['Trey Structure', 'Center Control', 'Space'];
+        } else if (piece === 'N') {
+          title = 'Active Shes (Knight) Outpost';
+          explanation = mover + ' maneuvers the Shes to ' + toSq + ', commanding vital forward landing squares and supporting adjacent Treys.';
+          tags = ['Shes Outpost', 'Piece Activity', 'Center Control'];
+        } else if (piece === 'B') {
+          title = 'Koul Strategic Deployment';
+          explanation = mover + ' steps the Koul (Noble) forward to ' + toSq + ', leveraging its 5-step movement (4 diagonals + 1 forward) to fortify the center.';
+          tags = ['Koul Maneuver', 'Five Directions', 'Solid Defense'];
+        } else if (piece === 'R') {
+          title = 'Touk (Rook) Heavy Line Pressure';
+          explanation = mover + ' deploys the Touk onto the ' + toSq[0] + '-file, preparing long-range battery threats and restricting enemy King mobility.';
+          tags = ['Touk Battery', 'Open File', 'Heavy Artillery'];
+        } else if (piece === 'Q') {
+          title = 'Neang Diagonal Repositioning';
+          explanation = mover + ' repositions the Neang to ' + toSq + ', strengthening the defensive core and guarding vulnerable adjacent pawns.';
+          tags = ['Neang Harmony', 'Diagonal Guard', 'Pawn Support'];
+        } else {
+          title = 'Sdaach Positional Adjustment';
+          explanation = mover + ' adjusts the King on ' + toSq + ', enhancing King safety and connecting the defensive backline.';
+          tags = ['King Safety', 'Positional Structure'];
+        }
+      }
+
+      if (qual === 'brilliant') {
+        title = '✨ Brilliant: ' + title;
+        explanation += ' A masterstroke that deepens tactical pressure with absolute precision.';
+        tags.unshift('✨ Brilliant');
+      } else if (qual === 'best') {
+        title = '🟢 Best Move: ' + title;
+      } else if (qual === 'inaccuracy') {
+        title = '🟡 Inaccuracy: ' + title;
+        if (contextData.bestEngineMove) {
+          betterMove = contextData.bestEngineMove + ' keeps tighter central control and superior piece mobility.';
+        }
+      } else if (qual === 'mistake') {
+        title = '🟠 Mistake: ' + title;
+        if (contextData.bestEngineMove) {
+          betterMove = contextData.bestEngineMove + ' was strongly preferred to prevent positional concessions.';
+        }
+      } else if (qual === 'blunder') {
+        title = '🔴 Blunder: ' + title;
+        if (contextData.bestEngineMove) {
+          betterMove = contextData.bestEngineMove + ' was essential to safeguard material and King security.';
+        }
+      }
+
+      if (isBilingual) {
+        explanation += ' (' + pieceKm + ' ដើរទៅ ' + toSq + ')';
+      }
+    }
+
+    return {
+      classification: qual,
+      title: title,
+      explanation: explanation,
+      tags: tags,
+      betterMove: betterMove
+    };
+  }
+
+  // "e4" -> {rank, file}, or null for anything that is not a real square.
+  // OukEngine.parseSquare is trusting by design (it yields NaN/-1 for junk),
+  // and these strings come from a language model, so validate here.
+  function parseSquareStrict(name) {
+    if (typeof name !== 'string') return null;
+    if (!/^[a-h][1-8]$/.test(name.trim().toLowerCase())) return null;
+    var sq = OukEngine.parseSquare(name.trim().toLowerCase());
+    return (sq.file >= 0 && sq.rank >= 0 && sq.rank <= 7) ? sq : null;
+  }
+
+  // Decides what the board actually draws. The LLM is the preferred source -
+  // it is the one giving the advice - but a model naming an illegal move is
+  // common in a variant this obscure, so every suggestion is checked against
+  // the real legal move list before it is trusted. Anything that fails falls
+  // back to the local search engine's pick, and the caller is told which
+  // source won so the UI can label it honestly.
+  function resolveRecommendedMove(stateBefore, contextData, review) {
+    var engineCoords = (contextData && contextData.bestEngineMoveCoords) || null;
+    var engineResult = engineCoords
+      ? { coords: engineCoords, source: 'engine' }
+      : { coords: null, source: null };
+
+    if (!review || !stateBefore) return engineResult;
+
+    var from = parseSquareStrict(review.betterMoveFrom);
+    var to = parseSquareStrict(review.betterMoveTo);
+    if (!from || !to) return engineResult;
+
+    // A model that "recommends" the move already played is not offering an
+    // alternative - there would be nothing to compare on the board.
+    var played = contextData && contextData.playedMoveCoords;
+    if (played &&
+        played.from.rank === from.rank && played.from.file === from.file &&
+        played.to.rank === to.rank && played.to.file === to.file) {
+      return engineResult;
+    }
+
+    var legal = OukEngine.generateLegalMoves(stateBefore, stateBefore.turn);
+    var match = null;
+    for (var i = 0; i < legal.length; i++) {
+      var m = legal[i];
+      if (m.from.rank === from.rank && m.from.file === from.file &&
+          m.to.rank === to.rank && m.to.file === to.file) {
+        match = m;
+        break;
+      }
+    }
+    if (!match) return engineResult;
+
+    return {
+      coords: {
+        from: { rank: match.from.rank, file: match.from.file },
+        to: { rank: match.to.rank, file: match.to.file },
+        special: match.special || null,
+        captured: !!match.captured
+      },
+      source: 'llm'
+    };
+  }
+
+  function parseAiResponse(rawText, fallbackClassification) {
+    var cleaned = rawText.trim();
+    // Strip markdown code fences if wrapped in ```json ... ```
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    }
+
+    try {
+      var json = JSON.parse(cleaned);
+      return {
+        classification: json.classification || fallbackClassification.key,
+        title: json.title || 'Move Analysis',
+        explanation: json.explanation || rawText,
+        tags: Array.isArray(json.tags) ? json.tags : ['Analysis'],
+        betterMove: json.betterMove || null,
+        betterMoveFrom: json.betterMoveFrom || null,
+        betterMoveTo: json.betterMoveTo || null
+      };
+    } catch (e) {
+      // Fallback if model returned plain text
+      return {
+        classification: fallbackClassification.key,
+        title: 'Move Commentary',
+        explanation: cleaned,
+        tags: ['Review'],
+        betterMove: null,
+        betterMoveFrom: null,
+        betterMoveTo: null
+      };
+    }
+  }
+
+  function parseChatResponseBody(rawBody) {
+    if (!rawBody || typeof rawBody !== 'string') return null;
+    var trimmed = rawBody.trim();
+
+    // 1. Direct standard JSON object or array
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        // Fall through to other handlers
+      }
+    }
+
+    // 2. Server-Sent Events (SSE) stream (e.g. data: {"id": ...} or streaming chunks)
+    if (trimmed.includes('data:')) {
+      var lines = trimmed.split(/\r?\n/);
+      var combinedContent = '';
+      var lastParsed = null;
+      var hasSseData = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line || line.startsWith(':')) continue;
+        if (line.startsWith('data:')) {
+          hasSseData = true;
+          var dataStr = line.slice(5).trim();
+          if (dataStr === '[DONE]') continue;
+          try {
+            var chunk = JSON.parse(dataStr);
+            lastParsed = chunk;
+            if (chunk.choices && chunk.choices[0]) {
+              var choice = chunk.choices[0];
+              if (choice.delta && typeof choice.delta.content === 'string') {
+                combinedContent += choice.delta.content;
+              } else if (choice.message && typeof choice.message.content === 'string') {
+                combinedContent += choice.message.content;
+              } else if (choice.text && typeof choice.text === 'string') {
+                combinedContent += choice.text;
+              }
+            }
+          } catch (e) {
+            // Ignore unparseable line
+          }
+        }
+      }
+
+      if (hasSseData) {
+        if (lastParsed && lastParsed.choices && lastParsed.choices[0] && lastParsed.choices[0].message && lastParsed.choices[0].message.content) {
+          return lastParsed;
+        }
+        return {
+          id: (lastParsed && lastParsed.id) || 'sse-parsed',
+          object: 'chat.completion',
+          choices: [
+            {
+              message: {
+                role: 'assistant',
+                content: combinedContent || (lastParsed && JSON.stringify(lastParsed)) || ''
+              }
+            }
+          ]
+        };
+      }
+    }
+
+    // 3. Fallback: extract JSON substring if wrapped in non-JSON prefix/suffix
+    var firstBrace = trimmed.indexOf('{');
+    var lastBrace = trimmed.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        return JSON.parse(trimmed.slice(firstBrace, lastBrace + 1));
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return null;
+  }
+
+  function sendChatRequest(settings, bodyPayload) {
+    var baseURL = (settings.baseURL || 'https://api.openai.com/v1').replace(/\/+$/, '');
+    var directUrl = baseURL + '/chat/completions';
+    var apiKey = settings.apiKey || '';
+
+    // Clone payload and ensure stream: false is explicitly set unless specified
+    var payload = Object.assign({ stream: false }, bodyPayload);
+
+    var headers = {
+      'Content-Type': 'application/json'
+    };
+    if (apiKey) {
+      headers['Authorization'] = 'Bearer ' + apiKey;
+    }
+
+    function doFetch(targetUrl, isProxy) {
+      var fetchUrl = targetUrl;
+      var fetchHeaders = Object.assign({}, headers);
+      if (isProxy) {
+        fetchUrl = '/api/proxy';
+        fetchHeaders['x-target-url'] = targetUrl;
+      }
+
+      return fetch(fetchUrl, {
+        method: 'POST',
+        headers: fetchHeaders,
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        return res.text().then(function (rawBody) {
+          var data = parseChatResponseBody(rawBody);
+
+          if (!res.ok) {
+            var errMsg = (data && data.error && data.error.message) ||
+                         (rawBody && rawBody.includes('Not found') ? 'Proxy endpoint returned 404 Not Found. Please restart your dev-server (`node scripts/dev-server.js`).' : null) ||
+                         (rawBody && rawBody.length < 200 ? rawBody : null) ||
+                         ('HTTP error ' + res.status + ' (' + res.statusText + ')');
+            throw new Error(errMsg);
+          }
+
+          if (!data) {
+            throw new Error('Received unexpected non-JSON response from server: ' + (rawBody.slice(0, 100) || 'Empty body'));
+          }
+
+          return data;
+        });
+      });
+    }
+
+    if (settings.useProxy) {
+      return doFetch(directUrl, true);
+    }
+
+    // Try direct fetch first. If it fails due to CORS or Network TypeError, attempt auto-fallback to dev proxy.
+    return doFetch(directUrl, false).catch(function (directErr) {
+      var isNetworkOrCors = directErr.name === 'TypeError' ||
+                            directErr.message === 'Failed to fetch' ||
+                            (typeof directErr.message === 'string' &&
+                              (directErr.message.includes('NetworkError') ||
+                               directErr.message.includes('Load failed') ||
+                               directErr.message.includes('CORS')));
+      if (isNetworkOrCors) {
+        return doFetch(directUrl, true).then(function (proxyResult) {
+          // If proxy worked, remember this setting for seamless subsequent calls
+          settings.useProxy = true;
+          saveSettings(settings);
+          return proxyResult;
+        }).catch(function () {
+          throw new Error('CORS / Network Error: Browser blocked direct access to ' + directUrl + '. Enable "Use Local Proxy" in Settings or run dev-server (node scripts/dev-server.js).');
+        });
+      }
+      throw directErr;
+    });
+  }
+
+  function requestMoveReview(history, moveIndex, settings, callback) {
+    var promptCtx = buildPromptContext(history, moveIndex);
+
+    var isSimulation = (settings.baseURL === 'simulation' || settings.baseURL === 'demo' || settings.baseURL === 'mock' || settings.isSimulation);
+    if (isSimulation) {
+      var simReview = generateSimulatedReview(promptCtx.contextData, settings.language || 'en');
+      setTimeout(function () {
+        callback(null, {
+          moveIndex: moveIndex,
+          context: promptCtx.contextData,
+          review: simReview,
+          raw: JSON.stringify(simReview)
+        });
+      }, 100);
+      return;
+    }
+
+    var userPrompt = buildUserPrompt(promptCtx.contextData, settings.language || 'en');
+
+    var bodyPayload = {
+      model: settings.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: typeof settings.temperature === 'number' ? settings.temperature : 0.3
+    };
+
+    sendChatRequest(settings, bodyPayload)
+      .then(function (data) {
+        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!content) throw new Error('Received empty response from AI model.');
+        var parsed = parseAiResponse(content, promptCtx.contextData.classification);
+        callback(null, {
+          moveIndex: moveIndex,
+          context: promptCtx.contextData,
+          review: parsed,
+          raw: content
+        });
+      })
+      .catch(function (err) {
+        callback(err, null);
+      });
+  }
+
+  function createReviewSession() {
+    var settings = loadSettings();
+    var cache = new Map(); // key: "moveIndex:moveCount:notation" -> reviewData
+    var isReviewingAll = false;
+    var abortReviewAll = false;
+
+    function getCacheKey(history, moveIndex) {
+      if (!history[moveIndex]) return null;
+      var mv = history[moveIndex];
+      return moveIndex + '_' + history.length + '_' + mv.from.rank + mv.from.file + mv.to.rank + mv.to.file + (mv.special || '');
+    }
+
+    function isSimMode() {
+      return (settings.baseURL === 'simulation' || settings.baseURL === 'demo' || settings.baseURL === 'mock' || settings.isSimulation);
+    }
+
+    function getReviewForMove(history, moveIndex, onComplete) {
+      if (moveIndex < 0 || moveIndex >= history.length) {
+        onComplete(new Error('Invalid move index'), null);
+        return;
+      }
+      var key = getCacheKey(history, moveIndex);
+      if (cache.has(key)) {
+        onComplete(null, cache.get(key));
+        return;
+      }
+
+      if (!isSimMode() && !settings.apiKey && !settings.baseURL.includes('localhost') && !settings.baseURL.includes('127.0.0.1')) {
+        onComplete(new Error('NO_API_KEY'), null);
+        return;
+      }
+
+      requestMoveReview(history, moveIndex, settings, function (err, result) {
+        if (!err && result) {
+          cache.set(key, result);
+        }
+        onComplete(err, result);
+      });
+    }
+
+    function reviewFullGame(history, onProgress, onComplete) {
+      if (isReviewingAll) return;
+      if (history.length === 0) {
+        onComplete(new Error('No moves to review'), null);
+        return;
+      }
+      if (!isSimMode() && !settings.apiKey && !settings.baseURL.includes('localhost') && !settings.baseURL.includes('127.0.0.1')) {
+        onComplete(new Error('NO_API_KEY'), null);
+        return;
+      }
+
+      isReviewingAll = true;
+      abortReviewAll = false;
+      var results = [];
+      var currentIndex = 0;
+
+      function step() {
+        if (abortReviewAll || currentIndex >= history.length) {
+          isReviewingAll = false;
+          onComplete(null, results);
+          return;
+        }
+
+        var idx = currentIndex;
+        getReviewForMove(history, idx, function (err, res) {
+          if (err) {
+            console.error('Error reviewing move ' + (idx + 1) + ':', err);
+          }
+          results.push({ moveIndex: idx, result: res, error: err ? err.message : null });
+          if (typeof onProgress === 'function') {
+            onProgress(idx + 1, history.length, res);
+          }
+          currentIndex++;
+          setTimeout(step, 100);
+        });
+      }
+
+      step();
+    }
+
+    function cancelFullGameReview() {
+      abortReviewAll = true;
+      isReviewingAll = false;
+    }
+
+    function clearCache() {
+      cache.clear();
+    }
+
+    return {
+      getSettings: function () { return settings; },
+      updateSettings: function (newSettings) {
+        settings = Object.assign({}, settings, newSettings);
+        saveSettings(settings);
+        return settings;
+      },
+      getReviewForMove: getReviewForMove,
+      reviewFullGame: reviewFullGame,
+      cancelFullGameReview: cancelFullGameReview,
+      clearCache: clearCache,
+      getCachedReview: function (history, moveIndex) {
+        var key = getCacheKey(history, moveIndex);
+        return cache.get(key) || null;
+      },
+      isReviewingAll: function () { return isReviewingAll; }
+    };
+  }
+
+  var api = {
+    PIECE_NAMES: PIECE_NAMES,
+    DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+    loadSettings: loadSettings,
+    saveSettings: saveSettings,
+    formatMoveText: formatMoveText,
+    renderAsciiBoard: renderAsciiBoard,
+    replayToMoveIndex: replayToMoveIndex,
+    stateBeforeMoveIndex: stateBeforeMoveIndex,
+    classifyMoveByEval: classifyMoveByEval,
+    buildPromptContext: buildPromptContext,
+    buildUserPrompt: buildUserPrompt,
+    parseAiResponse: parseAiResponse,
+    resolveRecommendedMove: resolveRecommendedMove,
+    generateSimulatedReview: generateSimulatedReview,
+    requestMoveReview: requestMoveReview,
+    createReviewSession: createReviewSession,
+    sendChatRequest: sendChatRequest,
+    parseChatResponseBody: parseChatResponseBody,
+    SYSTEM_PROMPT: SYSTEM_PROMPT
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    root.OukReview = api;
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function (root) {
+  'use strict';
+
   var OukEngine = root.OukEngine;
   var OukPieces = root.OukPieces;
+  var OukAI = root.OukAI;
+  var OukReview = root.OukReview;
 
   function squareColorClass(rank, file) {
     return (rank + file) % 2 === 0 ? 'dark' : 'light';
@@ -829,26 +3054,210 @@ body {
     }
   }
 
+  function loadSetting(key, fallback) {
+    try {
+      var val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function saveSetting(key, val) {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {
+      // Storage unavailable
+    }
+  }
+
+  function applyAppTheme(theme) {
+    if (theme === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }
+
+  function applyBoardTheme(board) {
+    document.documentElement.setAttribute('data-board', board || 'angkor');
+  }
+
+  function applyPieceSkin(skin) {
+    if (OukPieces.setSkin) {
+      OukPieces.setSkin(skin || 'ivory-teak');
+    }
+  }
+
   function createApp(els) {
+    var reviewSession = OukReview ? OukReview.createReviewSession() : null;
+
+    var themeState = {
+      appTheme: loadSetting('ouk_app_theme', 'system'),
+      boardTheme: loadSetting('ouk_board_theme', 'angkor'),
+      pieceSkin: loadSetting('ouk_piece_skin', 'ivory-teak')
+    };
+
+    // Apply active theme tokens
+    applyAppTheme(themeState.appTheme);
+    applyBoardTheme(themeState.boardTheme);
+    applyPieceSkin(themeState.pieceSkin);
+
     var appState = {
       gameState: OukEngine.createInitialState(),
       selectedSquare: null,
       legalMovesForSelected: [],
       mode: '2p', // '2p' | 'vs-ai'
       aiColor: 'b',
-      aiOptions: { timeLimitMs: 800, maxDepth: 5 }
+      aiOptions: { timeLimitMs: 800, maxDepth: 5 },
+      aiThinkingTimeoutId: null,
+      hintMove: null, // { move, atPly } - engine suggestion drawn on the live board
+      hintTimeoutId: null,
+      themeState: themeState,
+      viewMoveIndex: -1, // -1 means live position; >= 0 means viewing historical move
+      recommendMoveIndex: null, // move index whose AI recommendation is drawn on the board
+      reviewSession: reviewSession,
+      moveReviews: {} // moveIndex -> review object
     };
 
+    function isShowingRecommendation() {
+      return appState.recommendMoveIndex !== null;
+    }
+
+    function clearRecommendation() {
+      appState.recommendMoveIndex = null;
+    }
+
+    // A hint is only offered for a live position the player can actually move
+    // in: not a finished game, not a rewound board, and not the AI's turn.
+    function canRequestHint() {
+      if (appState.gameState.status !== 'active') return false;
+      if (isViewingHistory() || isShowingRecommendation()) return false;
+      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return false;
+      return true;
+    }
+
+    function clearHint() {
+      if (appState.hintTimeoutId) {
+        clearTimeout(appState.hintTimeoutId);
+        appState.hintTimeoutId = null;
+      }
+      appState.hintMove = null;
+    }
+
+    function requestHint() {
+      // Second press takes the hint back down, whether it is drawn already or
+      // still being searched for.
+      if (appState.hintMove || appState.hintTimeoutId) {
+        clearHint();
+        render();
+        return;
+      }
+      if (!canRequestHint()) return;
+      // The search blocks the main thread, so paint the notice first and let
+      // the browser render before starting - the same handoff maybeTriggerAI
+      // uses for the opponent's move.
+      els.status.textContent = 'Thinking of a hint...';
+      appState.hintTimeoutId = setTimeout(function () {
+        appState.hintTimeoutId = null;
+        var move = OukAI.suggestMove(appState.gameState);
+        appState.hintMove = move
+          ? { move: move, atPly: appState.gameState.history.length }
+          : null;
+        render();
+      }, 30);
+    }
+
+    // The review for a move, whether it came from the live AI or the offline
+    // simulation - both store the same shape under appState.moveReviews.
+    function reviewAt(moveIndex) {
+      if (moveIndex < 0) return null;
+      return appState.moveReviews[moveIndex] ||
+        (reviewSession && reviewSession.getCachedReview(appState.gameState.history, moveIndex)) ||
+        null;
+    }
+
+    // What the board draws for a reviewed move: the LLM's own suggestion when
+    // it named a legal move, otherwise the local engine's pick. Resolving costs
+    // a replay to the pre-move position, so the answer is cached on the review
+    // object - re-reviewing a move replaces that object, and the cache with it.
+    function recommendationFor(moveIndex) {
+      var data = reviewAt(moveIndex);
+      if (!data) return { coords: null, source: null };
+      if (!data.recommendation) {
+        data.recommendation = OukReview.resolveRecommendedMove(
+          OukReview.stateBeforeMoveIndex(appState.gameState.history, moveIndex),
+          data.context,
+          data.review
+        );
+      }
+      return data.recommendation;
+    }
+
+    function recommendationCoords(moveIndex) {
+      return recommendationFor(moveIndex).coords;
+    }
+
+    function coordsText(coords) {
+      if (!coords) return '';
+      return OukEngine.squareName(coords.from.rank, coords.from.file) + '-' +
+             OukEngine.squareName(coords.to.rank, coords.to.file);
+    }
+
+    function currentDisplayState() {
+      // A recommendation is an alternative to move N, so it only makes sense
+      // against the position *before* N was played - rewind one ply further
+      // than the move list navigation would.
+      if (isShowingRecommendation()) {
+        return OukReview.stateBeforeMoveIndex(appState.gameState.history, appState.recommendMoveIndex);
+      }
+      if (appState.viewMoveIndex >= 0 && appState.viewMoveIndex < appState.gameState.history.length - 1) {
+        return OukReview.replayToMoveIndex(appState.gameState.history, appState.viewMoveIndex);
+      }
+      return appState.gameState;
+    }
+
+    function isViewingHistory() {
+      return appState.viewMoveIndex >= 0 && appState.viewMoveIndex < appState.gameState.history.length - 1;
+    }
+
     function statusText(state) {
+      if (isShowingRecommendation()) {
+        var recIdx = appState.recommendMoveIndex;
+        var recData = reviewAt(recIdx);
+        var recCtx = (recData && recData.context) || {};
+        var played = (recCtx.from || '?') + '-' + (recCtx.to || '?');
+        var rec = recommendationFor(recIdx);
+        // Describe the arrow that is actually drawn, so the words and the board
+        // can never disagree about which move is being recommended.
+        var who = rec.source === 'llm' ? 'the AI recommends' : 'the engine prefers';
+        return '🔍 Move ' + (recIdx + 1) + ': you played ' + played +
+          ' — ' + who + ' ' + (coordsText(rec.coords) || 'a different move');
+      }
+      if (isViewingHistory()) {
+        return 'Viewing Move ' + (appState.viewMoveIndex + 1) + ' of ' + appState.gameState.history.length;
+      }
       if (state.status === 'checkmate') return (state.winner === 'w' ? 'White' : 'Black') + ' wins by checkmate';
       if (state.status === 'stalemate') return 'Draw by stalemate';
       if (state.status === 'draw-counting') return 'Draw — counting limit reached';
       if (state.status === 'draw-noprogress') return 'Draw — no progress for 64 moves';
       var turnName = state.turn === 'w' ? 'White' : 'Black';
-      return (OukEngine.isInCheck(state, state.turn) ? turnName + ' is in check — ' : '') + turnName + ' to move';
+      var checkPrefix = OukEngine.isInCheck(state, state.turn) ? '⚠️ ' + turnName + ' is in check! ' : '';
+
+      if (appState.selectedSquare) {
+        var piece = OukEngine.pieceAt(state, appState.selectedSquare.rank, appState.selectedSquare.file);
+        var sqName = OukEngine.squareName(appState.selectedSquare.rank, appState.selectedSquare.file);
+        var pInfo = piece && OukReview && OukReview.PIECE_NAMES && OukReview.PIECE_NAMES[piece.type];
+        var pName = pInfo ? (pInfo.km + ' / ' + pInfo.name) : 'Piece';
+        var moveCount = appState.legalMovesForSelected.length;
+        return checkPrefix + turnName + ': Selected ' + pName + ' (' + sqName + ') &mdash; ' + moveCount + ' move' + (moveCount === 1 ? '' : 's');
+      }
+
+      return checkPrefix + turnName + ' to move';
     }
 
     function renderCounting(state) {
+      if (!els.counting) return;
       if (!state.counting.active) { els.counting.hidden = true; return; }
       els.counting.hidden = false;
       var remaining = state.counting.budget - state.counting.elapsed;
@@ -859,6 +3268,7 @@ body {
     }
 
     function renderCaptured(state) {
+      if (!els.capturedByWhite || !els.capturedByBlack) return;
       var byWhite = [], byBlack = [];
       state.history.forEach(function (mv) {
         if (!mv.captured) return;
@@ -869,24 +3279,349 @@ body {
     }
 
     function renderMoves(state) {
-      els.moves.innerHTML = state.history.map(function (mv, i) {
+      if (!els.moves) return;
+      var history = appState.gameState.history;
+      var activeIndex = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+
+      els.moves.innerHTML = history.map(function (mv, i) {
         var text = OukEngine.squareName(mv.from.rank, mv.from.file) + (mv.captured ? 'x' : '-') + OukEngine.squareName(mv.to.rank, mv.to.file) + (mv.special === 'promotion' ? '=Q' : '');
-        return '<div>' + (i + 1) + '. ' + text + '</div>';
+        var isSelected = (i === activeIndex);
+        var review = appState.moveReviews[i];
+        var badgeHtml = '';
+        if (review && review.review) {
+          var qual = review.context && review.context.classification;
+          var symbol = (qual && qual.symbol) || '🟢';
+          var label = (qual && qual.label) || 'Analyzed';
+          badgeHtml = '<span class="oc-move-badge-dot" title="' + label + '">' + symbol + '</span>';
+        }
+        return '<div class="oc-move-item' + (isSelected ? ' selected' : '') + '" data-index="' + i + '">' +
+          '<span>' + (i + 1) + '. ' + text + '</span>' +
+          badgeHtml +
+          '</div>';
       }).join('');
-      els.moves.scrollTop = els.moves.scrollHeight;
+
+      var selectedEl = els.moves.querySelector('.oc-move-item.selected');
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
     }
 
     function squareEl(rank, file) {
       return els.board.querySelector('.oc-square[data-rank="' + rank + '"][data-file="' + file + '"]');
     }
 
-    function render() {
-      renderBoard(appState.gameState, els.board);
-      els.status.textContent = statusText(appState.gameState);
-      renderCounting(appState.gameState);
-      renderCaptured(appState.gameState);
-      renderMoves(appState.gameState);
+    var SVG_NS = 'http://www.w3.org/2000/svg';
+
+    // Board coordinates for an 8x8 viewBox. renderBoard draws engine rank 7 on
+    // the top row, so display row = 7 - rank; +0.5 centres within the square.
+    function squareCenter(rank, file) {
+      return { x: file + 0.5, y: (7 - rank) + 0.5 };
+    }
+
+    function arrowMarker(id, color) {
+      var marker = document.createElementNS(SVG_NS, 'marker');
+      marker.setAttribute('id', id);
+      marker.setAttribute('viewBox', '0 0 10 10');
+      marker.setAttribute('refX', '7');
+      marker.setAttribute('refY', '5');
+      marker.setAttribute('markerWidth', '4');
+      marker.setAttribute('markerHeight', '4');
+      marker.setAttribute('orient', 'auto-start-reverse');
+      var head = document.createElementNS(SVG_NS, 'path');
+      head.setAttribute('d', 'M 0 1 L 9 5 L 0 9 z');
+      head.setAttribute('fill', color);
+      marker.appendChild(head);
+      return marker;
+    }
+
+    // Stop the shaft short of the destination centre so the arrowhead sits on
+    // the square edge rather than covering the piece that would stand there.
+    function shortenedLine(from, to, gap) {
+      var dx = to.x - from.x, dy = to.y - from.y;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      return {
+        x1: from.x + (dx / len) * gap,
+        y1: from.y + (dy / len) * gap,
+        x2: to.x - (dx / len) * gap,
+        y2: to.y - (dy / len) * gap
+      };
+    }
+
+    function appendArrow(svg, coords, className, markerId) {
+      if (!coords) return;
+      var seg = shortenedLine(
+        squareCenter(coords.from.rank, coords.from.file),
+        squareCenter(coords.to.rank, coords.to.file),
+        0.3
+      );
+      var line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('x1', seg.x1);
+      line.setAttribute('y1', seg.y1);
+      line.setAttribute('x2', seg.x2);
+      line.setAttribute('y2', seg.y2);
+      line.setAttribute('class', className);
+      line.setAttribute('marker-end', 'url(#' + markerId + ')');
+      svg.appendChild(line);
+    }
+
+    // Overlay comparing the move actually played (amber) with the engine's
+    // preferred alternative (green), drawn over the pre-move position.
+    function drawRecommendationArrows(playedCoords, recCoords) {
+      var svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'oc-arrow-layer');
+      svg.setAttribute('viewBox', '0 0 8 8');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+
+      var defs = document.createElementNS(SVG_NS, 'defs');
+      defs.appendChild(arrowMarker('oc-arrow-played', 'var(--arrow-played, #d97706)'));
+      defs.appendChild(arrowMarker('oc-arrow-recommend', 'var(--arrow-recommend, #16a34a)'));
+      svg.appendChild(defs);
+
+      appendArrow(svg, playedCoords, 'oc-arrow oc-arrow-played-line', 'oc-arrow-played');
+      appendArrow(svg, recCoords, 'oc-arrow oc-arrow-recommend-line', 'oc-arrow-recommend');
+
+      els.board.appendChild(svg);
+    }
+
+    // One green arrow for the engine's suggestion in the live position. Unlike
+    // the review overlay this is purely additive - the usual highlights stay
+    // put and the board stays clickable, so the hint can be played at once.
+    function drawHintArrow(coords) {
+      var svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'oc-arrow-layer');
+      svg.setAttribute('viewBox', '0 0 8 8');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+
+      var defs = document.createElementNS(SVG_NS, 'defs');
+      defs.appendChild(arrowMarker('oc-arrow-hint', 'var(--arrow-recommend, #16a34a)'));
+      svg.appendChild(defs);
+
+      appendArrow(svg, coords, 'oc-arrow oc-arrow-recommend-line', 'oc-arrow-hint');
+      els.board.appendChild(svg);
+    }
+
+    function renderRecommendationOverlay() {
+      var idx = appState.recommendMoveIndex;
+      var data = reviewAt(idx);
+      var recCoords = recommendationCoords(idx);
+      if (!data || !recCoords) return false;
+
+      var playedCoords = data.context.playedMoveCoords;
+      function mark(coords, fromClass, toClass) {
+        if (!coords) return;
+        var f = squareEl(coords.from.rank, coords.from.file);
+        var t = squareEl(coords.to.rank, coords.to.file);
+        if (f) f.classList.add(fromClass);
+        if (t) t.classList.add(toClass);
+      }
+      mark(playedCoords, 'played-from', 'played-to');
+      mark(recCoords, 'recommend-from', 'recommend-to');
+
+      drawRecommendationArrows(playedCoords, recCoords);
+      return true;
+    }
+
+    function updateNavControls() {
+      var total = appState.gameState.history.length;
+      var cur = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex + 1 : total;
+      var labelEl = document.getElementById('oc-nav-label');
+      var btnFirst = document.getElementById('oc-nav-first');
+      var btnPrev = document.getElementById('oc-nav-prev');
+      var btnNext = document.getElementById('oc-nav-next');
+      var btnLast = document.getElementById('oc-nav-last');
+
+      if (labelEl) labelEl.textContent = 'Move ' + cur + ' / ' + total;
+      if (btnFirst) btnFirst.disabled = (total === 0 || cur <= 1);
+      if (btnPrev) btnPrev.disabled = (total === 0 || cur <= 1);
+      if (btnNext) btnNext.disabled = (total === 0 || cur >= total);
+      if (btnLast) btnLast.disabled = (total === 0 || cur >= total);
+    }
+
+    function updateReviewCard() {
+      var cardPlaceholder = document.getElementById('oc-review-placeholder');
+      var cardContent = document.getElementById('oc-review-content');
+      if (!cardPlaceholder || !cardContent) return;
+
       var history = appState.gameState.history;
+      var moveIndex = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+
+      if (moveIndex < 0 || history.length === 0) {
+        cardPlaceholder.hidden = false;
+        cardContent.hidden = true;
+        return;
+      }
+
+      var reviewData = appState.moveReviews[moveIndex] || (reviewSession && reviewSession.getCachedReview(history, moveIndex));
+
+      if (!reviewData) {
+        cardPlaceholder.hidden = false;
+        cardContent.hidden = true;
+        cardPlaceholder.innerHTML =
+          '<div class="oc-review-placeholder-icon">💡</div>' +
+          '<p>Move <strong>#' + (moveIndex + 1) + '</strong> not reviewed yet.</p>' +
+          '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">' +
+          '<button class="oc-btn-accent" id="oc-explain-inline-btn">Explain This Move</button>' +
+          '<button class="oc-btn-secondary" id="oc-simulate-inline-btn" title="Instant Grandmaster simulation without API key">🎮 Simulate</button>' +
+          '</div>';
+        var inlineBtn = document.getElementById('oc-explain-inline-btn');
+        if (inlineBtn) {
+          inlineBtn.addEventListener('click', function () { explainMoveAtIndex(moveIndex); });
+        }
+        var inlineSimBtn = document.getElementById('oc-simulate-inline-btn');
+        if (inlineSimBtn) {
+          inlineSimBtn.addEventListener('click', function () { simulateMoveAtIndex(moveIndex); });
+        }
+        return;
+      }
+
+      cardPlaceholder.hidden = true;
+      cardContent.hidden = false;
+
+      var moveBadge = document.getElementById('oc-move-badge');
+      var qualBadge = document.getElementById('oc-quality-badge');
+      var evalBadge = document.getElementById('oc-eval-badge');
+      var titleEl = document.getElementById('oc-review-title');
+      var expEl = document.getElementById('oc-review-explanation');
+      var betterWrap = document.getElementById('oc-better-move');
+      var betterText = document.getElementById('oc-better-move-text');
+      var tagsEl = document.getElementById('oc-review-tags');
+
+      var ctx = reviewData.context;
+      var rev = reviewData.review;
+      var qual = ctx.classification;
+
+      if (moveBadge) moveBadge.textContent = ctx.moveNotation;
+      if (qualBadge) {
+        qualBadge.textContent = (qual.symbol || '') + ' ' + (rev.classification ? rev.classification.toUpperCase() : qual.label);
+        qualBadge.style.color = qual.color || '#fff';
+      }
+      if (evalBadge) {
+        var sign = ctx.evalDiff >= 0 ? '+' : '';
+        evalBadge.textContent = 'Eval: ' + ctx.evalAfter + ' (' + sign + ctx.evalDiff + ')';
+      }
+      if (titleEl) titleEl.textContent = rev.title || 'Move Analysis';
+      if (expEl) expEl.textContent = rev.explanation || '';
+
+      var recInfo = recommendationFor(moveIndex);
+      var recText = coordsText(recInfo.coords);
+      var sourceEl = document.getElementById('oc-rec-source');
+
+      if (betterWrap && betterText) {
+        if (rev.betterMove && recInfo.source === 'llm') {
+          // The model's prose and the drawn arrow are the same move.
+          betterWrap.hidden = false;
+          betterText.textContent = rev.betterMove;
+        } else if (rev.betterMove && recInfo.source === 'engine') {
+          // The model said something but gave no usable move, so the arrow is
+          // the engine's. Name it rather than let the two silently disagree.
+          betterWrap.hidden = false;
+          betterText.textContent = rev.betterMove + ' (arrow shows the engine\'s ' + recText + ')';
+        } else if (recInfo.coords) {
+          betterWrap.hidden = false;
+          betterText.textContent = recText + ' was the engine preference.';
+        } else {
+          betterWrap.hidden = true;
+        }
+      }
+
+      if (sourceEl) {
+        sourceEl.hidden = !recInfo.coords;
+        if (recInfo.coords) {
+          var fromLlm = (recInfo.source === 'llm');
+          sourceEl.textContent = fromLlm ? '🤖 AI' : '⚙️ Engine';
+          sourceEl.title = fromLlm
+            ? 'Drawn from the AI\'s own recommendation'
+            : 'The AI gave no usable move, so the local engine\'s pick is drawn';
+          sourceEl.classList.toggle('is-llm', fromLlm);
+        }
+      }
+
+      // "Show on board" only appears when there is a validated move to draw.
+      var showBtn = document.getElementById('oc-show-on-board-btn');
+      if (showBtn) {
+        var canDraw = !!recInfo.coords;
+        showBtn.hidden = !canDraw;
+        if (canDraw) {
+          var active = (appState.recommendMoveIndex === moveIndex);
+          showBtn.textContent = active ? '✕ Hide from board' : '👁 Show on board';
+          showBtn.classList.toggle('active', active);
+          showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          showBtn.onclick = function () {
+            if (appState.recommendMoveIndex === moveIndex) {
+              clearRecommendation();
+            } else {
+              appState.recommendMoveIndex = moveIndex;
+              // Pin the move list to this move so any later navigation is a
+              // mismatch, which is what render() uses to close the overlay.
+              appState.viewMoveIndex = moveIndex;
+              appState.selectedSquare = null;
+              appState.legalMovesForSelected = [];
+            }
+            render();
+          };
+        }
+      }
+
+      if (tagsEl) {
+        var tags = rev.tags || [];
+        tagsEl.innerHTML = tags.map(function (t) {
+          return '<span class="oc-tag-pill">#' + t.replace(/^#/, '') + '</span>';
+        }).join('');
+      }
+    }
+
+    function render() {
+      // Close the overlay when it no longer applies: the review it points at is
+      // gone (undo, new game), or the user navigated away. Every navigation
+      // path - nav buttons, move list, playing a move, the AI replying - moves
+      // viewMoveIndex, so that one comparison covers them all.
+      if (isShowingRecommendation() &&
+          (appState.viewMoveIndex !== appState.recommendMoveIndex ||
+           !recommendationCoords(appState.recommendMoveIndex))) {
+        clearRecommendation();
+      }
+      // A hint answers one exact live position, so anything that leaves that
+      // position retires it: a move played, an undo, a new game, or a step
+      // back into history or the review overlay.
+      if (appState.hintMove &&
+          (appState.hintMove.atPly !== appState.gameState.history.length ||
+           !canRequestHint())) {
+        clearHint();
+      }
+      var displayState = currentDisplayState();
+      renderBoard(displayState, els.board);
+      els.status.textContent = statusText(displayState);
+      renderCounting(displayState);
+      renderCaptured(displayState);
+      renderMoves(displayState);
+      updateNavControls();
+      updateReviewCard();
+
+      var undoBtn = document.getElementById('oc-undo-btn');
+      if (undoBtn) {
+        // Undo acts on the real game, not the position being viewed, so it
+        // stays available while rewound for history or a recommendation.
+        undoBtn.disabled = (appState.gameState.history.length === 0);
+      }
+
+      var hintBtn = document.getElementById('oc-hint-btn');
+      if (hintBtn) {
+        // Stays enabled while a hint is up so the same button takes it down.
+        hintBtn.disabled = !canRequestHint() && !appState.hintMove;
+        hintBtn.setAttribute('aria-pressed', appState.hintMove ? 'true' : 'false');
+      }
+
+      // The recommendation overlay is a read-only comparison view: its own
+      // four square markers and two arrows replace the usual highlights, which
+      // would otherwise fight them for the same squares.
+      if (isShowingRecommendation()) {
+        renderRecommendationOverlay();
+        return;
+      }
+
+      var history = displayState.history;
       if (history.length > 0) {
         var lastMove = history[history.length - 1];
         var fromEl = squareEl(lastMove.from.rank, lastMove.from.file);
@@ -894,24 +3629,58 @@ body {
         if (fromEl) fromEl.classList.add('last-move');
         if (toEl) toEl.classList.add('last-move');
       }
-      if (OukEngine.isInCheck(appState.gameState, appState.gameState.turn)) {
-        var king = OukEngine.findKing(appState.gameState, appState.gameState.turn);
+
+      if (!isViewingHistory() && OukEngine.isInCheck(displayState, displayState.turn)) {
+        var king = OukEngine.findKing(displayState, displayState.turn);
         if (king) {
           var kingEl = squareEl(king.rank, king.file);
           if (kingEl) kingEl.classList.add('in-check');
         }
       }
-      if (appState.selectedSquare) {
+
+      if (!isViewingHistory() && displayState.status === 'active') {
+        var allLegal = OukEngine.generateLegalMoves(displayState, displayState.turn);
+        var moveableSquares = {};
+        allLegal.forEach(function (m) {
+          moveableSquares[m.from.rank + '_' + m.from.file] = true;
+        });
+        Object.keys(moveableSquares).forEach(function (key) {
+          var parts = key.split('_');
+          var sq = squareEl(parseInt(parts[0], 10), parseInt(parts[1], 10));
+          if (sq) sq.classList.add('can-move');
+        });
+      }
+
+      if (!isViewingHistory() && appState.selectedSquare) {
         var selEl = squareEl(appState.selectedSquare.rank, appState.selectedSquare.file);
         if (selEl) selEl.classList.add('selected');
         appState.legalMovesForSelected.forEach(function (mv) {
           var targetEl = squareEl(mv.to.rank, mv.to.file);
-          if (targetEl) targetEl.classList.add(mv.captured ? 'legal-capture' : 'legal-target');
+          if (targetEl) {
+            if (mv.special === 'kingJump' || mv.special === 'queenDouble' || mv.special === 'promotion') {
+              targetEl.classList.add('legal-special');
+            } else if (mv.captured) {
+              targetEl.classList.add('legal-capture');
+            } else {
+              targetEl.classList.add('legal-target');
+            }
+          }
         });
+      }
+
+      if (appState.hintMove) {
+        var hintFrom = squareEl(appState.hintMove.move.from.rank, appState.hintMove.move.from.file);
+        var hintTo = squareEl(appState.hintMove.move.to.rank, appState.hintMove.move.to.file);
+        if (hintFrom) hintFrom.classList.add('hint-from');
+        if (hintTo) hintTo.classList.add('hint-to');
+        drawHintArrow(appState.hintMove.move);
       }
     }
 
     function selectSquare(rank, file) {
+      if (isViewingHistory()) {
+        appState.viewMoveIndex = -1;
+      }
       var piece = OukEngine.pieceAt(appState.gameState, rank, file);
       if (piece && piece.color === appState.gameState.turn) {
         appState.selectedSquare = { rank: rank, file: file };
@@ -924,11 +3693,57 @@ body {
     }
 
     function tryMove(rank, file) {
+      if (isViewingHistory()) return false;
       var match = appState.legalMovesForSelected.find(function (m) { return m.to.rank === rank && m.to.file === file; });
       if (!match) return false;
       appState.gameState = OukEngine.applyMove(appState.gameState, match);
       appState.selectedSquare = null;
       appState.legalMovesForSelected = [];
+      appState.viewMoveIndex = -1;
+      return true;
+    }
+
+    function undoMove() {
+      if (appState.gameState.history.length === 0) return false;
+
+      // Cancel any pending AI search
+      if (appState.aiThinkingTimeoutId) {
+        clearTimeout(appState.aiThinkingTimeoutId);
+        appState.aiThinkingTimeoutId = null;
+      }
+
+      clearHint();
+
+      var history = appState.gameState.history;
+      var stepsToUndo = 1;
+
+      if (appState.mode === 'vs-ai') {
+        var lastMove = history[history.length - 1];
+        // If last move was AI, roll back 2 moves so player gets their turn back
+        // If last move was player (e.g. before AI replied or game ended), roll back 1 move
+        if (lastMove.piece.color === appState.aiColor) {
+          stepsToUndo = history.length >= 2 ? 2 : 1;
+        } else {
+          stepsToUndo = 1;
+        }
+      }
+
+      var targetCount = Math.max(0, history.length - stepsToUndo);
+      var newState = OukEngine.createInitialState();
+      for (var i = 0; i < targetCount; i++) {
+        newState = OukEngine.applyMove(newState, history[i]);
+      }
+
+      for (var u = targetCount; u < history.length; u++) {
+        delete appState.moveReviews[u];
+      }
+
+      appState.gameState = newState;
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      appState.viewMoveIndex = -1;
+
+      render();
       return true;
     }
 
@@ -937,15 +3752,23 @@ body {
       if (appState.gameState.status !== 'active') return;
       if (appState.gameState.turn !== appState.aiColor) return;
       els.status.textContent = (appState.aiColor === 'w' ? 'White' : 'Black') + ' (AI) is thinking...';
-      setTimeout(function () {
+      if (appState.aiThinkingTimeoutId) {
+        clearTimeout(appState.aiThinkingTimeoutId);
+      }
+      appState.aiThinkingTimeoutId = setTimeout(function () {
+        appState.aiThinkingTimeoutId = null;
         var move = OukAI.chooseMove(appState.gameState, appState.aiOptions);
         appState.gameState = OukEngine.applyMove(appState.gameState, move);
+        appState.viewMoveIndex = -1;
         render();
         maybeTriggerAI();
       }, 30);
     }
 
     function handleSquareClick(rank, file) {
+      // The recommendation overlay is a read-only comparison of a past
+      // position; clicking through it would move pieces in the live game.
+      if (isShowingRecommendation()) return;
       if (appState.gameState.status !== 'active') return;
       if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return;
       if (appState.selectedSquare && tryMove(rank, file)) {
@@ -958,23 +3781,237 @@ body {
     }
 
     function newGame() {
+      if (appState.aiThinkingTimeoutId) {
+        clearTimeout(appState.aiThinkingTimeoutId);
+        appState.aiThinkingTimeoutId = null;
+      }
+      clearHint();
       appState.gameState = OukEngine.createInitialState();
       appState.selectedSquare = null;
       appState.legalMovesForSelected = [];
+      appState.viewMoveIndex = -1;
+      appState.moveReviews = {};
+      if (reviewSession) reviewSession.clearCache();
       render();
       maybeTriggerAI();
     }
 
+    function simulateMoveAtIndex(idx) {
+      if (!OukReview || !OukReview.generateSimulatedReview) return;
+      var history = appState.gameState.history;
+      if (idx < 0 || idx >= history.length) return;
+
+      var promptCtx = OukReview.buildPromptContext(history, idx);
+      var currentLang = (reviewSession && reviewSession.getSettings().language) || 'en';
+      var simReview = OukReview.generateSimulatedReview(promptCtx.contextData, currentLang);
+
+      appState.moveReviews[idx] = {
+        moveIndex: idx,
+        context: promptCtx.contextData,
+        review: simReview,
+        raw: JSON.stringify(simReview)
+      };
+      render();
+    }
+
+    function explainMoveAtIndex(idx) {
+      if (!reviewSession) return;
+      var history = appState.gameState.history;
+      if (idx < 0 || idx >= history.length) return;
+
+      var cardPlaceholder = document.getElementById('oc-review-placeholder');
+      var cardContent = document.getElementById('oc-review-content');
+      if (cardPlaceholder) {
+        cardPlaceholder.hidden = false;
+        cardPlaceholder.innerHTML = '<div class="oc-review-placeholder-icon">⏳</div><p>Consulting Grandmaster AI for Move #' + (idx + 1) + '...</p>';
+      }
+      if (cardContent) cardContent.hidden = true;
+
+      reviewSession.getReviewForMove(history, idx, function (err, result) {
+        if (err) {
+          if (err.message === 'NO_API_KEY') {
+            if (cardPlaceholder) {
+              cardPlaceholder.innerHTML =
+                '<div class="oc-review-placeholder-icon">💡</div>' +
+                '<p>No API key configured for live AI.</p>' +
+                '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">' +
+                '<button class="oc-btn-accent" id="oc-err-settings-btn">⚙️ Configure API</button>' +
+                '<button class="oc-btn-secondary" id="oc-err-sim-btn">🎮 Simulate Review</button>' +
+                '</div>';
+              var sBtn = document.getElementById('oc-err-settings-btn');
+              if (sBtn) sBtn.addEventListener('click', function () { openSettingsDialog(); });
+              var simBtn = document.getElementById('oc-err-sim-btn');
+              if (simBtn) simBtn.addEventListener('click', function () { simulateMoveAtIndex(idx); });
+            }
+          } else if (cardPlaceholder) {
+            cardPlaceholder.innerHTML =
+              '<div class="oc-review-placeholder-icon">⚠️</div>' +
+              '<p style="color:var(--danger)">Review failed: ' + err.message + '</p>' +
+              '<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap">' +
+              '<button class="oc-btn-secondary" id="oc-retry-explain-btn">Retry</button>' +
+              '<button class="oc-btn-accent" id="oc-fallback-sim-btn">🎮 Simulate Review</button>' +
+              '</div>';
+            var retryBtn = document.getElementById('oc-retry-explain-btn');
+            if (retryBtn) retryBtn.addEventListener('click', function () { explainMoveAtIndex(idx); });
+            var fallbackSimBtn = document.getElementById('oc-fallback-sim-btn');
+            if (fallbackSimBtn) fallbackSimBtn.addEventListener('click', function () { simulateMoveAtIndex(idx); });
+          }
+          return;
+        }
+
+        appState.moveReviews[idx] = result;
+        render();
+      });
+    }
+
+    function startFullGameReview() {
+      if (!reviewSession) return;
+      var history = appState.gameState.history;
+      if (history.length === 0) {
+        alert('Make some moves first to review the game!');
+        return;
+      }
+
+      var progressWrap = document.getElementById('oc-review-progress-wrap');
+      var progressFill = document.getElementById('oc-review-progress-fill');
+      var progressText = document.getElementById('oc-review-progress-text');
+      var reviewBtn = document.getElementById('oc-review-game-btn');
+
+      if (progressWrap) progressWrap.hidden = false;
+      if (reviewBtn) reviewBtn.disabled = true;
+
+      reviewSession.reviewFullGame(
+        history,
+        function onProgress(current, total, result) {
+          var pct = Math.round((current / total) * 100);
+          if (progressFill) progressFill.style.width = pct + '%';
+          if (progressText) progressText.textContent = 'Analyzing move ' + current + ' of ' + total + ' (' + pct + '%)...';
+          if (result && typeof result.moveIndex === 'number') {
+            appState.moveReviews[result.moveIndex] = result;
+            renderMoves(appState.gameState);
+          }
+        },
+        function onComplete(err, results) {
+          if (progressWrap) progressWrap.hidden = true;
+          if (reviewBtn) reviewBtn.disabled = false;
+          if (err && err.message === 'NO_API_KEY') {
+            openSettingsDialog('Please configure your OpenAI API Key or local endpoint in Settings.');
+            return;
+          }
+          if (err) {
+            alert('Game review error: ' + err.message);
+            return;
+          }
+          if (results) {
+            results.forEach(function (r) {
+              if (r.result) appState.moveReviews[r.moveIndex] = r.result;
+            });
+          }
+          appState.viewMoveIndex = 0;
+          render();
+        }
+      );
+    }
+
+    function openSettingsDialog(message) {
+      var dialog = document.getElementById('oc-settings-dialog');
+      if (!dialog) return;
+      var settings = reviewSession ? reviewSession.getSettings() : OukReview.loadSettings();
+
+      var baseUrlInput = document.getElementById('oc-setting-base-url');
+      var apiKeyInput = document.getElementById('oc-setting-api-key');
+      var modelInput = document.getElementById('oc-setting-model');
+      var langSelect = document.getElementById('oc-setting-lang');
+      var useProxyInput = document.getElementById('oc-setting-use-proxy');
+      var statusDiv = document.getElementById('oc-dialog-status');
+
+      if (baseUrlInput) baseUrlInput.value = settings.baseURL || 'https://api.openai.com/v1';
+      if (apiKeyInput) apiKeyInput.value = settings.apiKey || '';
+      if (modelInput) modelInput.value = settings.model || 'gpt-4o-mini';
+      if (langSelect) langSelect.value = settings.language || 'en';
+      if (useProxyInput) useProxyInput.checked = !!settings.useProxy;
+      if (statusDiv) {
+        statusDiv.className = 'oc-dialog-status' + (message ? ' error' : '');
+        statusDiv.textContent = message || '';
+      }
+
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    function closeSettingsDialog() {
+      var dialog = document.getElementById('oc-settings-dialog');
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
     function renderControls() {
+      var skins = OukPieces.getAvailableSkins ? OukPieces.getAvailableSkins() : [
+        { id: 'ivory-teak', name: 'Ivory & Teak', nameKm: 'ភ្លុក & ឈើប្រណិត' },
+        { id: 'gold-bronze', name: 'Gold & Antique Bronze', nameKm: 'មាស & សំរឹទ្ធ' },
+        { id: 'jade-ruby', name: 'Imperial Jade & Ruby', nameKm: 'ត្បូងមរកត & ត្បូងទទឹម' },
+        { id: 'sandstone', name: 'Bayon Sandstone', nameKm: 'ថ្មភក់ & ថ្មបាសាល់' },
+        { id: 'modern', name: 'Modern Minimalist', nameKm: 'ស & ខ្មៅ ទំនើប' }
+      ];
+
+      var skinOptions = skins.map(function (s) {
+        var selected = s.id === themeState.pieceSkin ? ' selected' : '';
+        return '<option value="' + s.id + '"' + selected + '>' + s.name + ' (' + s.nameKm + ')</option>';
+      }).join('');
+
       els.controls.innerHTML =
+        '<div class="oc-btn-row">' +
         '<button id="oc-new-game">New Game</button>' +
+        '<button id="oc-undo-btn" title="Undo last move (Ctrl+Z / U)" aria-label="Undo Move" ' + (appState.gameState.history.length === 0 ? 'disabled' : '') + '>↶ Undo</button>' +
+        '<button id="oc-hint-btn" title="Show the suggested move (H)" aria-label="Show Hint" aria-pressed="false" ' + (canRequestHint() ? '' : 'disabled') + '>💡 Hint</button>' +
+        '</div>' +
         '<label><input type="radio" name="oc-mode" value="2p"' + (appState.mode === '2p' ? ' checked' : '') + '> 2-Player</label>' +
         '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
         '<label>Difficulty: <select id="oc-difficulty">' +
-          '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
-        '</select></label>';
+        '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
+        '</select></label>' +
+        '<div class="oc-theme-card">' +
+        '<div class="oc-theme-card-title"><span>🎨</span> Themes & Skins</div>' +
+        '<div class="oc-theme-row">' +
+        '<label for="oc-theme-select">Theme <span>រូបរាង</span></label>' +
+        '<select id="oc-theme-select">' +
+        '<option value="system"' + (themeState.appTheme === 'system' ? ' selected' : '') + '>System (Auto) / តាមប្រព័ន្ធ</option>' +
+        '<option value="light"' + (themeState.appTheme === 'light' ? ' selected' : '') + '>Angkor Light / ស្លឹករឹត</option>' +
+        '<option value="dark"' + (themeState.appTheme === 'dark' ? ' selected' : '') + '>Royal Dark Teak / ឈើប្រណិត</option>' +
+        '<option value="obsidian"' + (themeState.appTheme === 'obsidian' ? ' selected' : '') + '>Deep Obsidian / ថ្មខ្មៅរាត្រី</option>' +
+        '</select>' +
+        '</div>' +
+        '<div class="oc-theme-row">' +
+        '<label for="oc-board-select">Board <span>ក្ដារអុក</span></label>' +
+        '<select id="oc-board-select">' +
+        '<option value="angkor"' + (themeState.boardTheme === 'angkor' ? ' selected' : '') + '>Angkor Classic / អង្គរ</option>' +
+        '<option value="teak"' + (themeState.boardTheme === 'teak' ? ' selected' : '') + '>Royal Teak / ឈើប្រណិត</option>' +
+        '<option value="jade"' + (themeState.boardTheme === 'jade' ? ' selected' : '') + '>Temple Jade / ត្បូងមរកត</option>' +
+        '<option value="sandstone"' + (themeState.boardTheme === 'sandstone' ? ' selected' : '') + '>Bayon Sandstone / ថ្មបាយ័ន</option>' +
+        '<option value="obsidian"' + (themeState.boardTheme === 'obsidian' ? ' selected' : '') + '>Midnight Obsidian / ថ្មខ្មៅ</option>' +
+        '<option value="saffron"' + (themeState.boardTheme === 'saffron' ? ' selected' : '') + '>Lotus Saffron / ស្បង់ជីវរ</option>' +
+        '</select>' +
+        '</div>' +
+        '<div class="oc-theme-row">' +
+        '<label for="oc-piece-select">Pieces <span>កូនអុក</span></label>' +
+        '<select id="oc-piece-select">' +
+        skinOptions +
+        '</select>' +
+        '</div>' +
+        '</div>';
 
       document.getElementById('oc-new-game').addEventListener('click', newGame);
+      var undoBtnEl = document.getElementById('oc-undo-btn');
+      if (undoBtnEl) undoBtnEl.addEventListener('click', undoMove);
+      var hintBtnEl = document.getElementById('oc-hint-btn');
+      if (hintBtnEl) hintBtnEl.addEventListener('click', requestHint);
       Array.prototype.forEach.call(els.controls.querySelectorAll('input[name="oc-mode"]'), function (radio) {
         radio.addEventListener('change', function (evt) {
           appState.mode = evt.target.value;
@@ -985,6 +4022,272 @@ body {
       document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
         var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
         appState.aiOptions = presets[evt.target.value];
+      });
+
+      // Theme event listeners
+      var themeSelect = document.getElementById('oc-theme-select');
+      var boardSelect = document.getElementById('oc-board-select');
+      var pieceSelect = document.getElementById('oc-piece-select');
+
+      if (themeSelect) {
+        themeSelect.addEventListener('change', function (evt) {
+          var val = evt.target.value;
+          themeState.appTheme = val;
+          saveSetting('ouk_app_theme', val);
+          applyAppTheme(val);
+        });
+      }
+      if (boardSelect) {
+        boardSelect.addEventListener('change', function (evt) {
+          var val = evt.target.value;
+          themeState.boardTheme = val;
+          saveSetting('ouk_board_theme', val);
+          applyBoardTheme(val);
+        });
+      }
+      if (pieceSelect) {
+        pieceSelect.addEventListener('change', function (evt) {
+          var val = evt.target.value;
+          themeState.pieceSkin = val;
+          saveSetting('ouk_piece_skin', val);
+          applyPieceSkin(val);
+          render();
+        });
+      }
+
+      // Settings modal wire-up
+      var openSettingsBtn = document.getElementById('oc-open-settings');
+      var closeSettingsBtn = document.getElementById('oc-close-settings');
+      var settingsForm = document.getElementById('oc-settings-form');
+      var togglePwBtn = document.getElementById('oc-toggle-api-key');
+      var apiKeyInput = document.getElementById('oc-setting-api-key');
+      var testBtn = document.getElementById('oc-test-connection');
+      var cancelReviewBtn = document.getElementById('oc-cancel-review-btn');
+      var reviewGameBtn = document.getElementById('oc-review-game-btn');
+      var explainCurBtn = document.getElementById('oc-explain-current-btn');
+
+      if (openSettingsBtn) openSettingsBtn.addEventListener('click', function () { openSettingsDialog(); });
+      if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettingsDialog);
+      if (togglePwBtn && apiKeyInput) {
+        togglePwBtn.addEventListener('click', function () {
+          apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+        });
+      }
+
+      // Presets
+      var presetConfigs = {
+        simulation: { baseURL: 'simulation', model: 'ouk-grandmaster-v1' },
+        openai: { baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+        openrouter: { baseURL: 'https://openrouter.ai/api/v1', model: 'deepseek/deepseek-chat' },
+        groq: { baseURL: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
+        ollama: { baseURL: 'http://localhost:11434/v1', model: 'llama3' },
+        lmstudio: { baseURL: 'http://localhost:1234/v1', model: 'local-model' }
+      };
+
+      Array.prototype.forEach.call(document.querySelectorAll('.oc-preset-btn'), function (btn) {
+        btn.addEventListener('click', function () {
+          var p = presetConfigs[btn.dataset.preset];
+          if (p) {
+            var bInput = document.getElementById('oc-setting-base-url');
+            var mInput = document.getElementById('oc-setting-model');
+            if (bInput) bInput.value = p.baseURL;
+            if (mInput) mInput.value = p.model;
+          }
+        });
+      });
+
+      if (settingsForm) {
+        settingsForm.addEventListener('submit', function (evt) {
+          evt.preventDefault();
+          var bInput = document.getElementById('oc-setting-base-url');
+          var kInput = document.getElementById('oc-setting-api-key');
+          var mInput = document.getElementById('oc-setting-model');
+          var lSelect = document.getElementById('oc-setting-lang');
+          var pCheck = document.getElementById('oc-setting-use-proxy');
+
+          if (reviewSession) {
+            reviewSession.updateSettings({
+              baseURL: bInput ? bInput.value.trim() : 'https://api.openai.com/v1',
+              apiKey: kInput ? kInput.value.trim() : '',
+              model: mInput ? mInput.value.trim() : 'gpt-4o-mini',
+              language: lSelect ? lSelect.value : 'en',
+              useProxy: pCheck ? pCheck.checked : false
+            });
+          }
+          closeSettingsDialog();
+        });
+      }
+
+      if (testBtn) {
+        testBtn.addEventListener('click', function () {
+          var statusDiv = document.getElementById('oc-dialog-status');
+          var bInput = document.getElementById('oc-setting-base-url');
+          var kInput = document.getElementById('oc-setting-api-key');
+          var mInput = document.getElementById('oc-setting-model');
+          var pCheck = document.getElementById('oc-setting-use-proxy');
+
+          var baseURL = (bInput ? bInput.value.trim() : '').replace(/\/+$/, '');
+          var apiKey = kInput ? kInput.value.trim() : '';
+          var model = mInput ? mInput.value.trim() : 'gpt-4o-mini';
+          var useProxy = pCheck ? pCheck.checked : false;
+
+          if (baseURL === 'simulation' || baseURL === 'demo' || baseURL === 'mock') {
+            if (statusDiv) {
+              statusDiv.className = 'oc-dialog-status success';
+              statusDiv.textContent = '✅ Simulation engine ready! Generates Grandmaster move recommendations instantly.';
+            }
+            return;
+          }
+
+          if (statusDiv) {
+            statusDiv.className = 'oc-dialog-status loading';
+            statusDiv.textContent = 'Testing connection...';
+          }
+
+          var testSettings = {
+            baseURL: baseURL,
+            apiKey: apiKey,
+            model: model,
+            useProxy: useProxy
+          };
+
+          var payload = {
+            model: model,
+            messages: [{ role: 'user', content: 'Say hello in 1 word.' }],
+            max_tokens: 5,
+            stream: false
+          };
+
+          if (OukReview && OukReview.sendChatRequest) {
+            OukReview.sendChatRequest(testSettings, payload)
+              .then(function () {
+                if (statusDiv) {
+                  statusDiv.className = 'oc-dialog-status success';
+                  var via = testSettings.useProxy ? ' (via Dev Proxy)' : '';
+                  statusDiv.textContent = '✅ Connected successfully to ' + model + via + '!';
+                }
+                if (pCheck && testSettings.useProxy) {
+                  pCheck.checked = true;
+                }
+              })
+              .catch(function (err) {
+                if (statusDiv) {
+                  statusDiv.className = 'oc-dialog-status error';
+                  statusDiv.textContent = '❌ Error: ' + err.message;
+                }
+              });
+          } else {
+            var headers = { 'Content-Type': 'application/json' };
+            if (apiKey) headers['Authorization'] = 'Bearer ' + apiKey;
+            fetch(baseURL + '/chat/completions', {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(payload)
+            })
+              .then(function (res) {
+                return res.text().then(function (rawText) {
+                  var data = OukReview && OukReview.parseChatResponseBody ? OukReview.parseChatResponseBody(rawText) : null;
+                  if (!res.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
+                  if (!data) throw new Error('Received unexpected non-JSON response: ' + rawText.slice(0, 100));
+                  return data;
+                });
+              })
+              .then(function () {
+                if (statusDiv) {
+                  statusDiv.className = 'oc-dialog-status success';
+                  statusDiv.textContent = '✅ Connected successfully to ' + model + '!';
+                }
+              })
+              .catch(function (err) {
+                if (statusDiv) {
+                  statusDiv.className = 'oc-dialog-status error';
+                  statusDiv.textContent = '❌ Error: ' + err.message;
+                }
+              });
+          }
+        });
+      }
+
+      var simulateCurBtn = document.getElementById('oc-simulate-current-btn');
+      if (simulateCurBtn) {
+        simulateCurBtn.addEventListener('click', function () {
+          var history = appState.gameState.history;
+          if (history.length === 0) {
+            alert('Make a move first on the board to simulate an AI review!');
+            return;
+          }
+          var idx = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+          simulateMoveAtIndex(idx);
+        });
+      }
+
+      if (reviewGameBtn) reviewGameBtn.addEventListener('click', startFullGameReview);
+      if (cancelReviewBtn) {
+        cancelReviewBtn.addEventListener('click', function () {
+          if (reviewSession) reviewSession.cancelFullGameReview();
+        });
+      }
+      if (explainCurBtn) {
+        explainCurBtn.addEventListener('click', function () {
+          var history = appState.gameState.history;
+          if (history.length === 0) {
+            alert('No moves played yet!');
+            return;
+          }
+          var idx = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+          explainMoveAtIndex(idx);
+        });
+      }
+
+      // Step navigation wire-up
+      var btnFirst = document.getElementById('oc-nav-first');
+      var btnPrev = document.getElementById('oc-nav-prev');
+      var btnNext = document.getElementById('oc-nav-next');
+      var btnLast = document.getElementById('oc-nav-last');
+
+      if (btnFirst) {
+        btnFirst.addEventListener('click', function () {
+          if (appState.gameState.history.length > 0) {
+            appState.viewMoveIndex = 0;
+            render();
+          }
+        });
+      }
+      if (btnPrev) {
+        btnPrev.addEventListener('click', function () {
+          var history = appState.gameState.history;
+          if (history.length === 0) return;
+          var cur = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+          appState.viewMoveIndex = Math.max(0, cur - 1);
+          render();
+        });
+      }
+      if (btnNext) {
+        btnNext.addEventListener('click', function () {
+          var history = appState.gameState.history;
+          if (history.length === 0) return;
+          var cur = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+          appState.viewMoveIndex = Math.min(history.length - 1, cur + 1);
+          render();
+        });
+      }
+      if (btnLast) {
+        btnLast.addEventListener('click', function () {
+          appState.viewMoveIndex = -1;
+          render();
+        });
+      }
+    }
+
+    if (els.moves) {
+      els.moves.addEventListener('click', function (evt) {
+        var item = evt.target.closest('.oc-move-item');
+        if (!item) return;
+        var idx = parseInt(item.dataset.index, 10);
+        if (!isNaN(idx)) {
+          appState.viewMoveIndex = idx;
+          render();
+        }
       });
     }
 
@@ -1001,14 +4304,78 @@ body {
       handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
     });
 
+    // Global keyboard navigation for moves and undo shortcut
+    window.addEventListener('keydown', function (evt) {
+      if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'SELECT' || evt.target.tagName === 'TEXTAREA') return;
+
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === 'z') {
+        evt.preventDefault();
+        undoMove();
+        return;
+      }
+      if (evt.key.toLowerCase() === 'u' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
+        evt.preventDefault();
+        undoMove();
+        return;
+      }
+      if (evt.key.toLowerCase() === 'h' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
+        evt.preventDefault();
+        requestHint();
+        return;
+      }
+
+      var history = appState.gameState.history;
+      if (history.length === 0) return;
+
+      if (evt.key === 'ArrowLeft') {
+        var cur = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+        appState.viewMoveIndex = Math.max(0, cur - 1);
+        render();
+      } else if (evt.key === 'ArrowRight') {
+        var curR = appState.viewMoveIndex >= 0 ? appState.viewMoveIndex : history.length - 1;
+        appState.viewMoveIndex = Math.min(history.length - 1, curR + 1);
+        render();
+      } else if (evt.key === 'Home') {
+        appState.viewMoveIndex = 0;
+        render();
+      } else if (evt.key === 'End') {
+        appState.viewMoveIndex = -1;
+        render();
+      }
+    });
+
     render();
     renderControls();
-    return { handleSquareClick: handleSquareClick, getState: function () { return appState; } };
+
+    return {
+      handleSquareClick: handleSquareClick,
+      getState: function () { return appState; },
+      undoMove: undoMove,
+      requestHint: requestHint,
+      explainMoveAtIndex: explainMoveAtIndex,
+      setTheme: function (theme) {
+        themeState.appTheme = theme;
+        saveSetting('ouk_app_theme', theme);
+        applyAppTheme(theme);
+      },
+      setBoardTheme: function (board) {
+        themeState.boardTheme = board;
+        saveSetting('ouk_board_theme', board);
+        applyBoardTheme(board);
+      },
+      setPieceSkin: function (skin) {
+        themeState.pieceSkin = skin;
+        saveSetting('ouk_piece_skin', skin);
+        applyPieceSkin(skin);
+        render();
+      }
+    };
   }
 
   var api = { renderBoard: renderBoard, createApp: createApp };
   root.OukUI = api;
 })(typeof window !== 'undefined' ? window : globalThis);
+
 
 
   var app = OukUI.createApp({
@@ -1018,7 +4385,8 @@ body {
     capturedByWhite: document.getElementById('captured-by-white'),
     capturedByBlack: document.getElementById('captured-by-black'),
     moves: document.getElementById('moves'),
-    controls: document.getElementById('controls')
+    controls: document.getElementById('controls'),
+    reviewPanel: document.getElementById('review-panel')
   });
 
 </script>

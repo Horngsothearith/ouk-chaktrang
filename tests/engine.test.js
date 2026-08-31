@@ -463,3 +463,24 @@ test('perft depth 2 from the start position is a stable regression guard', () =>
   const n2 = perft(state, 2);
   assert.equal(n2, 625);
 });
+
+test('undoMove rolls back state accurately and returns to initial state', () => {
+  const start = OukEngine.createInitialState();
+  assert.equal(OukEngine.undoMove(start), start, 'undo on empty history returns same state');
+
+  const moves = OukEngine.generateLegalMoves(start, 'w');
+  const e3e4 = moves.find(m => OukEngine.squareName(m.from.rank, m.from.file) === 'e3' && OukEngine.squareName(m.to.rank, m.to.file) === 'e4');
+  assert.ok(e3e4);
+
+  const state1 = OukEngine.applyMove(start, e3e4);
+  assert.equal(state1.turn, 'b');
+  assert.equal(state1.history.length, 1);
+  assert.equal(OukEngine.pieceAt(state1, 3, 4).type, 'P');
+
+  const undone = OukEngine.undoMove(state1);
+  assert.equal(undone.turn, 'w');
+  assert.equal(undone.history.length, 0);
+  assert.equal(OukEngine.pieceAt(undone, 3, 4), null);
+  assert.equal(OukEngine.pieceAt(undone, 2, 4).type, 'P');
+});
+

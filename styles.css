@@ -13,52 +13,190 @@
   --warning: #8a5a12;
   --warning-bg: #f0dfae;
 
-  --bg: var(--parchment-light);
+  /* App Theme Tokens (Light default) */
+  --bg: #f2e8c8;
   --surface: #fbf6e6;
-  --text: var(--ink);
+  --surface-alt: #f0e3bf;
+  --text: #241811;
   --text-muted: #6b5a40;
-  --border: var(--teak);
-  --square-light: var(--parchment);
-  --square-dark: var(--laterite);
-  --accent: var(--gilt);
+  --border: #3c2a1c;
+  --accent: #a8823a;
+  --header-title: #b5542a;
+
+  /* Board Theme Tokens (Angkor Classic default) */
+  --square-light: #e4d5a8;
+  --square-dark: #b5542a;
+  --board-border: #3c2a1c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+
+  /* Recommendation overlay. Deliberately defined once rather than per board
+     theme: the played-vs-recommended contrast has to read identically on every
+     board so the comparison never depends on which theme is active. */
+  --arrow-played: #d97706;
+  --arrow-recommend: #16a34a;
+  --played-sq-bg: rgba(217, 119, 6, 0.28);
+  --played-sq-border: rgba(217, 119, 6, 0.9);
+  --recommend-sq-bg: rgba(22, 163, 74, 0.32);
+  --recommend-sq-border: rgba(22, 163, 74, 0.95);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: var(--teak-deep);
+  :root:not([data-theme="light"]):not([data-theme="obsidian"]) {
+    --bg: #1f1610;
     --surface: #2c2015;
+    --surface-alt: #382a1d;
     --text: #ecdfc0;
     --text-muted: #b6a482;
-    --border: var(--gilt);
-    --square-light: #5a4530;
-    --square-dark: #7a3a22;
+    --border: #a8823a;
+    --accent: #d4aa50;
+    --header-title: #e07248;
     --warning-bg: #4a3a14;
     --warning: #e0b354;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: var(--teak-deep);
+  --bg: #1f1610;
   --surface: #2c2015;
+  --surface-alt: #382a1d;
   --text: #ecdfc0;
   --text-muted: #b6a482;
-  --border: var(--gilt);
-  --square-light: #5a4530;
-  --square-dark: #7a3a22;
+  --border: #a8823a;
+  --accent: #d4aa50;
+  --header-title: #e07248;
   --warning-bg: #4a3a14;
   --warning: #e0b354;
 }
 
+:root[data-theme="obsidian"] {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-alt: #21262d;
+  --text: #f0f6fc;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --accent: #d29922;
+  --header-title: #e3b341;
+  --warning-bg: #341a04;
+  --warning: #f2cc60;
+}
+
+/* Board Skins */
+:root[data-board="angkor"], [data-board="angkor"] {
+  --square-light: #e4d5a8;
+  --square-dark: #b5542a;
+  --board-border: #3c2a1c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="teak"], [data-board="teak"] {
+  --square-light: #dfc8a0;
+  --square-dark: #5c391f;
+  --board-border: #8b5a2b;
+  --target-dot: #22c55e;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.55);
+  --capture-ring: #f87171;
+  --selected-bg: rgba(250, 204, 21, 0.45);
+  --selected-border: #eab308;
+  --selected-glow: rgba(234, 179, 8, 0.5);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(202, 138, 4, 0.85);
+}
+
+:root[data-board="jade"], [data-board="jade"] {
+  --square-light: #d4e2d9;
+  --square-dark: #3b634e;
+  --board-border: #234433;
+  --target-dot: #00d2ff;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.55);
+  --capture-ring: #f43f5e;
+  --selected-bg: rgba(251, 191, 36, 0.46);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.5);
+  --last-move-bg: rgba(245, 158, 11, 0.40);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="sandstone"], [data-board="sandstone"] {
+  --square-light: #ded5c8;
+  --square-dark: #625749;
+  --board-border: #3f362c;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.85);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #f59e0b;
+  --selected-glow: rgba(245, 158, 11, 0.45);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(217, 119, 6, 0.85);
+}
+
+:root[data-board="obsidian"], [data-board="obsidian"] {
+  --square-light: #4c5663;
+  --square-dark: #1b1e22;
+  --board-border: #b89758;
+  --target-dot: #34d399;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.6);
+  --capture-ring: #f87171;
+  --selected-bg: rgba(245, 158, 11, 0.45);
+  --selected-border: #fbbf24;
+  --selected-glow: rgba(251, 191, 36, 0.55);
+  --last-move-bg: rgba(234, 179, 8, 0.45);
+  --last-move-border: rgba(250, 204, 21, 0.9);
+}
+
+:root[data-board="saffron"], [data-board="saffron"] {
+  --square-light: #faeee2;
+  --square-dark: #cc6d36;
+  --board-border: #883516;
+  --target-dot: #10b981;
+  --target-dot-border: rgba(255, 255, 255, 0.9);
+  --target-dot-shadow: rgba(0, 0, 0, 0.5);
+  --capture-ring: #ef4444;
+  --selected-bg: rgba(234, 179, 8, 0.45);
+  --selected-border: #eab308;
+  --selected-glow: rgba(234, 179, 8, 0.5);
+  --last-move-bg: rgba(234, 179, 8, 0.42);
+  --last-move-border: rgba(202, 138, 4, 0.85);
+}
+
 * { box-sizing: border-box; }
+
+/* Several panel elements are toggled with the `hidden` attribute but carry an
+   author `display` rule, which outranks the user-agent rule `display: none`
+   and leaves them rendering while "hidden". Restore the attribute's meaning
+   once, globally, rather than per component. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .oc-square::after, button, select { transition: opacity 0.15s ease, box-shadow 0.15s ease; }
+  .oc-square, .oc-square::after, button, select { transition: opacity 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
 }
 
 .oc-app {
@@ -82,7 +220,7 @@ body {
   font-family: "Noto Serif Khmer", serif;
   font-size: 2rem;
   font-weight: 600;
-  color: var(--laterite);
+  color: var(--header-title, var(--laterite));
   margin: 0;
 }
 .oc-title-en {
@@ -96,28 +234,288 @@ body {
 .oc-board-wrap { display: flex; flex-direction: column; gap: 10px; }
 
 .oc-board {
+  position: relative; /* containing block for .oc-arrow-layer */
   display: grid;
   grid-template-columns: repeat(8, minmax(36px, 64px));
   grid-template-rows: repeat(8, minmax(36px, 64px));
-  border: 4px solid var(--border);
-  border-radius: 2px;
+  border: 4px solid var(--board-border, var(--border));
+  border-radius: 4px;
   width: min(90vw, 512px);
   aspect-ratio: 1;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
-.oc-square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.oc-board-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  width: min(90vw, 512px);
+}
+.oc-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.oc-legend-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.oc-legend-selected {
+  background: #f59e0b;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+.oc-legend-target {
+  background: #10b981;
+  border: 2px solid #34d399;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+.oc-legend-capture {
+  background: rgba(239, 68, 68, 0.3);
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+.oc-legend-special {
+  background: rgba(168, 85, 247, 0.3);
+  border: 2px dashed #a855f7;
+  color: #c084fc;
+  font-weight: bold;
+}
+.oc-legend-lastmove {
+  background: rgba(234, 179, 8, 0.5);
+  border: 2px solid #eab308;
+}
+.oc-legend-check {
+  background: #ef4444;
+  border: 2px solid #f87171;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+}
+.oc-legend-recommend {
+  background: var(--recommend-sq-bg);
+  border: 2px solid var(--recommend-sq-border);
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.6);
+}
+
+/* --- AI recommendation overlay ------------------------------------------
+   Shown only while "Show on board" is active. The board is rewound to the
+   position before the reviewed move so both arrows start from squares whose
+   pieces are actually there. */
+
+.oc-arrow-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3; /* above .oc-piece (z-index 1) */
+  overflow: visible;
+}
+.oc-arrow {
+  stroke-linecap: round;
+  /* Stroke widths are in board units (1 = one square) because of the 8x8
+     viewBox, so the arrows scale with the board instead of needing media
+     queries. */
+  fill: none;
+}
+.oc-arrow-played-line {
+  stroke: var(--arrow-played);
+  stroke-width: 0.1;
+  stroke-dasharray: 0.22 0.16;
+  opacity: 0.75;
+}
+.oc-arrow-recommend-line {
+  stroke: var(--arrow-recommend);
+  stroke-width: 0.15;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.45));
+}
+
+.oc-square.played-from,
+.oc-square.played-to {
+  background-image: linear-gradient(var(--played-sq-bg), var(--played-sq-bg));
+  box-shadow: inset 0 0 0 2px var(--played-sq-border);
+}
+/* The live-board hint reuses the review overlay's green so "what the engine
+   would play" reads the same wherever it is shown. */
+.oc-square.recommend-from,
+.oc-square.recommend-to,
+.oc-square.hint-from,
+.oc-square.hint-to {
+  background-image: linear-gradient(var(--recommend-sq-bg), var(--recommend-sq-bg));
+  box-shadow: inset 0 0 0 3px var(--recommend-sq-border), inset 0 0 14px rgba(22, 163, 74, 0.35);
+}
+/* A square can be both the played origin and the recommended origin (same
+   piece, different destination) - the recommendation wins the border. */
+.oc-square.played-from.recommend-from,
+.oc-square.played-to.recommend-to,
+.oc-square.played-from.recommend-to,
+.oc-square.played-to.recommend-from {
+  box-shadow: inset 0 0 0 3px var(--recommend-sq-border), inset 0 0 0 6px var(--played-sq-border);
+}
+.oc-square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
 .oc-square.light { background: var(--square-light); }
 .oc-square.dark { background: var(--square-dark); }
-.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--accent); }
-.oc-square.legal-target::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--jade); opacity: 0.85; }
-.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--jade); }
-.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--danger); }
-/* Uses the square's own box-shadow (not ::after, already used by the rules
-   above) so it composes independently - a square can be both the previous
-   move's destination and the current selection at once. */
-.oc-square.last-move { box-shadow: inset 0 0 0 999px rgba(168, 130, 58, 0.32); }
+
+/* 1. Last Move: highlights both origin (from) and destination (to) squares */
+.oc-square.last-move {
+  background-image: linear-gradient(var(--last-move-bg), var(--last-move-bg));
+  box-shadow: inset 0 0 0 2.5px var(--last-move-border), inset 0 0 14px rgba(234, 179, 8, 0.35);
+}
+
+/* 2. Selected Square: rich luminous golden highlight wash */
+.oc-square.selected {
+  background-image: linear-gradient(var(--selected-bg), var(--selected-bg)) !important;
+  box-shadow: inset 0 0 0 3.5px var(--selected-border), 0 0 18px var(--selected-glow) !important;
+  z-index: 2;
+}
+
+/* 3. In Check: radiant danger glow behind King */
+.oc-square.in-check {
+  background-image: radial-gradient(circle at center, rgba(239, 68, 68, 0.92) 0%, rgba(220, 38, 38, 0.6) 50%, rgba(185, 28, 28, 0.25) 80%, transparent 100%) !important;
+  box-shadow: inset 0 0 0 3.5px #ef4444, 0 0 18px rgba(239, 68, 68, 0.75) !important;
+  animation: oc-check-pulse 1.6s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* 4. Legal Move Target: prominent luminous emerald dot */
+.oc-square.legal-target::after {
+  content: '';
+  position: absolute;
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: var(--target-dot, #10b981);
+  border: 2px solid var(--target-dot-border, rgba(255, 255, 255, 0.9));
+  box-shadow: 0 2px 8px var(--target-dot-shadow, rgba(0, 0, 0, 0.5)), 0 0 12px var(--target-dot, #10b981);
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 3;
+  transform: scale(1);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.oc-square.legal-target:hover::after {
+  transform: scale(1.3);
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65), 0 0 16px var(--target-dot, #10b981);
+}
+
+/* 5. Legal Capture Target: distinct ruby target reticle ring framing the enemy piece */
+.oc-square.legal-capture::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 4px solid var(--capture-ring, #ef4444);
+  background: rgba(239, 68, 68, 0.22);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6), inset 0 0 10px rgba(239, 68, 68, 0.35);
+  pointer-events: none;
+  z-index: 3;
+  animation: oc-capture-pulse 1.8s ease-in-out infinite;
+  transition: border-width 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.oc-square.legal-capture:hover::after {
+  border-width: 5px;
+  background: rgba(239, 68, 68, 0.32);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.8), inset 0 0 14px rgba(239, 68, 68, 0.5);
+}
+
+/* 6. Special Move Target: King Jump, Queen Double-step, Trey Promotion */
+.oc-square.legal-special::after {
+  content: '★';
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset: 6px;
+  border-radius: 50%;
+  border: 3.5px dashed #a855f7;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(147, 51, 234, 0.15) 70%, transparent 100%);
+  color: #f3e8ff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.75), inset 0 0 10px rgba(168, 85, 247, 0.4);
+  pointer-events: none;
+  z-index: 3;
+  animation: oc-special-pulse 1.8s ease-in-out infinite;
+}
+.oc-square.legal-special:hover::after {
+  border-width: 4.5px;
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.9), inset 0 0 14px rgba(168, 85, 247, 0.6);
+}
+
+/* Moveable piece hover indicator */
+.oc-square.can-move {
+  cursor: pointer;
+}
+.oc-square.can-move:hover {
+  filter: brightness(1.08);
+}
+.oc-square.can-move .oc-piece {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.oc-square.can-move:hover .oc-piece {
+  transform: scale(1.08) translateY(-2px);
+}
+
 .oc-square:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
-.oc-piece { width: 82%; height: 82%; pointer-events: none; }
+.oc-piece { width: 82%; height: 82%; pointer-events: none; z-index: 1; position: relative; }
+
+/* Pulse Keyframes */
+@keyframes oc-capture-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+}
+
+@keyframes oc-special-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(0.96) rotate(15deg);
+    opacity: 1;
+  }
+}
+
+@keyframes oc-check-pulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3.5px #ef4444, 0 0 12px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: inset 0 0 0 4px #f87171, 0 0 22px rgba(239, 68, 68, 0.85);
+  }
+}
 
 .oc-panel {
   min-width: 260px;
@@ -183,5 +581,597 @@ body {
 }
 .oc-controls button:hover, .oc-controls select:hover { border-color: var(--accent); }
 .oc-controls button:focus-visible, .oc-controls select:focus-visible,
-.oc-controls input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#oc-new-game { background: var(--laterite); color: var(--parchment-light); border-color: var(--laterite); font-weight: 600; }
+.oc-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.oc-btn-row button {
+  flex: 1;
+}
+#oc-new-game {
+  background: var(--laterite);
+  color: var(--parchment-light);
+  border-color: var(--laterite);
+  font-weight: 600;
+}
+#oc-hint-btn[aria-pressed="true"] {
+  border-color: var(--recommend-sq-border);
+  box-shadow: inset 0 0 0 1px var(--recommend-sq-border);
+}
+#oc-undo-btn {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+#oc-undo-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.12);
+  color: var(--accent);
+}
+#oc-undo-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Theme & Appearance Customization */
+.oc-theme-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.oc-theme-card-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 2px;
+}
+.oc-theme-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.oc-theme-row label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-theme-row select {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.oc-theme-row select:hover {
+  border-color: var(--accent);
+}
+.oc-theme-row select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Move list interactive items & badges */
+.oc-move-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.oc-move-item:hover {
+  background: rgba(168, 130, 58, 0.15);
+}
+.oc-move-item.selected {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.oc-move-badge-dot {
+  font-size: 0.75rem;
+  margin-left: 6px;
+}
+
+/* AI Review Panel */
+.oc-review-panel {
+  min-width: 280px;
+  max-width: 380px;
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.oc-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(168, 130, 58, 0.25);
+  padding-bottom: 10px;
+}
+
+.oc-review-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oc-review-title-km {
+  font-family: "Noto Serif Khmer", serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--laterite);
+}
+.oc-review-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.oc-icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.oc-icon-btn:hover {
+  background: rgba(168, 130, 58, 0.2);
+  border-color: var(--accent);
+  transform: rotate(15deg);
+}
+
+.oc-review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.oc-btn-accent {
+  flex: 1;
+  background: var(--laterite);
+  color: var(--parchment-light);
+  border: 1px solid var(--laterite);
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.oc-btn-accent:hover {
+  background: #9c4521;
+}
+.oc-btn-accent:active {
+  transform: scale(0.98);
+}
+.oc-btn-secondary {
+  flex: 1;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: border-color 0.15s ease;
+}
+.oc-btn-secondary:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.08);
+}
+.oc-btn-text {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  padding: 2px 4px;
+}
+
+/* Progress bar */
+.oc-review-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(168, 130, 58, 0.1);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.oc-review-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.oc-review-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--jade);
+  transition: width 0.2s ease;
+}
+.oc-review-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Navigation step bar */
+.oc-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  background: rgba(168, 130, 58, 0.08);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 130, 58, 0.2);
+}
+.oc-nav-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--text);
+  line-height: 1;
+}
+.oc-nav-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.oc-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.oc-nav-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Review Card */
+.oc-review-card {
+  min-height: 180px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(168, 130, 58, 0.2);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+:root[data-theme="dark"] .oc-review-card,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .oc-review-card {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.oc-review-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: auto;
+}
+.oc-review-placeholder-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.oc-review-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.oc-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.oc-badge-quality {
+  border-color: var(--accent);
+}
+.oc-eval-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.oc-review-card-title {
+  margin: 4px 0 8px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--laterite);
+}
+.oc-review-explanation {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 10px;
+  color: var(--text);
+}
+
+.oc-better-move {
+  background: rgba(16, 185, 129, 0.12);
+  border-left: 3px solid var(--jade);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+}
+.oc-better-label {
+  font-weight: 600;
+  color: var(--jade);
+  margin-right: 4px;
+}
+/* Says whether the drawn arrow came from the language model or the fallback
+   local search, so the advice is never anonymous. */
+.oc-rec-source {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(120, 120, 120, 0.18);
+  border: 1px solid rgba(120, 120, 120, 0.45);
+  color: var(--text-muted, var(--text));
+}
+.oc-rec-source.is-llm {
+  background: rgba(22, 163, 74, 0.18);
+  border-color: var(--recommend-sq-border);
+  color: var(--jade);
+}
+
+.oc-show-on-board-btn {
+  display: block;
+  margin-top: 8px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--jade);
+  background: transparent;
+  border: 1.5px solid var(--jade);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.oc-show-on-board-btn:hover {
+  background: rgba(22, 163, 74, 0.15);
+}
+.oc-show-on-board-btn.active {
+  background: var(--jade);
+  color: var(--surface);
+}
+.oc-show-on-board-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.oc-review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.oc-tag-pill {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(168, 130, 58, 0.15);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Settings Dialog */
+.oc-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  background: transparent;
+  max-width: 520px;
+  width: 90vw;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+.oc-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+.oc-dialog-content {
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.oc-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-dialog-header h2 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.25rem;
+  color: var(--laterite);
+}
+.oc-dialog-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.oc-dialog-close:hover {
+  color: var(--text);
+}
+.oc-dialog-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.oc-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(168, 130, 58, 0.08);
+  padding: 10px;
+  border-radius: 8px;
+}
+.oc-preset-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.oc-preset-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.oc-preset-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text);
+}
+.oc-preset-btn:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.15);
+}
+
+.oc-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.oc-settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.oc-settings-form label.oc-checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.oc-settings-form label.oc-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--laterite);
+}
+.oc-settings-form input,
+.oc-settings-form select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+.oc-settings-form input:focus,
+.oc-settings-form select:focus {
+  outline: 2px solid var(--accent);
+}
+
+.oc-input-password-wrap {
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.oc-input-password-wrap input {
+  flex: 1;
+  padding-right: 36px;
+}
+.oc-toggle-password {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.9rem;
+}
+
+.oc-dialog-status {
+  font-size: 0.85rem;
+  min-height: 20px;
+  font-weight: 500;
+}
+.oc-dialog-status.success { color: var(--jade); }
+.oc-dialog-status.error { color: var(--danger); }
+.oc-dialog-status.loading { color: var(--warning); }
+
+.oc-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}

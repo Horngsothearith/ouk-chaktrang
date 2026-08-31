@@ -126,3 +126,51 @@ test('chooseMove does not hang a defended rook for a free pawn', () => {
   const takesBait = OukEngine.squareName(move.to.rank, move.to.file) === 'd7';
   assert.equal(takesBait, false, 'should not grab a defended pawn and drop the rook next move');
 });
+
+test('suggestMove returns null when the game is already over', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'h7', type: 'R', color: 'w' },
+    { at: 'h1', type: 'K', color: 'w' },
+  ], 'b');
+  assert.equal(state.status, 'checkmate');
+  assert.equal(OukAI.suggestMove(state), null);
+});
+
+test('suggestMove returns null on a stalemated position rather than an undefined move', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'c6', type: 'N', color: 'w' },
+  ], 'b');
+  state.kingHasMoved.b = true;
+  const derived = OukEngine.deriveStatus(state);
+  state.status = derived.status;
+  state.winner = derived.winner;
+  assert.equal(state.status, 'stalemate');
+  assert.equal(OukAI.suggestMove(state), null);
+});
+
+test('suggestMove returns a legal move for whichever side is to move', () => {
+  const state = OukEngine.createInitialState();
+  state.turn = 'b';
+  const legalKeys = new Set(OukEngine.generateLegalMoves(state, 'b').map(
+    (m) => OukEngine.squareName(m.from.rank, m.from.file) + OukEngine.squareName(m.to.rank, m.to.file) + (m.special || '')
+  ));
+  const move = OukAI.suggestMove(state);
+  assert.ok(move, 'expected a suggestion on an active position');
+  const key = OukEngine.squareName(move.from.rank, move.from.file) + OukEngine.squareName(move.to.rank, move.to.file) + (move.special || '');
+  assert.ok(legalKeys.has(key), 'suggested move must be legal for Black: ' + key);
+});
+
+test('suggestMove finds a mate-in-1 without being passed any difficulty options', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'd8', type: 'N', color: 'w' },
+  ], 'w');
+  const move = OukAI.suggestMove(state);
+  assert.equal(OukEngine.applyMove(state, move).status, 'checkmate');
+});

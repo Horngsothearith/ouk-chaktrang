@@ -412,8 +412,19 @@
     materialTier: materialTier,
     countAllPieces: countAllPieces,
     hasPawns: hasPawns,
-    isBareKing: isBareKing
+    isBareKing: isBareKing,
+    undoMove: undoMove
   };
+
+  function undoMove(state) {
+    if (!state || !state.history || state.history.length === 0) return state;
+    var targetLength = state.history.length - 1;
+    var nextState = createInitialState();
+    for (var i = 0; i < targetLength; i++) {
+      nextState = applyMove(nextState, state.history[i]);
+    }
+    return nextState;
+  }
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

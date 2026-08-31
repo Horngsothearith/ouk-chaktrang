@@ -67,12 +67,13 @@
     });
   }
 
-  function searchRoot(state, depth) {
+  function searchRoot(state, depth, deadline) {
     var moves = orderMoves(OukEngine.generateLegalMoves(state, state.turn));
     var bestMove = moves[0];
     var bestScore = -Infinity;
     var alpha = -Infinity, beta = Infinity;
     for (var i = 0; i < moves.length; i++) {
+      if (deadline && i > 0 && Date.now() >= deadline) break;
       var child = OukEngine.applyMove(state, moves[i]);
       var score = -negamax(child, depth - 1, 1, -beta, -alpha);
       if (score > bestScore) {
@@ -92,7 +93,8 @@
     var best = null;
 
     for (var depth = 1; depth <= maxDepth; depth++) {
-      var result = searchRoot(state, depth);
+      if (depth > 1 && Date.now() >= deadline) break;
+      var result = searchRoot(state, depth, deadline);
       best = result.move;
       if (Date.now() >= deadline) break;
       if (result.score >= MATE_SCORE - 100) break;
@@ -100,8 +102,21 @@
     return best;
   }
 
+  // A hint is advice to the human player, so it always searches at one fixed
+  // strength rather than the opponent's difficulty setting - a hint from the
+  // "easy" engine would be bad advice.
+  var HINT_OPTIONS = { timeLimitMs: 800, maxDepth: 5 };
+
+  function suggestMove(state) {
+    // searchRoot takes moves[0] of an empty move list, so asking a finished
+    // position for a move yields undefined. Say null instead, once, here.
+    if (state.status !== 'active') return null;
+    return chooseMove(state, HINT_OPTIONS);
+  }
+
   var api = {
     evaluate: evaluate,
+    suggestMove: suggestMove,
     negamax: negamax,
     MATE_SCORE: MATE_SCORE,
     chooseMove: chooseMove
