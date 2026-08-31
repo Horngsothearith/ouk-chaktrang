@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ouk Chaktrang</title>
+<style>
+:root {
+  --oc-light: #eadfc4;
+  --oc-dark: #a97c50;
+  --oc-highlight: #6fae4a;
+  --oc-select: #4a90d9;
+  --oc-check: #c0392b;
+  --oc-bg: #f7f3ea;
+  --oc-panel-bg: #ffffff;
+  --oc-text: #2a2016;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --oc-bg: #1c1712;
+    --oc-panel-bg: #2a2119;
+    --oc-text: #f0e9db;
+  }
+}
+body { margin: 0; }
+.oc-app { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; background: var(--oc-bg); color: var(--oc-text); font-family: system-ui, sans-serif; min-height: 100vh; box-sizing: border-box; }
+.oc-board { display: grid; grid-template-columns: repeat(8, minmax(36px, 64px)); grid-template-rows: repeat(8, minmax(36px, 64px)); border: 3px solid var(--oc-dark); width: min(90vw, 512px); aspect-ratio: 1; }
+.oc-square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.oc-square.light { background: var(--oc-light); }
+.oc-square.dark { background: var(--oc-dark); }
+.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-select); }
+.oc-square.legal-target::after { content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: var(--oc-highlight); opacity: 0.75; }
+.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-highlight); }
+.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-check); }
+.oc-piece { width: 82%; height: 82%; pointer-events: none; }
+.oc-panel { min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
+.oc-status { font-weight: 600; font-size: 1.1em; }
+.oc-counting { background: #fff3cd; color: #7a5c00; padding: 8px 12px; border-radius: 6px; font-size: 0.9em; }
+.oc-captured { display: flex; flex-wrap: wrap; gap: 4px; min-height: 28px; }
+.oc-captured .oc-piece { width: 22px; height: 22px; }
+.oc-moves { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9em; }
+.oc-controls { display: flex; flex-direction: column; gap: 8px; }
+
+</style>
+</head>
+<body>
+
+<div class="oc-app">
+  <div class="oc-board" id="board"></div>
+  <div class="oc-panel">
+    <div class="oc-status" id="status">White to move</div>
+    <div class="oc-counting" id="counting" hidden></div>
+    <div>
+      <div>Captured by White:</div>
+      <div class="oc-captured" id="captured-by-white"></div>
+      <div>Captured by Black:</div>
+      <div class="oc-captured" id="captured-by-black"></div>
+    </div>
+    <div class="oc-moves" id="moves"></div>
+    <div class="oc-controls" id="controls"></div>
+  </div>
+</div>
+
+<script>
+(function (root) {
+  'use strict';
+
+  var FILES = 'abcdefgh';
+
+  function squareName(rank, file) {
+    return FILES[file] + (rank + 1);
+  }
+
+  function parseSquare(name) {
+    var file = FILES.indexOf(name[0]);
+    var rank = parseInt(name.slice(1), 10) - 1;
+    return { rank: rank, file: file };
+  }
+
+  function inBounds(rank, file) {
+    return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+  }
+
+  var START_BACK_RANK_WHITE = ['R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R'];
+  var START_BACK_RANK_BLACK = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+
+  function createInitialState() {
+    var board = new Array(64).fill(null);
+    for (var file = 0; file < 8; file++) {
+      board[0 * 8 + file] = { type: START_BACK_RANK_WHITE[file], color: 'w' };
+      board[2 * 8 + file] = { type: 'P', color: 'w' };
+      board[5 * 8 + file] = { type: 'P', color: 'b' };
+      board[7 * 8 + file] = { type: START_BACK_RANK_BLACK[file], color: 'b' };
+    }
+    return {
+      board: board,
+      turn: 'w',
+      fullMoveNumber: 1,
+      history: [],
+      kingHasMoved: { w: false, b: false },
+      queenHasMoved: { w: false, b: false },
+      anyCaptureYet: false,
+      counting: { active: false, trigger: null, disadvantagedColor: null, tierBase: null, budget: null, elapsed: 0 },
+      status: 'active',
+      winner: null
+    };
+  }
+
+  function pieceAt(state, rank, file) {
+    if (!inBounds(rank, file)) return null;
+    return state.board[rank * 8 + file];
+  }
+
+  function opposite(color) { return color === 'w' ? 'b' : 'w'; }
+
+  var KING_STEPS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  var KNIGHT_STEPS = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+  var DIAGONAL_DIRS = [[1,1],[-1,1],[-1,-1],[1,-1]];
+  var ORTHOGONAL_DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+
+  function addStepMoves(state, rank, file, steps, piece, out) {
+    steps.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      if (!inBounds(r2, f2)) return;
+      var occ = pieceAt(state, r2, f2);
+      if (occ && occ.color === piece.color) return;
+      out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: null });
+    });
+  }
+
+  function addSlideMoves(state, rank, file, dirs, piece, out) {
+    dirs.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      while (inBounds(r2, f2)) {
+        var occ = pieceAt(state, r2, f2);
+        if (occ && occ.color === piece.color) break;
+        out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: null });
+        if (occ) break;
+        r2 += d[0]; f2 += d[1];
+      }
+    });
+  }
+
+  function bishopSteps(color) {
+    var forward = color === 'w' ? [1, 0] : [-1, 0];
+    return DIAGONAL_DIRS.concat([forward]);
+  }
+
+  // Pawns start on rank index 2 (White) / 5 (Black) and promote on reaching
+  // the rank where the OPPONENT's pawns started.
+  var WHITE_PROMOTION_RANK = 5; // display rank 6
+  var BLACK_PROMOTION_RANK = 2; // display rank 3
+
+  function promotionRankFor(color) {
+    return color === 'w' ? WHITE_PROMOTION_RANK : BLACK_PROMOTION_RANK;
+  }
+
+  function pawnMoves(state, rank, file, piece, out) {
+    var dir = piece.color === 'w' ? 1 : -1;
+    var r1 = rank + dir;
+    var promoRank = promotionRankFor(piece.color);
+
+    if (inBounds(r1, file) && !pieceAt(state, r1, file)) {
+      out.push({ from: { rank: rank, file: file }, to: { rank: r1, file: file }, piece: piece, captured: null, special: r1 === promoRank ? 'promotion' : null });
+    }
+    [-1, 1].forEach(function (df) {
+      var f2 = file + df;
+      if (!inBounds(r1, f2)) return;
+      var occ = pieceAt(state, r1, f2);
+      if (occ && occ.color !== piece.color) {
+        out.push({ from: { rank: rank, file: file }, to: { rank: r1, file: f2 }, piece: piece, captured: occ, special: r1 === promoRank ? 'promotion' : null });
+      }
+    });
+  }
+
+  function generateBaseMoves(state, rank, file) {
+    var piece = pieceAt(state, rank, file);
+    if (!piece) return [];
+    var out = [];
+    switch (piece.type) {
+      case 'K':
+        addStepMoves(state, rank, file, KING_STEPS, piece, out);
+        break;
+      case 'Q':
+        addStepMoves(state, rank, file, DIAGONAL_DIRS, piece, out);
+        break;
+      case 'B':
+        addStepMoves(state, rank, file, bishopSteps(piece.color), piece, out);
+        break;
+      case 'N':
+        addStepMoves(state, rank, file, KNIGHT_STEPS, piece, out);
+        break;
+      case 'R':
+        addSlideMoves(state, rank, file, ORTHOGONAL_DIRS, piece, out);
+        break;
+      case 'P':
+        pawnMoves(state, rank, file, piece, out);
+        break;
+    }
+    return out;
+  }
+
+  function cloneBoard(board) {
+    return board.map(function (p) { return p ? { type: p.type, color: p.color } : null; });
+  }
+
+  // Board/bookkeeping transition only — deliberately does NOT compute
+  // status or counting. generateLegalMoves calls this (via isInCheck) once
+  // per candidate move to test king safety; if it called the full applyMove
+  // instead, computing one move's status would recursively require
+  // computing every future ply's status too (deriveStatus ->
+  // generateLegalMoves -> applyMove -> deriveStatus -> ...), which never
+  // terminates. Only the public applyMove (below) finalizes status.
+  function applyMoveRaw(state, move) {
+    var board = cloneBoard(state.board);
+    var fromIdx = move.from.rank * 8 + move.from.file;
+    var toIdx = move.to.rank * 8 + move.to.file;
+    var movedPiece = { type: move.piece.type, color: move.piece.color };
+    if (move.special === 'promotion') movedPiece.type = 'Q';
+    board[fromIdx] = null;
+    board[toIdx] = movedPiece;
+
+    var mover = state.turn;
+    var next = {
+      board: board,
+      turn: opposite(mover),
+      fullMoveNumber: mover === 'b' ? state.fullMoveNumber + 1 : state.fullMoveNumber,
+      history: state.history.concat([move]),
+      kingHasMoved: { w: state.kingHasMoved.w, b: state.kingHasMoved.b },
+      queenHasMoved: { w: state.queenHasMoved.w, b: state.queenHasMoved.b },
+      anyCaptureYet: state.anyCaptureYet || !!move.captured,
+      counting: { active: state.counting.active, trigger: state.counting.trigger, disadvantagedColor: state.counting.disadvantagedColor, tierBase: state.counting.tierBase, budget: state.counting.budget, elapsed: state.counting.elapsed },
+      status: 'active',
+      winner: null
+    };
+    if (move.piece.type === 'K') next.kingHasMoved[mover] = true;
+    if (move.piece.type === 'Q') next.queenHasMoved[mover] = true;
+    return next;
+  }
+
+  function countAllPieces(state) {
+    var n = 0;
+    for (var i = 0; i < 64; i++) if (state.board[i]) n++;
+    return n;
+  }
+
+  function hasPawns(state, color) {
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color && p.type === 'P') return true;
+    }
+    return false;
+  }
+
+  function isBareKing(state, color) {
+    var count = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color) {
+        if (p.type !== 'K') return false;
+        count++;
+      }
+    }
+    return count === 1;
+  }
+
+  function countType(state, color, type) {
+    var n = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color && p.type === type) n++;
+    }
+    return n;
+  }
+
+  // Priority-ordered extrapolation of the documented table for material
+  // combinations it doesn't explicitly name (see spec/plan Global Constraints).
+  function materialTier(state, color) {
+    var rooks = countType(state, color, 'R');
+    var bishops = countType(state, color, 'B');
+    var knights = countType(state, color, 'N');
+    if (rooks >= 2) return { label: 'twoRooks', base: 8 };
+    if (rooks >= 1) return { label: 'oneRook', base: 16 };
+    if (bishops >= 2) return { label: 'twoBishops', base: 22 };
+    if (knights >= 2) return { label: 'twoKnights', base: 32 };
+    if (bishops >= 1) return { label: 'oneBishop', base: 44 };
+    if (knights >= 1) return { label: 'oneKnight', base: 64 };
+    return { label: 'metsOnly', base: 64 };
+  }
+
+  function emptyCounting() {
+    return { active: false, trigger: null, disadvantagedColor: null, tierBase: null, budget: null, elapsed: 0 };
+  }
+
+  function updateCounting(prevCounting, state, moverColor) {
+    var whiteBare = isBareKing(state, 'w');
+    var blackBare = isBareKing(state, 'b');
+    var bothPawnless = !hasPawns(state, 'w') && !hasPawns(state, 'b');
+
+    if (whiteBare || blackBare) {
+      var disadvantaged = whiteBare ? 'w' : 'b';
+      var advantaged = opposite(disadvantaged);
+      var tier = materialTier(state, advantaged);
+      var total = countAllPieces(state);
+      var budget = tier.base - total;
+      var sameCount = prevCounting.active && prevCounting.trigger === 'bareKing' &&
+        prevCounting.disadvantagedColor === disadvantaged && prevCounting.tierBase === tier.base;
+      var elapsed = 0;
+      if (sameCount) {
+        elapsed = moverColor === advantaged ? prevCounting.elapsed + 1 : prevCounting.elapsed;
+      }
+      return { active: true, trigger: 'bareKing', disadvantagedColor: disadvantaged, tierBase: tier.base, budget: budget, elapsed: elapsed };
+    }
+
+    if (bothPawnless) {
+      if (!prevCounting.active || prevCounting.trigger !== 'noProgress') {
+        return { active: true, trigger: 'noProgress', disadvantagedColor: null, tierBase: 64, budget: 64, elapsed: 0 };
+      }
+      return { active: true, trigger: 'noProgress', disadvantagedColor: null, tierBase: 64, budget: 64, elapsed: prevCounting.elapsed + 1 };
+    }
+
+    return emptyCounting();
+  }
+
+  function applyMove(state, move) {
+    var next = applyMoveRaw(state, move);
+    var derived = deriveStatus(next);
+    next.status = derived.status;
+    next.winner = derived.winner;
+
+    var mover = state.turn;
+    next.counting = updateCounting(state.counting, next, mover);
+    if (move.captured && next.counting.trigger === 'noProgress') {
+      // A capture resets the no-progress clock even though both sides
+      // remain pawnless (the trigger condition is unaffected by the capture).
+      next.counting.elapsed = 0;
+    }
+    if (next.status === 'active' && next.counting.active && next.counting.elapsed >= next.counting.budget) {
+      next.status = next.counting.trigger === 'bareKing' ? 'draw-counting' : 'draw-noprogress';
+      next.winner = null;
+    }
+    return next;
+  }
+
+  // Attack detection deliberately does NOT reuse pawnMoves()'s forward-step
+  // logic: a pawn's forward move requires an empty destination and is not a
+  // threat, while its diagonal squares are threatened regardless of whether
+  // anything currently occupies them. Reusing generateBaseMoves verbatim for
+  // pawns would report the empty square ahead as "attacked", which is wrong.
+  function pawnAttackSquares(rank, file, color) {
+    var dir = color === 'w' ? 1 : -1;
+    var r1 = rank + dir;
+    var squares = [];
+    [-1, 1].forEach(function (df) {
+      var f2 = file + df;
+      if (inBounds(r1, f2)) squares.push({ rank: r1, file: f2 });
+    });
+    return squares;
+  }
+
+  function isSquareAttacked(state, rank, file, byColor) {
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (!p || p.color !== byColor) continue;
+        if (p.type === 'P') {
+          var attacks = pawnAttackSquares(r, f, byColor);
+          for (var k = 0; k < attacks.length; k++) {
+            if (attacks[k].rank === rank && attacks[k].file === file) return true;
+          }
+          continue;
+        }
+        // Base patterns only: the first-move exceptions (Task 6) are move
+        // options, not standing threats, and including them here would make
+        // isInCheck depend circularly on their own eligibility check.
+        var moves = generateBaseMoves(state, r, f);
+        for (var i = 0; i < moves.length; i++) {
+          if (moves[i].to.rank === rank && moves[i].to.file === file) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function findKing(state, color) {
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (p && p.color === color && p.type === 'K') return { rank: r, file: f };
+      }
+    }
+    return null;
+  }
+
+  function isInCheck(state, color) {
+    var king = findKing(state, color);
+    if (!king) return false;
+    return isSquareAttacked(state, king.rank, king.file, opposite(color));
+  }
+
+  function addKingJumpIfEligible(state, rank, file, piece, out) {
+    if (state.anyCaptureYet) return;
+    if (state.kingHasMoved[piece.color]) return;
+    if (isInCheck(state, piece.color)) return;
+    KNIGHT_STEPS.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      if (!inBounds(r2, f2)) return;
+      var occ = pieceAt(state, r2, f2);
+      if (occ && occ.color === piece.color) return;
+      // Judgment call (see spec/plan Global Constraints): capturing is
+      // allowed on this jump, matching a literal "moves like a horse" reading.
+      out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: 'kingJump' });
+    });
+  }
+
+  function addQueenDoubleStepIfEligible(state, rank, file, piece, out) {
+    if (state.anyCaptureYet) return;
+    if (state.queenHasMoved[piece.color]) return;
+    var dir = piece.color === 'w' ? 1 : -1;
+    var r1 = rank + dir, r2 = rank + 2 * dir;
+    if (!inBounds(r2, file)) return;
+    if (pieceAt(state, r1, file) || pieceAt(state, r2, file)) return;
+    out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: file }, piece: piece, captured: null, special: 'queenDoubleStep' });
+  }
+
+  function generatePseudoMoves(state, rank, file) {
+    var piece = pieceAt(state, rank, file);
+    if (!piece) return [];
+    var out = generateBaseMoves(state, rank, file);
+    if (piece.type === 'K') addKingJumpIfEligible(state, rank, file, piece, out);
+    if (piece.type === 'Q') addQueenDoubleStepIfEligible(state, rank, file, piece, out);
+    return out;
+  }
+
+  function generateLegalMoves(state, color) {
+    var legal = [];
+    for (var r = 0; r < 8; r++) {
+      for (var f = 0; f < 8; f++) {
+        var p = pieceAt(state, r, f);
+        if (!p || p.color !== color) continue;
+        var candidates = generatePseudoMoves(state, r, f);
+        for (var i = 0; i < candidates.length; i++) {
+          var resulting = applyMoveRaw(state, candidates[i]);
+          if (!isInCheck(resulting, color)) legal.push(candidates[i]);
+        }
+      }
+    }
+    return legal;
+  }
+
+  function deriveStatus(state) {
+    var sideToMove = state.turn;
+    var inCheck = isInCheck(state, sideToMove);
+    var hasMoves = generateLegalMoves(state, sideToMove).length > 0;
+    if (!hasMoves && inCheck) return { status: 'checkmate', winner: opposite(sideToMove) };
+    if (!hasMoves && !inCheck) return { status: 'stalemate', winner: null };
+    return { status: 'active', winner: null };
+  }
+
+  var api = {
+    squareName: squareName,
+    parseSquare: parseSquare,
+    inBounds: inBounds,
+    createInitialState: createInitialState,
+    pieceAt: pieceAt,
+    generateBaseMoves: generateBaseMoves,
+    opposite: opposite,
+    applyMove: applyMove,
+    promotionRankFor: promotionRankFor,
+    isSquareAttacked: isSquareAttacked,
+    isInCheck: isInCheck,
+    generatePseudoMoves: generatePseudoMoves,
+    generateLegalMoves: generateLegalMoves,
+    findKing: findKing,
+    deriveStatus: deriveStatus,
+    materialTier: materialTier,
+    countAllPieces: countAllPieces,
+    hasPawns: hasPawns,
+    isBareKing: isBareKing
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    root.OukEngine = api;
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function (root) {
+  'use strict';
+
+  var OukEngine = (typeof module !== 'undefined' && module.exports) ? require('./engine.js') : root.OukEngine;
+
+  var PIECE_VALUES = { R: 5, N: 3, B: 2.5, Q: 1.5, P: 1, K: 0 };
+  var MOBILITY_WEIGHT = 0.02;
+
+  function materialScore(state) {
+    var score = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (!p) continue;
+      var v = PIECE_VALUES[p.type];
+      score += p.color === 'w' ? v : -v;
+    }
+    return score;
+  }
+
+  function mobilityScore(state) {
+    var white = OukEngine.generateLegalMoves(state, 'w').length;
+    var black = OukEngine.generateLegalMoves(state, 'b').length;
+    return MOBILITY_WEIGHT * (white - black);
+  }
+
+  function evaluate(state) {
+    return materialScore(state) + mobilityScore(state);
+  }
+
+  var MATE_SCORE = 100000;
+
+  function negamax(state, depth, ply, alpha, beta) {
+    if (state.status !== 'active') {
+      if (state.status === 'checkmate') {
+        // state.turn has no moves and is checkmated: worst possible outcome
+        // for state.turn. Subtracting ply prefers faster mates.
+        return -(MATE_SCORE - ply);
+      }
+      // stalemate, draw-counting, draw-noprogress: all plain draws. This one
+      // check is the entire mechanism by which the AI is counting-aware —
+      // applyMove already resolved the counting rule into state.status.
+      return 0;
+    }
+    if (depth === 0) {
+      return (state.turn === 'w' ? 1 : -1) * evaluate(state);
+    }
+    var moves = OukEngine.generateLegalMoves(state, state.turn);
+    var best = -Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      var child = OukEngine.applyMove(state, moves[i]);
+      var score = -negamax(child, depth - 1, ply + 1, -beta, -alpha);
+      if (score > best) best = score;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
+  function orderMoves(moves) {
+    // Cheap move ordering: captures first (most valuable victim first).
+    // Meaningfully improves alpha-beta pruning without a real static
+    // exchange evaluation - good enough at this engine's search depth.
+    return moves.slice().sort(function (a, b) {
+      var av = a.captured ? PIECE_VALUES[a.captured.type] : -1;
+      var bv = b.captured ? PIECE_VALUES[b.captured.type] : -1;
+      return bv - av;
+    });
+  }
+
+  function searchRoot(state, depth) {
+    var moves = orderMoves(OukEngine.generateLegalMoves(state, state.turn));
+    var bestMove = moves[0];
+    var bestScore = -Infinity;
+    var alpha = -Infinity, beta = Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      var child = OukEngine.applyMove(state, moves[i]);
+      var score = -negamax(child, depth - 1, 1, -beta, -alpha);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = moves[i];
+      }
+      if (bestScore > alpha) alpha = bestScore;
+    }
+    return { move: bestMove, score: bestScore };
+  }
+
+  function chooseMove(state, options) {
+    options = options || {};
+    var timeLimitMs = options.timeLimitMs || 1000;
+    var maxDepth = options.maxDepth || 6;
+    var deadline = Date.now() + timeLimitMs;
+    var best = null;
+
+    for (var depth = 1; depth <= maxDepth; depth++) {
+      var result = searchRoot(state, depth);
+      best = result.move;
+      if (Date.now() >= deadline) break;
+      if (result.score >= MATE_SCORE - 100) break;
+    }
+    return best;
+  }
+
+  var api = {
+    evaluate: evaluate,
+    negamax: negamax,
+    MATE_SCORE: MATE_SCORE,
+    chooseMove: chooseMove
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    root.OukAI = api;
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function (root) {
+  'use strict';
+
+  // Original glyphs (not copied from any source): flat geometric shapes
+  // evoking the traditional bulbous Makruk/Ouk piece silhouettes, one per
+  // type, colored via inline style so a single path works for both sides.
+  var PATHS = {
+    K: '<circle cx="50" cy="34" r="16"/><path d="M28 90 Q50 58 72 90 Z"/><rect x="44" y="14" width="12" height="14"/>',
+    Q: '<circle cx="50" cy="40" r="14"/><path d="M30 90 Q50 64 70 90 Z"/>',
+    B: '<circle cx="50" cy="42" r="13"/><path d="M32 90 Q50 66 68 90 Z"/><circle cx="50" cy="20" r="5"/>',
+    N: '<path d="M35 90 L40 50 Q30 40 38 22 Q55 18 62 34 L58 50 L68 90 Z"/>',
+    R: '<rect x="32" y="26" width="36" height="14"/><path d="M30 90 Q50 62 70 90 Z"/><rect x="32" y="26" width="8" height="8"/><rect x="60" y="26" width="8" height="8"/>',
+    P: '<circle cx="50" cy="48" r="15"/><path d="M36 90 Q50 72 64 90 Z"/>'
+  };
+
+  function svgFor(type, color) {
+    var body = PATHS[type] || '';
+    var fill = color === 'w' ? '#f5efe0' : '#3a2a1a';
+    var stroke = color === 'w' ? '#7a5c30' : '#1a1008';
+    return '<svg viewBox="0 0 100 100" class="oc-piece" style="fill:' + fill + ';stroke:' + stroke + ';stroke-width:3">' + body + '</svg>';
+  }
+
+  var api = { svgFor: svgFor };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    root.OukPieces = api;
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function (root) {
+  'use strict';
+
+  var OukEngine = root.OukEngine;
+  var OukPieces = root.OukPieces;
+
+  function squareColorClass(rank, file) {
+    return (rank + file) % 2 === 0 ? 'dark' : 'light';
+  }
+
+  function renderBoard(gameState, containerEl) {
+    containerEl.innerHTML = '';
+    // Engine rank 0 (White's back rank) renders at the BOTTOM of the screen,
+    // so iterate display rows top (engine rank 7) to bottom (engine rank 0).
+    for (var displayRow = 0; displayRow < 8; displayRow++) {
+      var rank = 7 - displayRow;
+      for (var file = 0; file < 8; file++) {
+        var sq = document.createElement('div');
+        sq.className = 'oc-square ' + squareColorClass(rank, file);
+        sq.dataset.rank = String(rank);
+        sq.dataset.file = String(file);
+        var piece = OukEngine.pieceAt(gameState, rank, file);
+        if (piece) sq.innerHTML = OukPieces.svgFor(piece.type, piece.color);
+        containerEl.appendChild(sq);
+      }
+    }
+  }
+
+  function createApp(els) {
+    var appState = {
+      gameState: OukEngine.createInitialState(),
+      selectedSquare: null,
+      legalMovesForSelected: [],
+      mode: '2p', // '2p' | 'vs-ai'
+      aiColor: 'b',
+      aiOptions: { timeLimitMs: 800, maxDepth: 5 }
+    };
+
+    function statusText(state) {
+      if (state.status === 'checkmate') return (state.winner === 'w' ? 'White' : 'Black') + ' wins by checkmate';
+      if (state.status === 'stalemate') return 'Draw by stalemate';
+      if (state.status === 'draw-counting') return 'Draw — counting limit reached';
+      if (state.status === 'draw-noprogress') return 'Draw — no progress for 64 moves';
+      var turnName = state.turn === 'w' ? 'White' : 'Black';
+      return (OukEngine.isInCheck(state, state.turn) ? turnName + ' is in check — ' : '') + turnName + ' to move';
+    }
+
+    function renderCounting(state) {
+      if (!state.counting.active) { els.counting.hidden = true; return; }
+      els.counting.hidden = false;
+      var remaining = state.counting.budget - state.counting.elapsed;
+      var side = state.counting.trigger === 'bareKing'
+        ? (state.counting.disadvantagedColor === 'w' ? 'Black' : 'White') + ' must deliver checkmate'
+        : 'Either side must make progress';
+      els.counting.textContent = 'Counting rule active: ' + side + ' within ' + remaining + ' more move(s), or it is a draw.';
+    }
+
+    function renderCaptured(state) {
+      var byWhite = [], byBlack = [];
+      state.history.forEach(function (mv) {
+        if (!mv.captured) return;
+        (mv.piece.color === 'w' ? byWhite : byBlack).push(mv.captured);
+      });
+      els.capturedByWhite.innerHTML = byWhite.map(function (p) { return OukPieces.svgFor(p.type, p.color); }).join('');
+      els.capturedByBlack.innerHTML = byBlack.map(function (p) { return OukPieces.svgFor(p.type, p.color); }).join('');
+    }
+
+    function renderMoves(state) {
+      els.moves.innerHTML = state.history.map(function (mv, i) {
+        var text = OukEngine.squareName(mv.from.rank, mv.from.file) + (mv.captured ? 'x' : '-') + OukEngine.squareName(mv.to.rank, mv.to.file) + (mv.special === 'promotion' ? '=Q' : '');
+        return '<div>' + (i + 1) + '. ' + text + '</div>';
+      }).join('');
+      els.moves.scrollTop = els.moves.scrollHeight;
+    }
+
+    function render() {
+      renderBoard(appState.gameState, els.board);
+      els.status.textContent = statusText(appState.gameState);
+      renderCounting(appState.gameState);
+      renderCaptured(appState.gameState);
+      renderMoves(appState.gameState);
+      if (OukEngine.isInCheck(appState.gameState, appState.gameState.turn)) {
+        var king = OukEngine.findKing(appState.gameState, appState.gameState.turn);
+        if (king) {
+          var kingEl = els.board.querySelector('.oc-square[data-rank="' + king.rank + '"][data-file="' + king.file + '"]');
+          if (kingEl) kingEl.classList.add('in-check');
+        }
+      }
+      if (appState.selectedSquare) {
+        var selEl = els.board.querySelector(
+          '.oc-square[data-rank="' + appState.selectedSquare.rank + '"][data-file="' + appState.selectedSquare.file + '"]'
+        );
+        if (selEl) selEl.classList.add('selected');
+        appState.legalMovesForSelected.forEach(function (mv) {
+          var targetEl = els.board.querySelector(
+            '.oc-square[data-rank="' + mv.to.rank + '"][data-file="' + mv.to.file + '"]'
+          );
+          if (targetEl) targetEl.classList.add(mv.captured ? 'legal-capture' : 'legal-target');
+        });
+      }
+    }
+
+    function selectSquare(rank, file) {
+      var piece = OukEngine.pieceAt(appState.gameState, rank, file);
+      if (piece && piece.color === appState.gameState.turn) {
+        appState.selectedSquare = { rank: rank, file: file };
+        appState.legalMovesForSelected = OukEngine.generateLegalMoves(appState.gameState, piece.color)
+          .filter(function (m) { return m.from.rank === rank && m.from.file === file; });
+      } else {
+        appState.selectedSquare = null;
+        appState.legalMovesForSelected = [];
+      }
+    }
+
+    function tryMove(rank, file) {
+      var match = appState.legalMovesForSelected.find(function (m) { return m.to.rank === rank && m.to.file === file; });
+      if (!match) return false;
+      appState.gameState = OukEngine.applyMove(appState.gameState, match);
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      return true;
+    }
+
+    function maybeTriggerAI() {
+      if (appState.mode !== 'vs-ai') return;
+      if (appState.gameState.status !== 'active') return;
+      if (appState.gameState.turn !== appState.aiColor) return;
+      els.status.textContent = (appState.aiColor === 'w' ? 'White' : 'Black') + ' (AI) is thinking...';
+      setTimeout(function () {
+        var move = OukAI.chooseMove(appState.gameState, appState.aiOptions);
+        appState.gameState = OukEngine.applyMove(appState.gameState, move);
+        render();
+        maybeTriggerAI();
+      }, 30);
+    }
+
+    function handleSquareClick(rank, file) {
+      if (appState.gameState.status !== 'active') return;
+      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return;
+      if (appState.selectedSquare && tryMove(rank, file)) {
+        render();
+        maybeTriggerAI();
+        return;
+      }
+      selectSquare(rank, file);
+      render();
+    }
+
+    function newGame() {
+      appState.gameState = OukEngine.createInitialState();
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      render();
+      maybeTriggerAI();
+    }
+
+    function renderControls() {
+      els.controls.innerHTML =
+        '<button id="oc-new-game">New Game</button>' +
+        '<label><input type="radio" name="oc-mode" value="2p"' + (appState.mode === '2p' ? ' checked' : '') + '> 2-Player</label>' +
+        '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
+        '<label>Difficulty: <select id="oc-difficulty">' +
+          '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
+        '</select></label>';
+
+      document.getElementById('oc-new-game').addEventListener('click', newGame);
+      Array.prototype.forEach.call(els.controls.querySelectorAll('input[name="oc-mode"]'), function (radio) {
+        radio.addEventListener('change', function (evt) {
+          appState.mode = evt.target.value;
+          render();
+          maybeTriggerAI();
+        });
+      });
+      document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
+        var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
+        appState.aiOptions = presets[evt.target.value];
+      });
+    }
+
+    els.board.addEventListener('click', function (evt) {
+      var sq = evt.target.closest('.oc-square');
+      if (!sq) return;
+      handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
+    });
+
+    render();
+    renderControls();
+    return { handleSquareClick: handleSquareClick, getState: function () { return appState; } };
+  }
+
+  var api = { renderBoard: renderBoard, createApp: createApp };
+  root.OukUI = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+  var app = OukUI.createApp({
+    board: document.getElementById('board'),
+    status: document.getElementById('status'),
+    counting: document.getElementById('counting'),
+    capturedByWhite: document.getElementById('captured-by-white'),
+    capturedByBlack: document.getElementById('captured-by-black'),
+    moves: document.getElementById('moves'),
+    controls: document.getElementById('controls')
+  });
+
+</script>
+</body>
+</html>
