@@ -370,3 +370,67 @@ test('both first-move exceptions vanish permanently for both sides after any cap
   const bQueenDests = destSet(OukEngine.generatePseudoMoves(state, bQueenSq.rank, bQueenSq.file));
   assert.ok(!bQueenDests.includes('e6'), 'black queen (moving toward rank 1) double-step also gone: ' + bQueenDests.join(','));
 });
+
+test('materialTier matches the documented table', () => {
+  const twoRooks = placedState([{ at: 'a1', type: 'R', color: 'w' }, { at: 'b1', type: 'R', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(twoRooks, 'w').base, 8);
+
+  const oneRook = placedState([{ at: 'a1', type: 'R', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(oneRook, 'w').base, 16);
+
+  const twoBishops = placedState([{ at: 'a1', type: 'B', color: 'w' }, { at: 'b1', type: 'B', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(twoBishops, 'w').base, 22);
+
+  const twoKnights = placedState([{ at: 'a1', type: 'N', color: 'w' }, { at: 'b1', type: 'N', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(twoKnights, 'w').base, 32);
+
+  const oneBishop = placedState([{ at: 'a1', type: 'B', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(oneBishop, 'w').base, 44);
+
+  const oneKnight = placedState([{ at: 'a1', type: 'N', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(oneKnight, 'w').base, 64);
+
+  const onlyQueen = placedState([{ at: 'a1', type: 'Q', color: 'w' }, { at: 'a8', type: 'K', color: 'w' }], 'w');
+  assert.equal(OukEngine.materialTier(onlyQueen, 'w').base, 64);
+});
+
+test('bare-king trigger computes budget via the worked example from the source rules: two rooks and a knight vs lone king = 3 moves', () => {
+  const state = placedState([
+    { at: 'a1', type: 'K', color: 'w' },
+    { at: 'a2', type: 'R', color: 'w' },
+    { at: 'a3', type: 'R', color: 'w' },
+    { at: 'a4', type: 'N', color: 'w' },
+    { at: 'h8', type: 'K', color: 'b' },
+  ], 'w');
+  assert.equal(OukEngine.isBareKing(state, 'b'), true);
+  assert.equal(OukEngine.countAllPieces(state), 5);
+  const mv = OukEngine.generateLegalMoves(state, 'w').find((m) => m.piece.type === 'N');
+  const next = OukEngine.applyMove(state, mv);
+  assert.equal(next.counting.active, true);
+  assert.equal(next.counting.trigger, 'bareKing');
+  assert.equal(next.counting.disadvantagedColor, 'b');
+  assert.equal(next.counting.tierBase, 8);
+  assert.equal(next.counting.budget, 3, 'base 8 minus 5 total pieces = 3');
+});
+
+test('counting forces a draw if the budget elapses without checkmate', () => {
+  let state = placedState([
+    { at: 'a1', type: 'K', color: 'w' },
+    { at: 'h1', type: 'N', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  let guard = 0;
+  while (state.status === 'active' && guard < 200) {
+    const moves = OukEngine.generateLegalMoves(state, state.turn);
+    const mv = moves[0];
+    state = OukEngine.applyMove(state, mv);
+    guard++;
+  }
+  assert.ok(state.status === 'draw-counting' || state.status === 'checkmate', 'game must terminate: ' + state.status + ' after ' + guard + ' plies');
+});
+
+test('hasPawns reflects whether a color has any unpromoted pawn on the board', () => {
+  const state = placedState([{ at: 'a2', type: 'P', color: 'w' }, { at: 'a1', type: 'K', color: 'w' }, { at: 'a8', type: 'K', color: 'b' }], 'w');
+  assert.equal(OukEngine.hasPawns(state, 'w'), true);
+  assert.equal(OukEngine.hasPawns(state, 'b'), false);
+});

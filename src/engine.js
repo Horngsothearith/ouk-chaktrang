@@ -174,11 +174,107 @@
     return next;
   }
 
+  function countAllPieces(state) {
+    var n = 0;
+    for (var i = 0; i < 64; i++) if (state.board[i]) n++;
+    return n;
+  }
+
+  function hasPawns(state, color) {
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color && p.type === 'P') return true;
+    }
+    return false;
+  }
+
+  function isBareKing(state, color) {
+    var count = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color) {
+        if (p.type !== 'K') return false;
+        count++;
+      }
+    }
+    return count === 1;
+  }
+
+  function countType(state, color, type) {
+    var n = 0;
+    for (var i = 0; i < 64; i++) {
+      var p = state.board[i];
+      if (p && p.color === color && p.type === type) n++;
+    }
+    return n;
+  }
+
+  // Priority-ordered extrapolation of the documented table for material
+  // combinations it doesn't explicitly name (see spec/plan Global Constraints).
+  function materialTier(state, color) {
+    var rooks = countType(state, color, 'R');
+    var bishops = countType(state, color, 'B');
+    var knights = countType(state, color, 'N');
+    if (rooks >= 2) return { label: 'twoRooks', base: 8 };
+    if (rooks >= 1) return { label: 'oneRook', base: 16 };
+    if (bishops >= 2) return { label: 'twoBishops', base: 22 };
+    if (knights >= 2) return { label: 'twoKnights', base: 32 };
+    if (bishops >= 1) return { label: 'oneBishop', base: 44 };
+    if (knights >= 1) return { label: 'oneKnight', base: 64 };
+    return { label: 'metsOnly', base: 64 };
+  }
+
+  function emptyCounting() {
+    return { active: false, trigger: null, disadvantagedColor: null, tierBase: null, budget: null, elapsed: 0 };
+  }
+
+  function updateCounting(prevCounting, state, moverColor) {
+    var whiteBare = isBareKing(state, 'w');
+    var blackBare = isBareKing(state, 'b');
+    var bothPawnless = !hasPawns(state, 'w') && !hasPawns(state, 'b');
+
+    if (whiteBare || blackBare) {
+      var disadvantaged = whiteBare ? 'w' : 'b';
+      var advantaged = opposite(disadvantaged);
+      var tier = materialTier(state, advantaged);
+      var total = countAllPieces(state);
+      var budget = tier.base - total;
+      var sameCount = prevCounting.active && prevCounting.trigger === 'bareKing' &&
+        prevCounting.disadvantagedColor === disadvantaged && prevCounting.tierBase === tier.base;
+      var elapsed = 0;
+      if (sameCount) {
+        elapsed = moverColor === advantaged ? prevCounting.elapsed + 1 : prevCounting.elapsed;
+      }
+      return { active: true, trigger: 'bareKing', disadvantagedColor: disadvantaged, tierBase: tier.base, budget: budget, elapsed: elapsed };
+    }
+
+    if (bothPawnless) {
+      if (!prevCounting.active || prevCounting.trigger !== 'noProgress') {
+        return { active: true, trigger: 'noProgress', disadvantagedColor: null, tierBase: 64, budget: 64, elapsed: 0 };
+      }
+      return { active: true, trigger: 'noProgress', disadvantagedColor: null, tierBase: 64, budget: 64, elapsed: prevCounting.elapsed + 1 };
+    }
+
+    return emptyCounting();
+  }
+
   function applyMove(state, move) {
     var next = applyMoveRaw(state, move);
     var derived = deriveStatus(next);
     next.status = derived.status;
     next.winner = derived.winner;
+
+    var mover = state.turn;
+    next.counting = updateCounting(state.counting, next, mover);
+    if (move.captured && next.counting.trigger === 'noProgress') {
+      // A capture resets the no-progress clock even though both sides
+      // remain pawnless (the trigger condition is unaffected by the capture).
+      next.counting.elapsed = 0;
+    }
+    if (next.status === 'active' && next.counting.active && next.counting.elapsed >= next.counting.budget) {
+      next.status = next.counting.trigger === 'bareKing' ? 'draw-counting' : 'draw-noprogress';
+      next.winner = null;
+    }
     return next;
   }
 
@@ -312,7 +408,11 @@
     generatePseudoMoves: generatePseudoMoves,
     generateLegalMoves: generateLegalMoves,
     findKing: findKing,
-    deriveStatus: deriveStatus
+    deriveStatus: deriveStatus,
+    materialTier: materialTier,
+    countAllPieces: countAllPieces,
+    hasPawns: hasPawns,
+    isBareKing: isBareKing
   };
 
   if (typeof module !== 'undefined' && module.exports) {
