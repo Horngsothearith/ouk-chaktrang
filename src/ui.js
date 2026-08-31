@@ -30,7 +30,10 @@
     var appState = {
       gameState: OukEngine.createInitialState(),
       selectedSquare: null,
-      legalMovesForSelected: []
+      legalMovesForSelected: [],
+      mode: '2p', // '2p' | 'vs-ai'
+      aiColor: 'b',
+      aiOptions: { timeLimitMs: 800, maxDepth: 5 }
     };
 
     function statusText(state) {
@@ -118,14 +121,60 @@
       return true;
     }
 
+    function maybeTriggerAI() {
+      if (appState.mode !== 'vs-ai') return;
+      if (appState.gameState.status !== 'active') return;
+      if (appState.gameState.turn !== appState.aiColor) return;
+      els.status.textContent = (appState.aiColor === 'w' ? 'White' : 'Black') + ' (AI) is thinking...';
+      setTimeout(function () {
+        var move = OukAI.chooseMove(appState.gameState, appState.aiOptions);
+        appState.gameState = OukEngine.applyMove(appState.gameState, move);
+        render();
+        maybeTriggerAI();
+      }, 30);
+    }
+
     function handleSquareClick(rank, file) {
       if (appState.gameState.status !== 'active') return;
+      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return;
       if (appState.selectedSquare && tryMove(rank, file)) {
         render();
+        maybeTriggerAI();
         return;
       }
       selectSquare(rank, file);
       render();
+    }
+
+    function newGame() {
+      appState.gameState = OukEngine.createInitialState();
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      render();
+      maybeTriggerAI();
+    }
+
+    function renderControls() {
+      els.controls.innerHTML =
+        '<button id="oc-new-game">New Game</button>' +
+        '<label><input type="radio" name="oc-mode" value="2p"' + (appState.mode === '2p' ? ' checked' : '') + '> 2-Player</label>' +
+        '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
+        '<label>Difficulty: <select id="oc-difficulty">' +
+          '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
+        '</select></label>';
+
+      document.getElementById('oc-new-game').addEventListener('click', newGame);
+      Array.prototype.forEach.call(els.controls.querySelectorAll('input[name="oc-mode"]'), function (radio) {
+        radio.addEventListener('change', function (evt) {
+          appState.mode = evt.target.value;
+          render();
+          maybeTriggerAI();
+        });
+      });
+      document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
+        var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
+        appState.aiOptions = presets[evt.target.value];
+      });
     }
 
     els.board.addEventListener('click', function (evt) {
@@ -135,6 +184,7 @@
     });
 
     render();
+    renderControls();
     return { handleSquareClick: handleSquareClick, getState: function () { return appState; } };
   }
 
