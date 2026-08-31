@@ -82,6 +82,33 @@
     return DIAGONAL_DIRS.concat([forward]);
   }
 
+  // Pawns start on rank index 2 (White) / 5 (Black) and promote on reaching
+  // the rank where the OPPONENT's pawns started.
+  var WHITE_PROMOTION_RANK = 5; // display rank 6
+  var BLACK_PROMOTION_RANK = 2; // display rank 3
+
+  function promotionRankFor(color) {
+    return color === 'w' ? WHITE_PROMOTION_RANK : BLACK_PROMOTION_RANK;
+  }
+
+  function pawnMoves(state, rank, file, piece, out) {
+    var dir = piece.color === 'w' ? 1 : -1;
+    var r1 = rank + dir;
+    var promoRank = promotionRankFor(piece.color);
+
+    if (inBounds(r1, file) && !pieceAt(state, r1, file)) {
+      out.push({ from: { rank: rank, file: file }, to: { rank: r1, file: file }, piece: piece, captured: null, special: r1 === promoRank ? 'promotion' : null });
+    }
+    [-1, 1].forEach(function (df) {
+      var f2 = file + df;
+      if (!inBounds(r1, f2)) return;
+      var occ = pieceAt(state, r1, f2);
+      if (occ && occ.color !== piece.color) {
+        out.push({ from: { rank: rank, file: file }, to: { rank: r1, file: f2 }, piece: piece, captured: occ, special: r1 === promoRank ? 'promotion' : null });
+      }
+    });
+  }
+
   function generateBaseMoves(state, rank, file) {
     var piece = pieceAt(state, rank, file);
     if (!piece) return [];
@@ -103,10 +130,41 @@
         addSlideMoves(state, rank, file, ORTHOGONAL_DIRS, piece, out);
         break;
       case 'P':
-        // pawn handled in Task 3
+        pawnMoves(state, rank, file, piece, out);
         break;
     }
     return out;
+  }
+
+  function cloneBoard(board) {
+    return board.map(function (p) { return p ? { type: p.type, color: p.color } : null; });
+  }
+
+  function applyMove(state, move) {
+    var board = cloneBoard(state.board);
+    var fromIdx = move.from.rank * 8 + move.from.file;
+    var toIdx = move.to.rank * 8 + move.to.file;
+    var movedPiece = { type: move.piece.type, color: move.piece.color };
+    if (move.special === 'promotion') movedPiece.type = 'Q';
+    board[fromIdx] = null;
+    board[toIdx] = movedPiece;
+
+    var mover = state.turn;
+    var next = {
+      board: board,
+      turn: opposite(mover),
+      fullMoveNumber: mover === 'b' ? state.fullMoveNumber + 1 : state.fullMoveNumber,
+      history: state.history.concat([move]),
+      kingHasMoved: { w: state.kingHasMoved.w, b: state.kingHasMoved.b },
+      queenHasMoved: { w: state.queenHasMoved.w, b: state.queenHasMoved.b },
+      anyCaptureYet: state.anyCaptureYet || !!move.captured,
+      counting: { active: state.counting.active, trigger: state.counting.trigger, disadvantagedColor: state.counting.disadvantagedColor, tierBase: state.counting.tierBase, budget: state.counting.budget, elapsed: state.counting.elapsed },
+      status: 'active',
+      winner: null
+    };
+    if (move.piece.type === 'K') next.kingHasMoved[mover] = true;
+    if (move.piece.type === 'Q') next.queenHasMoved[mover] = true;
+    return next;
   }
 
   var api = {
@@ -116,7 +174,9 @@
     createInitialState: createInitialState,
     pieceAt: pieceAt,
     generateBaseMoves: generateBaseMoves,
-    opposite: opposite
+    opposite: opposite,
+    applyMove: applyMove,
+    promotionRankFor: promotionRankFor
   };
 
   if (typeof module !== 'undefined' && module.exports) {

@@ -115,3 +115,82 @@ test('king moves exactly 1 step in any of 8 directions', () => {
   const dests = destSet(OukEngine.generateBaseMoves(state, sq.rank, sq.file));
   assert.deepEqual(dests, ['c3', 'c4', 'c5', 'd3', 'd5', 'e3', 'e4', 'e5'].sort());
 });
+
+test('white pawn moves 1 forward, captures 1 diagonally forward, no double-step', () => {
+  const state = placedState([
+    { at: 'd4', type: 'P', color: 'w' },
+    { at: 'e5', type: 'P', color: 'b' }, // diagonal capture target
+    { at: 'd5', type: 'P', color: 'w' }, // own piece blocks forward move
+  ], 'w');
+  const sq = OukEngine.parseSquare('d4');
+  const dests = destSet(OukEngine.generateBaseMoves(state, sq.rank, sq.file));
+  assert.deepEqual(dests, ['e5'].sort(), 'forward blocked by own pawn, only diagonal capture available');
+});
+
+test('black pawn direction is mirrored', () => {
+  const state = placedState([{ at: 'd5', type: 'P', color: 'b' }], 'b');
+  const sq = OukEngine.parseSquare('d5');
+  const dests = destSet(OukEngine.generateBaseMoves(state, sq.rank, sq.file));
+  assert.deepEqual(dests, ['d4']);
+});
+
+test('pawn cannot capture straight ahead, only diagonally, and never backward', () => {
+  const state = placedState([
+    { at: 'd4', type: 'P', color: 'w' },
+    { at: 'd5', type: 'P', color: 'b' }, // directly ahead: blocks, not capturable
+  ], 'w');
+  const sq = OukEngine.parseSquare('d4');
+  const dests = destSet(OukEngine.generateBaseMoves(state, sq.rank, sq.file));
+  assert.deepEqual(dests, []);
+});
+
+test('white pawn promotes to queen-moving piece on reaching rank 6 (opponent pawn start rank)', () => {
+  const state = placedState([
+    { at: 'd5', type: 'P', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'a1', type: 'K', color: 'w' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('d5');
+  const moves = OukEngine.generateBaseMoves(state, sq.rank, sq.file);
+  const mv = moves.find((m) => OukEngine.squareName(m.to.rank, m.to.file) === 'd6');
+  assert.equal(mv.special, 'promotion');
+
+  const next = OukEngine.applyMove(state, mv);
+  const promoted = OukEngine.pieceAt(next, 5, 3); // d6
+  assert.equal(promoted.type, 'Q');
+  assert.equal(promoted.color, 'w');
+  const afterDests = destSet(OukEngine.generateBaseMoves(next, 5, 3));
+  assert.deepEqual(afterDests, ['c5', 'c7', 'e5', 'e7'].sort(), 'promoted piece now moves like a queen');
+});
+
+test('black pawn promotes on reaching rank 3', () => {
+  const state = placedState([
+    { at: 'd4', type: 'P', color: 'b' },
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'a1', type: 'K', color: 'w' },
+  ], 'b');
+  const sq = OukEngine.parseSquare('d4');
+  const mv = OukEngine.generateBaseMoves(state, sq.rank, sq.file)[0];
+  assert.equal(OukEngine.squareName(mv.to.rank, mv.to.file), 'd3');
+  assert.equal(mv.special, 'promotion');
+});
+
+test('applyMove flips turn, records capture, and tracks anyCaptureYet', () => {
+  const state = placedState([
+    { at: 'd4', type: 'R', color: 'w' },
+    { at: 'd6', type: 'P', color: 'b' },
+    { at: 'a1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('d4');
+  const mv = OukEngine.generateBaseMoves(state, sq.rank, sq.file)
+    .find((m) => OukEngine.squareName(m.to.rank, m.to.file) === 'd6');
+  assert.equal(state.anyCaptureYet, false);
+  const next = OukEngine.applyMove(state, mv);
+  assert.equal(next.turn, 'b');
+  assert.equal(next.anyCaptureYet, true);
+  assert.equal(next.history.length, 1);
+  assert.equal(OukEngine.pieceAt(next, 2, 3), null, 'origin square vacated');
+  assert.equal(OukEngine.pieceAt(next, 5, 3).type, 'R');
+  assert.equal(state.anyCaptureYet, false, 'original state untouched (immutable apply)');
+});
