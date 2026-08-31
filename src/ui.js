@@ -76,28 +76,36 @@
       els.moves.scrollTop = els.moves.scrollHeight;
     }
 
+    function squareEl(rank, file) {
+      return els.board.querySelector('.oc-square[data-rank="' + rank + '"][data-file="' + file + '"]');
+    }
+
     function render() {
       renderBoard(appState.gameState, els.board);
       els.status.textContent = statusText(appState.gameState);
       renderCounting(appState.gameState);
       renderCaptured(appState.gameState);
       renderMoves(appState.gameState);
+      var history = appState.gameState.history;
+      if (history.length > 0) {
+        var lastMove = history[history.length - 1];
+        var fromEl = squareEl(lastMove.from.rank, lastMove.from.file);
+        var toEl = squareEl(lastMove.to.rank, lastMove.to.file);
+        if (fromEl) fromEl.classList.add('last-move');
+        if (toEl) toEl.classList.add('last-move');
+      }
       if (OukEngine.isInCheck(appState.gameState, appState.gameState.turn)) {
         var king = OukEngine.findKing(appState.gameState, appState.gameState.turn);
         if (king) {
-          var kingEl = els.board.querySelector('.oc-square[data-rank="' + king.rank + '"][data-file="' + king.file + '"]');
+          var kingEl = squareEl(king.rank, king.file);
           if (kingEl) kingEl.classList.add('in-check');
         }
       }
       if (appState.selectedSquare) {
-        var selEl = els.board.querySelector(
-          '.oc-square[data-rank="' + appState.selectedSquare.rank + '"][data-file="' + appState.selectedSquare.file + '"]'
-        );
+        var selEl = squareEl(appState.selectedSquare.rank, appState.selectedSquare.file);
         if (selEl) selEl.classList.add('selected');
         appState.legalMovesForSelected.forEach(function (mv) {
-          var targetEl = els.board.querySelector(
-            '.oc-square[data-rank="' + mv.to.rank + '"][data-file="' + mv.to.file + '"]'
-          );
+          var targetEl = squareEl(mv.to.rank, mv.to.file);
           if (targetEl) targetEl.classList.add(mv.captured ? 'legal-capture' : 'legal-target');
         });
       }
