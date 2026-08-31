@@ -5,7 +5,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { parseAllowedHosts, isAllowedTarget } = require('./proxy-guard.js');
+const { parseAllowedHosts, isAllowedTarget, describeFetchFailure } = require('./proxy-guard.js');
 
 const root = path.join(__dirname, '..');
 const port = process.env.PORT || 5173;
@@ -77,7 +77,7 @@ http.createServer(async (req, res) => {
       res.end(resBody);
     } catch (err) {
       res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: { message: 'Proxy request failed: ' + err.message } }));
+      res.end(JSON.stringify({ error: { message: 'Proxy request failed: ' + describeFetchFailure(err) } }));
     }
     return;
   }

@@ -60,3 +60,40 @@ test('isAllowedTarget matches the host regardless of port or letter case', () =>
   assert.equal(guard.isAllowedTarget('http://localhost:11434/v1/chat', hosts).allowed, true);
   assert.equal(guard.isAllowedTarget('https://API.OpenAI.com/v1', hosts).allowed, true);
 });
+
+// fetch() collapses every transport failure into the same opaque "fetch
+// failed"; the actionable part (ECONNREFUSED, ENOTFOUND, a TLS error) only
+// ever lives on err.cause. Dropping it turns a diagnosable 502 into a guess.
+test('describeFetchFailure surfaces the underlying cause code', () => {
+  const err = new TypeError('fetch failed');
+  err.cause = Object.assign(new Error('connect ECONNREFUSED 100.101.84.127:11434'), {
+    code: 'ECONNREFUSED'
+  });
+  assert.match(guard.describeFetchFailure(err), /ECONNREFUSED/);
+});
+
+test('describeFetchFailure falls back to the cause message when there is no code', () => {
+  const err = new TypeError('fetch failed');
+  err.cause = new Error('unable to verify the first certificate');
+  assert.match(guard.describeFetchFailure(err), /unable to verify the first certificate/);
+});
+
+test('describeFetchFailure returns the plain message when there is no cause', () => {
+  assert.equal(guard.describeFetchFailure(new Error('boom')), 'boom');
+});
+
+test('describeFetchFailure tolerates a non-Error being thrown', () => {
+  assert.equal(typeof guard.describeFetchFailure(undefined), 'string');
+});
+
+// The allowlist is the whole security control, and these defaults ship to
+// everyone. An operator's own private host belongs in PROXY_ALLOWED_HOSTS,
+// not baked into the defaults - see the header comment in proxy-guard.js.
+test('DEFAULT_ALLOWED_HOSTS contains only the public preset API hosts', () => {
+  assert.deepEqual(guard.DEFAULT_ALLOWED_HOSTS, [
+    'api.openai.com',
+    'openrouter.ai',
+    'api.groq.com',
+    'api.deepseek.com'
+  ]);
+});

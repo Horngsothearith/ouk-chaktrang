@@ -51,4 +51,16 @@ function isAllowedTarget(targetUrl, allowedHosts) {
   return { allowed: true, reason: 'ok' };
 }
 
-module.exports = { DEFAULT_ALLOWED_HOSTS, parseAllowedHosts, isAllowedTarget };
+// fetch() reports every transport failure - connection refused, DNS miss,
+// timeout, TLS rejection - as the same opaque TypeError: "fetch failed". The
+// part an operator can act on is always one level down, on err.cause, so
+// unwrap it. Without this a 502 says nothing about which of those happened.
+function describeFetchFailure(err) {
+  const message = (err && err.message) || 'Unknown error';
+  const cause = err && err.cause;
+  if (!cause) return message;
+  const detail = cause.code || cause.message;
+  return detail ? message + ' (' + detail + ')' : message;
+}
+
+module.exports = { DEFAULT_ALLOWED_HOSTS, parseAllowedHosts, isAllowedTarget, describeFetchFailure };
