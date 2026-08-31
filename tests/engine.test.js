@@ -263,6 +263,10 @@ test('deriveStatus detects stalemate as a draw (no winner)', () => {
     { at: 'c7', type: 'K', color: 'w' },
     { at: 'c6', type: 'N', color: 'w' },
   ], 'b');
+  // Isolate this from the Task 6 king-jump first-move exception (tested on
+  // its own below) so this fixture only has to cover the king's normal
+  // 1-step moves.
+  state.kingHasMoved.b = true;
   assert.equal(OukEngine.isInCheck(state, 'b'), false, 'must not be in check for a true stalemate test');
   assert.equal(OukEngine.generateLegalMoves(state, 'b').length, 0, 'no legal moves');
   const status = OukEngine.deriveStatus(state);
@@ -282,4 +286,87 @@ test('applyMove wires deriveStatus in automatically', () => {
   const next = OukEngine.applyMove(state, mv);
   assert.equal(next.status, 'checkmate');
   assert.equal(next.winner, 'w');
+});
+
+test('king may jump like a knight on its first move, pre-capture, not in check', () => {
+  const state = placedState([
+    { at: 'd1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('d1');
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(dests.includes('e3'), 'knight-jump destination available: ' + dests.join(','));
+  assert.ok(dests.includes('c3'));
+  assert.ok(dests.includes('c1') && dests.includes('d2') && dests.includes('e1'), 'normal king steps still present');
+});
+
+test('king jump unavailable once a capture has happened anywhere in the game', () => {
+  const state = placedState([
+    { at: 'd1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  state.anyCaptureYet = true;
+  const sq = OukEngine.parseSquare('d1');
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(!dests.includes('e3') && !dests.includes('c3'), 'jump squares gone: ' + dests.join(','));
+});
+
+test('king jump unavailable once that king has already moved once', () => {
+  const state = placedState([
+    { at: 'd1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  state.kingHasMoved.w = true;
+  const sq = OukEngine.parseSquare('d1');
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(!dests.includes('e3') && !dests.includes('c3'));
+});
+
+test('king jump unavailable while currently in check', () => {
+  const state = placedState([
+    { at: 'd1', type: 'K', color: 'w' },
+    { at: 'd8', type: 'R', color: 'b' },
+    { at: 'a8', type: 'K', color: 'b' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('d1');
+  assert.equal(OukEngine.isInCheck(state, 'w'), true);
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(!dests.includes('e3') && !dests.includes('c3'));
+});
+
+test('queen may advance 2 squares straight forward on her first move once the path is clear', () => {
+  const state = placedState([
+    { at: 'e1', type: 'Q', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'a1', type: 'K', color: 'w' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('e1');
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(dests.includes('e3'), 'double-step available: ' + dests.join(','));
+});
+
+test('queen double-step blocked if either intermediate or destination square is occupied', () => {
+  const state = placedState([
+    { at: 'e1', type: 'Q', color: 'w' },
+    { at: 'e3', type: 'P', color: 'w' }, // own pawn still sitting on the destination square
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'a1', type: 'K', color: 'w' },
+  ], 'w');
+  const sq = OukEngine.parseSquare('e1');
+  const dests = destSet(OukEngine.generatePseudoMoves(state, sq.rank, sq.file));
+  assert.ok(!dests.includes('e3'));
+});
+
+test('both first-move exceptions vanish permanently for both sides after any capture', () => {
+  const state = placedState([
+    { at: 'd1', type: 'K', color: 'w' },
+    { at: 'd8', type: 'K', color: 'b' },
+    { at: 'e8', type: 'Q', color: 'b' },
+  ], 'w');
+  state.anyCaptureYet = true;
+  const wKingDests = destSet(OukEngine.generatePseudoMoves(state, 0, 3));
+  assert.ok(!wKingDests.includes('e3') && !wKingDests.includes('c3'));
+  const bQueenSq = OukEngine.parseSquare('e8');
+  const bQueenDests = destSet(OukEngine.generatePseudoMoves(state, bQueenSq.rank, bQueenSq.file));
+  assert.ok(!bQueenDests.includes('e6'), 'black queen (moving toward rank 1) double-step also gone: ' + bQueenDests.join(','));
 });

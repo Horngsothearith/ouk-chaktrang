@@ -238,9 +238,38 @@
     return isSquareAttacked(state, king.rank, king.file, opposite(color));
   }
 
+  function addKingJumpIfEligible(state, rank, file, piece, out) {
+    if (state.anyCaptureYet) return;
+    if (state.kingHasMoved[piece.color]) return;
+    if (isInCheck(state, piece.color)) return;
+    KNIGHT_STEPS.forEach(function (d) {
+      var r2 = rank + d[0], f2 = file + d[1];
+      if (!inBounds(r2, f2)) return;
+      var occ = pieceAt(state, r2, f2);
+      if (occ && occ.color === piece.color) return;
+      // Judgment call (see spec/plan Global Constraints): capturing is
+      // allowed on this jump, matching a literal "moves like a horse" reading.
+      out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: f2 }, piece: piece, captured: occ || null, special: 'kingJump' });
+    });
+  }
+
+  function addQueenDoubleStepIfEligible(state, rank, file, piece, out) {
+    if (state.anyCaptureYet) return;
+    if (state.queenHasMoved[piece.color]) return;
+    var dir = piece.color === 'w' ? 1 : -1;
+    var r1 = rank + dir, r2 = rank + 2 * dir;
+    if (!inBounds(r2, file)) return;
+    if (pieceAt(state, r1, file) || pieceAt(state, r2, file)) return;
+    out.push({ from: { rank: rank, file: file }, to: { rank: r2, file: file }, piece: piece, captured: null, special: 'queenDoubleStep' });
+  }
+
   function generatePseudoMoves(state, rank, file) {
-    // Task 6 extends this with the two Cambodia-specific first-move options.
-    return generateBaseMoves(state, rank, file);
+    var piece = pieceAt(state, rank, file);
+    if (!piece) return [];
+    var out = generateBaseMoves(state, rank, file);
+    if (piece.type === 'K') addKingJumpIfEligible(state, rank, file, piece, out);
+    if (piece.type === 'Q') addQueenDoubleStepIfEligible(state, rank, file, piece, out);
+    return out;
   }
 
   function generateLegalMoves(state, color) {
