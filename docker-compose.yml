@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    image: ouk-chaktrong:latest
+    container_name: ouk-chaktrong
+    # Bound to loopback on purpose. scripts/dev-server.js exposes /api/proxy,
+    # which forwards a request to whatever URL the caller puts in the
+    # x-target-url header - so publishing this port on a shared network would
+    # let anyone reach the container use it as an open relay into that network.
+    # Only widen this to "${PORT:-5173}:5173" after that endpoint takes an
+    # allowlist of permitted API hosts.
+    ports:
+      - "127.0.0.1:${PORT:-5173}:5173"
+    environment:
+      PORT: 5173
+    # The server reads each file from disk per request, so this bind mount gives
+    # live edits with no rebuild. Read-only: the app never writes to disk.
+    volumes:
+      - .:/app:ro
+    init: true
+    restart: unless-stopped
+
+  # One-shot test runner: `docker compose run --rm test`
+  # Behind a profile so `docker compose up` doesn't start it.
+  test:
+    build: .
+    image: ouk-chaktrong:latest
+    profiles: ["test"]
+    command: ["node", "--test"]
+    volumes:
+      - .:/app:ro
+    init: true
