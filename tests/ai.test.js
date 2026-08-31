@@ -89,3 +89,40 @@ test('negamax at depth 1 finds a mate-in-1 (discovered check) among 25 legal mov
   assert.equal(OukEngine.squareName(best.from.rank, best.from.file), 'd8');
   assert.equal(OukEngine.squareName(best.to.rank, best.to.file), 'c6');
 });
+
+test('chooseMove returns a legal move for the starting position within the time budget', () => {
+  const state = OukEngine.createInitialState();
+  const legal = OukEngine.generateLegalMoves(state, 'w');
+  const legalKeys = new Set(legal.map((m) => OukEngine.squareName(m.from.rank, m.from.file) + OukEngine.squareName(m.to.rank, m.to.file) + (m.special || '')));
+  const start = Date.now();
+  const move = OukAI.chooseMove(state, { timeLimitMs: 300, maxDepth: 4 });
+  const elapsed = Date.now() - start;
+  const key = OukEngine.squareName(move.from.rank, move.from.file) + OukEngine.squareName(move.to.rank, move.to.file) + (move.special || '');
+  assert.ok(legalKeys.has(key), 'chosen move must be legal: ' + key);
+  assert.ok(elapsed < 2000, 'must respect the time budget with reasonable overhead: ' + elapsed + 'ms');
+});
+
+test('chooseMove takes an immediate mate-in-1 when available', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'd8', type: 'N', color: 'w' },
+  ], 'w');
+  const move = OukAI.chooseMove(state, { timeLimitMs: 500, maxDepth: 4 });
+  const next = OukEngine.applyMove(state, move);
+  assert.equal(next.status, 'checkmate');
+});
+
+test('chooseMove does not hang a defended rook for a free pawn', () => {
+  const state = placedState([
+    { at: 'a1', type: 'K', color: 'w' },
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'd4', type: 'R', color: 'w' },
+    { at: 'd7', type: 'P', color: 'b' },
+    { at: 'h7', type: 'R', color: 'b' },
+  ], 'w');
+  const move = OukAI.chooseMove(state, { timeLimitMs: 500, maxDepth: 3 });
+  const takesBait = OukEngine.squareName(move.to.rank, move.to.file) === 'd7';
+  assert.equal(takesBait, false, 'should not grab a defended pawn and drop the rook next move');
+});

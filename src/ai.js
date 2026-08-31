@@ -56,10 +56,55 @@
     return best;
   }
 
+  function orderMoves(moves) {
+    // Cheap move ordering: captures first (most valuable victim first).
+    // Meaningfully improves alpha-beta pruning without a real static
+    // exchange evaluation - good enough at this engine's search depth.
+    return moves.slice().sort(function (a, b) {
+      var av = a.captured ? PIECE_VALUES[a.captured.type] : -1;
+      var bv = b.captured ? PIECE_VALUES[b.captured.type] : -1;
+      return bv - av;
+    });
+  }
+
+  function searchRoot(state, depth) {
+    var moves = orderMoves(OukEngine.generateLegalMoves(state, state.turn));
+    var bestMove = moves[0];
+    var bestScore = -Infinity;
+    var alpha = -Infinity, beta = Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      var child = OukEngine.applyMove(state, moves[i]);
+      var score = -negamax(child, depth - 1, 1, -beta, -alpha);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = moves[i];
+      }
+      if (bestScore > alpha) alpha = bestScore;
+    }
+    return { move: bestMove, score: bestScore };
+  }
+
+  function chooseMove(state, options) {
+    options = options || {};
+    var timeLimitMs = options.timeLimitMs || 1000;
+    var maxDepth = options.maxDepth || 6;
+    var deadline = Date.now() + timeLimitMs;
+    var best = null;
+
+    for (var depth = 1; depth <= maxDepth; depth++) {
+      var result = searchRoot(state, depth);
+      best = result.move;
+      if (Date.now() >= deadline) break;
+      if (result.score >= MATE_SCORE - 100) break;
+    }
+    return best;
+  }
+
   var api = {
     evaluate: evaluate,
     negamax: negamax,
-    MATE_SCORE: MATE_SCORE
+    MATE_SCORE: MATE_SCORE,
+    chooseMove: chooseMove
   };
 
   if (typeof module !== 'undefined' && module.exports) {
