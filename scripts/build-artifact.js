@@ -32,6 +32,11 @@ const out = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- Without this a mobile browser lays the page out at 980px and scales it
+     down, so every responsive rule in the stylesheet measures the wrong
+     viewport. index.html carries the same tag; the <head> here is rebuilt from
+     scratch rather than copied, so it has to be repeated. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ouk Chaktrang</title>
 <style>
 ${css}
