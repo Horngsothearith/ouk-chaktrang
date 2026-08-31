@@ -6,7 +6,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
-const jsFiles = ['src/engine.js', 'src/ai.js', 'src/pieces.js', 'src/review.js', 'src/ui.js'];
+const jsFiles = ['src/engine.js', 'src/ai.js', 'src/pieces.js', 'src/review.js', 'src/opponent.js', 'src/ui.js'];
 const js = jsFiles.map((f) => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
 
 const bodyMatch = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
