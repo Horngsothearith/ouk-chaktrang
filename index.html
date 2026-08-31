@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ouk Chaktrang</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="oc-app">
+  <div class="oc-board" id="board"></div>
+  <div class="oc-panel">
+    <div class="oc-status" id="status">White to move</div>
+    <div class="oc-counting" id="counting" hidden></div>
+    <div>
+      <div>Captured by White:</div>
+      <div class="oc-captured" id="captured-by-white"></div>
+      <div>Captured by Black:</div>
+      <div class="oc-captured" id="captured-by-black"></div>
+    </div>
+    <div class="oc-moves" id="moves"></div>
+    <div class="oc-controls" id="controls"></div>
+  </div>
+</div>
+<script src="src/engine.js"></script>
+<script src="src/ai.js"></script>
+<script src="src/pieces.js"></script>
+<script src="src/ui.js"></script>
+<script>
+  var gameState = OukEngine.createInitialState();
+  OukUI.renderBoard(gameState, document.getElementById('board'));
+</script>
+</body>
+</html>

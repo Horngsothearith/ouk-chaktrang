@@ -1,0 +1,35 @@
+:root {
+  --oc-light: #eadfc4;
+  --oc-dark: #a97c50;
+  --oc-highlight: #6fae4a;
+  --oc-select: #4a90d9;
+  --oc-check: #c0392b;
+  --oc-bg: #f7f3ea;
+  --oc-panel-bg: #ffffff;
+  --oc-text: #2a2016;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --oc-bg: #1c1712;
+    --oc-panel-bg: #2a2119;
+    --oc-text: #f0e9db;
+  }
+}
+body { margin: 0; }
+.oc-app { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; background: var(--oc-bg); color: var(--oc-text); font-family: system-ui, sans-serif; min-height: 100vh; box-sizing: border-box; }
+.oc-board { display: grid; grid-template-columns: repeat(8, minmax(36px, 64px)); grid-template-rows: repeat(8, minmax(36px, 64px)); border: 3px solid var(--oc-dark); width: min(90vw, 512px); aspect-ratio: 1; }
+.oc-square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.oc-square.light { background: var(--oc-light); }
+.oc-square.dark { background: var(--oc-dark); }
+.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-select); }
+.oc-square.legal-target::after { content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: var(--oc-highlight); opacity: 0.75; }
+.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-highlight); }
+.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-check); }
+.oc-piece { width: 82%; height: 82%; pointer-events: none; }
+.oc-panel { min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
+.oc-status { font-weight: 600; font-size: 1.1em; }
+.oc-counting { background: #fff3cd; color: #7a5c00; padding: 8px 12px; border-radius: 6px; font-size: 0.9em; }
+.oc-captured { display: flex; flex-wrap: wrap; gap: 4px; min-height: 28px; }
+.oc-captured .oc-piece { width: 22px; height: 22px; }
+.oc-moves { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9em; }
+.oc-controls { display: flex; flex-direction: column; gap: 8px; }
