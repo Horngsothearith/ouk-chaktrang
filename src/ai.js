@@ -27,8 +27,39 @@
     return materialScore(state) + mobilityScore(state);
   }
 
+  var MATE_SCORE = 100000;
+
+  function negamax(state, depth, ply, alpha, beta) {
+    if (state.status !== 'active') {
+      if (state.status === 'checkmate') {
+        // state.turn has no moves and is checkmated: worst possible outcome
+        // for state.turn. Subtracting ply prefers faster mates.
+        return -(MATE_SCORE - ply);
+      }
+      // stalemate, draw-counting, draw-noprogress: all plain draws. This one
+      // check is the entire mechanism by which the AI is counting-aware —
+      // applyMove already resolved the counting rule into state.status.
+      return 0;
+    }
+    if (depth === 0) {
+      return (state.turn === 'w' ? 1 : -1) * evaluate(state);
+    }
+    var moves = OukEngine.generateLegalMoves(state, state.turn);
+    var best = -Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      var child = OukEngine.applyMove(state, moves[i]);
+      var score = -negamax(child, depth - 1, ply + 1, -beta, -alpha);
+      if (score > best) best = score;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
   var api = {
-    evaluate: evaluate
+    evaluate: evaluate,
+    negamax: negamax,
+    MATE_SCORE: MATE_SCORE
   };
 
   if (typeof module !== 'undefined' && module.exports) {

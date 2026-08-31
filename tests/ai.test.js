@@ -11,6 +11,9 @@ function placedState(pieces, turn) {
     state.board[sq.rank * 8 + sq.file] = { type: p.type, color: p.color };
   }
   state.turn = turn || 'w';
+  const derived = OukEngine.deriveStatus(state);
+  state.status = derived.status;
+  state.winner = derived.winner;
   return state;
 }
 
@@ -36,4 +39,53 @@ test('evaluate is negative for White when Black is up material', () => {
     { at: 'd4', type: 'Q', color: 'b' },
   ], 'w');
   assert.ok(OukAI.evaluate(state) < 0);
+});
+
+test('negamax scores an already-checkmated side-to-move as a large negative number', () => {
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'h7', type: 'R', color: 'w' },
+    { at: 'h1', type: 'K', color: 'w' },
+  ], 'b');
+  assert.equal(state.status, 'checkmate');
+  const score = OukAI.negamax(state, 3, 0, -Infinity, Infinity);
+  assert.ok(score <= -OukAI.MATE_SCORE + 1, 'checkmated side-to-move must score near -MATE_SCORE: ' + score);
+});
+
+test('negamax scores stalemate and counting-forced draws as exactly 0', () => {
+  const stalemate = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'c6', type: 'N', color: 'w' },
+  ], 'b');
+  stalemate.kingHasMoved.b = true;
+  const derived = OukEngine.deriveStatus(stalemate);
+  stalemate.status = derived.status;
+  stalemate.winner = derived.winner;
+  assert.equal(stalemate.status, 'stalemate');
+  assert.equal(OukAI.negamax(stalemate, 2, 0, -Infinity, Infinity), 0);
+});
+
+test('negamax at depth 1 finds a mate-in-1 (discovered check) among 25 legal moves', () => {
+  // Verified independently: white has 25 legal moves from this position and
+  // exactly one, Nd8-c6 (unblocking the h8 rook's rank-8 sweep while the
+  // knight's new square also covers a7), delivers checkmate.
+  const state = placedState([
+    { at: 'a8', type: 'K', color: 'b' },
+    { at: 'c7', type: 'K', color: 'w' },
+    { at: 'h8', type: 'R', color: 'w' },
+    { at: 'd8', type: 'N', color: 'w' },
+  ], 'w');
+  assert.equal(state.status, 'active');
+  const moves = OukEngine.generateLegalMoves(state, 'w');
+  assert.equal(moves.length, 25);
+  let best = null, bestScore = -Infinity;
+  for (const mv of moves) {
+    const child = OukEngine.applyMove(state, mv);
+    const score = -OukAI.negamax(child, 1, 1, -Infinity, Infinity);
+    if (score > bestScore) { bestScore = score; best = mv; }
+  }
+  assert.equal(OukEngine.squareName(best.from.rank, best.from.file), 'd8');
+  assert.equal(OukEngine.squareName(best.to.rank, best.to.file), 'c6');
 });
