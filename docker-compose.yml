@@ -3,16 +3,19 @@ services:
     build: .
     image: ouk-chaktrong:latest
     container_name: ouk-chaktrong
-    # Bound to loopback on purpose. scripts/dev-server.js exposes /api/proxy,
-    # which forwards a request to whatever URL the caller puts in the
-    # x-target-url header - so publishing this port on a shared network would
-    # let anyone reach the container use it as an open relay into that network.
-    # Only widen this to "${PORT:-5173}:5173" after that endpoint takes an
-    # allowlist of permitted API hosts.
+    # /api/proxy now refuses any target that is not on the allowlist in
+    # scripts/proxy-guard.js, so it is no longer an open relay and this may be
+    # widened to "${PORT:-5173}:5173" when the app should be reachable from
+    # elsewhere. Loopback stays the default because that is the right default
+    # for a service with no authentication of its own.
     ports:
       - "127.0.0.1:${PORT:-5173}:5173"
     environment:
       PORT: 5173
+      # Hosts the proxy may forward to, on top of the built-in public API
+      # hosts. Adding a loopback or private address here is a deliberate
+      # choice: inside a container it points at the container itself.
+      PROXY_ALLOWED_HOSTS: "${PROXY_ALLOWED_HOSTS:-}"
     # The server reads each file from disk per request, so this bind mount gives
     # live edits with no rebuild. Read-only: the app never writes to disk.
     volumes:

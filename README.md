@@ -1,0 +1,120 @@
+# Ouk Chaktrang — អុកចត្រង្គ
+
+A browser implementation of Khmer chess (Ouk Chaktrang), the Cambodian relative
+of chess. Vanilla JavaScript, **zero runtime dependencies**, no build step: the
+files you edit are the files the browser runs.
+
+## Running it
+
+```bash
+node scripts/dev-server.js
+```
+
+Then open <http://localhost:5173>. Set `PORT` to serve elsewhere.
+
+With Docker:
+
+```bash
+docker compose up
+```
+
+The compose file publishes the port on loopback only — see
+[Proxy security](#proxy-security) before widening it. It also bind-mounts the
+working tree read-only so edits show up without a rebuild, which means the
+container serves *your files*, not the image's. For a self-contained
+deployment, run the image on its own:
+
+```bash
+docker run -d -p 127.0.0.1:5173:5173 ouk-chaktrong:latest
+```
+
+The image runs as the unprivileged `node` user and ships a healthcheck.
+
+## Tests
+
+```bash
+node --test
+```
+
+79 tests, `node:test` only — no framework, no install. In Docker:
+`docker compose run --rm test`.
+
+## The rules it implements
+
+Ouk Chaktrang differs from international chess in ways the engine models
+directly:
+
+- **Neang (Queen)** moves one square diagonally. On its first move it may
+  instead advance two squares straight ahead — but only while no capture has
+  yet been made by either side.
+- **Koul (Bishop)** moves one square diagonally, or one square straight forward.
+- **Sdaach (King)** may make a single knight-like jump, subject to the same
+  conditions: the king has not moved, no capture has been made yet, and the
+  king is not currently in check. This implementation lets that jump capture —
+  a judgment call recorded in the design docs.
+- **Trey (Pawn)** promotes to Neang on reaching the rank the opponent's pawns
+  started from — the sixth rank for White, the third for Black — not the last.
+- **Counting rules** end drawn-out endgames: both the bare-king count and the
+  no-progress count are implemented, with the board showing the budget and how
+  much of it has elapsed. `applyMove` resolves a spent count into the game
+  status, so the search sees counting-forced draws as draws.
+
+## Playing features
+
+- **2-player** on one board, or **vs Computer** at three difficulties.
+- **💡 Hint** (`H`) — the engine searches your position and draws its suggested
+  move on the board. Fixed strength, independent of the opponent's difficulty:
+  a hint from the "Easy" engine would be bad advice.
+- **Undo** (`U` / `Ctrl+Z`), move list, and arrow-key navigation through history.
+- **AI Move Review** — an optional LLM pass that explains a move in English,
+  Khmer, or both, and draws the line it would rather have played. It needs an
+  API key; without one, a built-in **Simulation** mode generates reviews
+  offline from the local engine's own evaluation.
+- Themes, board styles, and five hand-drawn piece skins.
+
+## Configuring AI review
+
+The settings dialog (⚙) accepts any OpenAI-compatible endpoint — OpenAI,
+OpenRouter, Groq, DeepSeek, Ollama, or LM Studio. **The API key is stored in
+your browser's `localStorage` and sent only to the endpoint you configure.** It
+never reaches this repository's server unless you tick *Use Local Dev Server
+Proxy*, which exists to get around browsers refusing cross-origin requests to
+endpoints that send no CORS headers.
+
+### Proxy security
+
+`/api/proxy` forwards a request to a URL the caller supplies, along with the
+caller's `Authorization` header. Unrestricted, that is an open relay and a way
+into whatever network the server can reach. It is therefore restricted to an
+**allowlist of hosts** ([scripts/proxy-guard.js](scripts/proxy-guard.js));
+anything else is refused with a 403.
+
+The allowlist ships with the public API hosts behind the presets. To permit
+others — including a local Ollama or LM Studio, which are deliberately *not*
+allowed by default:
+
+```bash
+PROXY_ALLOWED_HOSTS=localhost,127.0.0.1 node scripts/dev-server.js
+```
+
+Inside a container, a loopback address points at the container itself, so
+allowlisting one there is rarely what you want. The allowlist is the whole
+control: whatever is on it is reachable, so add to it deliberately.
+
+## Layout
+
+| Path | What it is |
+|------|------------|
+| `src/engine.js` | Rules, move generation, counting, game status. No DOM. |
+| `src/ai.js` | Negamax with alpha-beta, iterative deepening, and the hint search. |
+| `src/pieces.js` | Piece artwork — five skins, drawn as inline SVG. |
+| `src/review.js` | Prompt building and response parsing for LLM review, plus the offline simulation. |
+| `src/ui.js` | Board rendering, interaction, controls. Browser only. |
+| `scripts/dev-server.js` | Static server and API proxy. Also the container's entrypoint. |
+| `scripts/build-artifact.js` | Inlines everything into `artifact/ouk-chaktrong.html`. |
+
+`artifact/ouk-chaktrong.html` is generated — edit the sources and rebuild:
+
+```bash
+node scripts/build-artifact.js
+```
