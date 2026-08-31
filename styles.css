@@ -1221,6 +1221,44 @@ body {
   font-size: 0.9rem;
 }
 
+/* The model field pairs a free-text input with the button that fills its
+   datalist. The text stays authoritative: an endpoint that will not list its
+   models, or a model newer than the list, must still be typeable. */
+.oc-input-with-action {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+.oc-input-with-action input {
+  flex: 1;
+  min-width: 0;
+}
+.oc-load-models {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.oc-load-models:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.15);
+}
+.oc-load-models:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.oc-field-hint {
+  font-size: 0.76rem;
+  font-weight: 400;
+  opacity: 0.72;
+}
+
 .oc-dialog-status {
   font-size: 0.85rem;
   min-height: 20px;
@@ -1486,6 +1524,9 @@ body {
   }
   .oc-toggle-password {
     min-width: 40px;
+    min-height: 40px;
+  }
+  .oc-load-models {
     min-height: 40px;
   }
   .oc-show-on-board-btn,

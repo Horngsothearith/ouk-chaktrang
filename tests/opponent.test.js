@@ -10,12 +10,13 @@ const LIVE_SETTINGS = { baseURL: 'https://example.test/v1', apiKey: 'k', model: 
 const FAST_ENGINE = { timeLimitMs: 20, maxDepth: 1 };
 
 // Replaces the transport for one test and always puts it back, so a failure
-// cannot leak a stub into the tests that follow.
-function withChatResponse(impl, run) {
+// cannot leak a stub into the tests that follow. Awaits the run, so the stub
+// is still in place for anything the call does after its first await.
+async function withChatResponse(impl, run) {
   const original = OukReview.sendChatRequest;
   OukReview.sendChatRequest = impl;
   try {
-    return run();
+    return await run();
   } finally {
     OukReview.sendChatRequest = original;
   }

@@ -1061,6 +1061,9 @@
       if (baseUrlInput) baseUrlInput.value = settings.baseURL || 'https://api.openai.com/v1';
       if (apiKeyInput) apiKeyInput.value = settings.apiKey || '';
       if (modelInput) modelInput.value = settings.model || 'gpt-4o-mini';
+      // A list belongs to the endpoint it came from. Reopening the dialog may
+      // be the first step of pointing it somewhere else, so the old names go.
+      resetModelPicker();
       if (langSelect) langSelect.value = settings.language || 'en';
       if (useProxyInput) useProxyInput.checked = !!settings.useProxy;
       if (statusDiv) {
@@ -1073,6 +1076,93 @@
       } else {
         dialog.setAttribute('open', '');
       }
+    }
+
+    // Fills the datalist behind the model field. The text input is left alone:
+    // it is the setting, and an endpoint that will not list its models - or a
+    // model released since the list was fetched - must still be typeable.
+    //
+    // Built through the DOM rather than innerHTML: these ids are whatever a
+    // remote endpoint chose to send, so they go in as values, never as markup.
+    function setModelOptions(ids) {
+      var list = document.getElementById('oc-model-options');
+      if (!list) return;
+      list.innerHTML = '';
+      ids.forEach(function (id) {
+        var opt = document.createElement('option');
+        opt.value = String(id);
+        list.appendChild(opt);
+      });
+    }
+
+    function setModelHint(text) {
+      var hint = document.getElementById('oc-model-hint');
+      if (hint) hint.textContent = text;
+    }
+
+    // A loaded list describes one endpoint. Anything that repoints the dialog
+    // clears the names and the count that went with them - leaving the count
+    // behind would have the hint advertising models that are no longer offered.
+    function resetModelPicker() {
+      setModelOptions([]);
+      setModelHint('Type a model name, or load the list the endpoint offers and pick from it.');
+    }
+
+    function loadModelList() {
+      var btn = document.getElementById('oc-load-models');
+      var statusDiv = document.getElementById('oc-dialog-status');
+      var bInput = document.getElementById('oc-setting-base-url');
+      var kInput = document.getElementById('oc-setting-api-key');
+      var pCheck = document.getElementById('oc-setting-use-proxy');
+
+      var baseURL = (bInput ? bInput.value.trim() : '').replace(/\/+$/, '');
+
+      function say(cls, text) {
+        if (!statusDiv) return;
+        statusDiv.className = 'oc-dialog-status' + (cls ? ' ' + cls : '');
+        statusDiv.textContent = text;
+      }
+
+      // The Simulation preset answers from the local engine; there is no
+      // endpoint to ask, and its one model name is already in the field.
+      if (baseURL === 'simulation' || baseURL === 'demo' || baseURL === 'mock') {
+        say('', 'Simulation mode has no endpoint to list models from.');
+        return;
+      }
+      if (!baseURL) {
+        say('error', '❌ Set an API Base URL first.');
+        return;
+      }
+
+      // The list is read from the form as typed, not from saved settings, so
+      // the button answers for the endpoint on screen.
+      var probeSettings = {
+        baseURL: baseURL,
+        apiKey: kInput ? kInput.value.trim() : '',
+        useProxy: pCheck ? pCheck.checked : false
+      };
+
+      if (btn) btn.disabled = true;
+      say('loading', 'Loading models from ' + baseURL + '...');
+
+      OukReview.listModels(probeSettings)
+        .then(function (ids) {
+          setModelOptions(ids);
+          setModelHint('Click the Model field to pick from ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + ', or keep typing.');
+          var via = probeSettings.useProxy ? ' (via Dev Proxy)' : '';
+          say('success', '✅ Loaded ' + ids.length + ' model' + (ids.length === 1 ? '' : 's') + via + '. Click the Model field to choose one.');
+          // listModels turns on the proxy itself when the direct call is
+          // blocked; reflect that so the checkbox matches what just worked.
+          if (pCheck && probeSettings.useProxy) pCheck.checked = true;
+        })
+        .catch(function (err) {
+          setModelOptions([]);
+          setModelHint('Type a model name — this endpoint did not return a list.');
+          say('error', '❌ Could not list models: ' + err.message);
+        })
+        .then(function () {
+          if (btn) btn.disabled = false;
+        });
     }
 
     function closeSettingsDialog() {
@@ -1203,6 +1293,8 @@
       var explainCurBtn = document.getElementById('oc-explain-current-btn');
 
       if (openSettingsBtn) openSettingsBtn.addEventListener('click', function () { openSettingsDialog(); });
+      var loadModelsBtn = document.getElementById('oc-load-models');
+      if (loadModelsBtn) loadModelsBtn.addEventListener('click', loadModelList);
       if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettingsDialog);
       if (togglePwBtn && apiKeyInput) {
         togglePwBtn.addEventListener('click', function () {
@@ -1228,6 +1320,8 @@
             var mInput = document.getElementById('oc-setting-model');
             if (bInput) bInput.value = p.baseURL;
             if (mInput) mInput.value = p.model;
+            // Different endpoint, different catalogue.
+            resetModelPicker();
           }
         });
       });

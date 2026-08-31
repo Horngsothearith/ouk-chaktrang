@@ -586,13 +586,16 @@
     return null;
   }
 
-  function sendChatRequest(settings, bodyPayload) {
-    var baseURL = (settings.baseURL || 'https://api.openai.com/v1').replace(/\/+$/, '');
-    var directUrl = baseURL + '/chat/completions';
+  // One request to the configured endpoint, carrying the CORS dance every
+  // caller needs: try the endpoint directly, and on the network/CORS failure
+  // browsers report for endpoints that send no CORS headers, retry through the
+  // dev server's proxy. `options` is { path, method, body } - body omitted for
+  // a GET.
+  function apiRequest(settings, options) {
+    var baseURL = (settings.baseURL || DEFAULT_SETTINGS.baseURL).replace(/\/+$/, '');
+    var directUrl = baseURL + options.path;
+    var method = options.method || 'POST';
     var apiKey = settings.apiKey || '';
-
-    // Clone payload and ensure stream: false is explicitly set unless specified
-    var payload = Object.assign({ stream: false }, bodyPayload);
 
     var headers = {
       'Content-Type': 'application/json'
@@ -609,11 +612,10 @@
         fetchHeaders['x-target-url'] = targetUrl;
       }
 
-      return fetch(fetchUrl, {
-        method: 'POST',
-        headers: fetchHeaders,
-        body: JSON.stringify(payload)
-      }).then(function (res) {
+      var init = { method: method, headers: fetchHeaders };
+      if (options.body !== undefined) init.body = JSON.stringify(options.body);
+
+      return fetch(fetchUrl, init).then(function (res) {
         return res.text().then(function (rawBody) {
           var data = parseChatResponseBody(rawBody);
 
@@ -648,15 +650,67 @@
                                directErr.message.includes('CORS')));
       if (isNetworkOrCors) {
         return doFetch(directUrl, true).then(function (proxyResult) {
-          // If proxy worked, remember this setting for seamless subsequent calls
+          // If proxy worked, remember it for subsequent calls. Only the flag:
+          // callers pass throwaway settings objects (the dialog's Test
+          // Connection builds one from the unsaved form), and writing the whole
+          // thing back would persist half-edited fields and drop the keys it
+          // does not carry - the language choice among them.
           settings.useProxy = true;
-          saveSettings(settings);
+          saveSettings(Object.assign({}, loadSettings(), { useProxy: true }));
           return proxyResult;
         }).catch(function () {
           throw new Error('CORS / Network Error: Browser blocked direct access to ' + directUrl + '. Enable "Use Local Proxy" in Settings or run dev-server (node scripts/dev-server.js).');
         });
       }
       throw directErr;
+    });
+  }
+
+  function sendChatRequest(settings, bodyPayload) {
+    return apiRequest(settings, {
+      path: '/chat/completions',
+      method: 'POST',
+      // Clone payload and ensure stream: false is explicitly set unless specified
+      body: Object.assign({ stream: false }, bodyPayload)
+    });
+  }
+
+  // What an OpenAI-compatible /models response can look like varies more than
+  // the spec suggests: OpenAI and Ollama wrap the list in `data`, some
+  // gateways return a bare array, and entries are sometimes plain strings
+  // rather than objects. Read all of those rather than making the picker a
+  // provider lottery.
+  function parseModelList(data) {
+    if (!data) return [];
+    var raw = Array.isArray(data) ? data
+      : (Array.isArray(data.data) ? data.data
+      : (Array.isArray(data.models) ? data.models : []));
+
+    var seen = {};
+    var ids = [];
+    raw.forEach(function (entry) {
+      var id = typeof entry === 'string' ? entry : (entry && (entry.id || entry.name));
+      if (typeof id !== 'string') return;
+      id = id.trim();
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      ids.push(id);
+    });
+
+    // Alphabetical, case-insensitively: a provider's own order is arbitrary,
+    // and OpenRouter alone returns hundreds.
+    return ids.sort(function (a, b) {
+      return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+  }
+
+  function listModels(settings) {
+    return apiRequest(settings, { path: '/models', method: 'GET' }).then(function (data) {
+      var ids = parseModelList(data);
+      if (ids.length === 0) {
+        throw new Error('The endpoint answered but listed no models.');
+      }
+      return ids;
     });
   }
 
@@ -830,7 +884,10 @@
     generateSimulatedReview: generateSimulatedReview,
     requestMoveReview: requestMoveReview,
     createReviewSession: createReviewSession,
+    apiRequest: apiRequest,
     sendChatRequest: sendChatRequest,
+    parseModelList: parseModelList,
+    listModels: listModels,
     parseChatResponseBody: parseChatResponseBody,
     SYSTEM_PROMPT: SYSTEM_PROMPT
   };
