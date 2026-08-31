@@ -37,7 +37,7 @@ The image runs as the unprivileged `node` user and ships a healthcheck.
 node --test
 ```
 
-91 tests, `node:test` only — no framework, no install. In Docker:
+106 tests, `node:test` only — no framework, no install. In Docker:
 `docker compose run --rm test`.
 
 ## The rules it implements
@@ -62,7 +62,9 @@ directly:
 
 ## Playing features
 
-- **2-player** on one board, or **vs Computer** at three difficulties.
+- **2-player** on one board, **vs Computer** at three difficulties, or **vs AI**
+  — the same board played against the language model you configure, rather than
+  against the local search.
 - **💡 Hint** (`H`) — the engine searches your position and draws its suggested
   move on the board. Fixed strength, independent of the opponent's difficulty:
   a hint from the "Easy" engine would be bad advice.
@@ -73,7 +75,7 @@ directly:
   offline from the local engine's own evaluation.
 - Themes, board styles, and five hand-drawn piece skins.
 
-## Configuring AI review
+## Configuring the AI
 
 The settings dialog (⚙) accepts any OpenAI-compatible endpoint — OpenAI,
 OpenRouter, Groq, DeepSeek, Ollama, or LM Studio. **The API key is stored in
@@ -81,6 +83,26 @@ your browser's `localStorage` and sent only to the endpoint you configure.** It
 never reaches this repository's server unless you tick *Use Local Dev Server
 Proxy*, which exists to get around browsers refusing cross-origin requests to
 endpoints that send no CORS headers.
+
+### Playing against the model
+
+*vs AI* uses that same endpoint, key and language setting — the model is asked
+to play rather than to comment, so there is nothing extra to configure.
+
+The prompt hands the model the board, the recent moves, and **the complete list
+of its legal moves**, and asks it to pick one. That list is what makes the mode
+work at all: asked to invent a move in a variant this obscure, a model guesses;
+asked to choose a line out of a list, it is doing something it is reliably good
+at.
+
+Every reply is still checked against the real legal move list before it is
+played, and **anything that fails falls back to the local engine** — an illegal
+move, unparseable JSON, a failed request, or no configured endpoint. The board
+says so when that happens, naming the cause, so an engine move is never passed
+off as the model's. Difficulty picks the strength of that fallback.
+
+The consequence worth knowing: in *vs AI* every move costs an API call against
+your own key.
 
 ### Proxy security
 
@@ -127,6 +149,7 @@ ports:
 | `src/ai.js` | Negamax with alpha-beta, iterative deepening, and the hint search. |
 | `src/pieces.js` | Piece artwork — five skins, drawn as inline SVG. |
 | `src/review.js` | Prompt building and response parsing for LLM review, plus the offline simulation. |
+| `src/opponent.js` | The LLM opponent behind *vs AI*: prompt, reply parsing, legality check, engine fallback. |
 | `src/ui.js` | Board rendering, interaction, controls. Browser only. |
 | `scripts/dev-server.js` | Static server and API proxy. Also the container's entrypoint. |
 | `scripts/build-artifact.js` | Inlines everything into `artifact/ouk-chaktrong.html`. |

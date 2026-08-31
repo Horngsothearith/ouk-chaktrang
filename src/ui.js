@@ -5,6 +5,7 @@
   var OukPieces = root.OukPieces;
   var OukAI = root.OukAI;
   var OukReview = root.OukReview;
+  var OukOpponent = root.OukOpponent;
 
   function squareColorClass(rank, file) {
     return (rank + file) % 2 === 0 ? 'dark' : 'light';
@@ -114,10 +115,18 @@
       gameState: OukEngine.createInitialState(),
       selectedSquare: null,
       legalMovesForSelected: [],
-      mode: '2p', // '2p' | 'vs-ai'
+      // '2p' | 'vs-ai' (local negamax search) | 'vs-llm' (the configured
+      // chat model picks the moves, via src/opponent.js)
+      mode: '2p',
       aiColor: 'b',
       aiOptions: { timeLimitMs: 800, maxDepth: 5 },
       aiThinkingTimeoutId: null,
+      // An LLM reply arrives over the network, long after the position that
+      // asked for it may have been undone, reset or switched away from. Every
+      // request carries the counter's value and a reply whose value is stale
+      // is dropped rather than played onto a board it does not belong to.
+      opponentRequestId: 0,
+      opponentNotice: null, // why the engine answered instead of the model
       hintMove: null, // { move, atPly } - engine suggestion drawn on the live board
       hintTimeoutId: null,
       themeState: themeState,
@@ -126,6 +135,23 @@
       reviewSession: reviewSession,
       moveReviews: {} // moveIndex -> review object
     };
+
+    // Both AI modes hand the same colour to a machine; only the thing that
+    // picks the move differs. Everything that just needs to know "is it the
+    // opponent's turn" asks this rather than naming a mode.
+    function hasComputerOpponent() {
+      return appState.mode === 'vs-ai' || appState.mode === 'vs-llm';
+    }
+
+    function isComputerTurn() {
+      return hasComputerOpponent() && appState.gameState.turn === appState.aiColor;
+    }
+
+    // Invalidates any LLM reply still in flight. Called wherever the position
+    // the request was asked about stops being the position on the board.
+    function cancelPendingOpponentMove() {
+      appState.opponentRequestId++;
+    }
 
     function isShowingRecommendation() {
       return appState.recommendMoveIndex !== null;
@@ -140,7 +166,7 @@
     function canRequestHint() {
       if (appState.gameState.status !== 'active') return false;
       if (isViewingHistory() || isShowingRecommendation()) return false;
-      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return false;
+      if (isComputerTurn()) return false;
       return true;
     }
 
@@ -258,6 +284,13 @@
         var pName = pInfo ? (pInfo.km + ' / ' + pInfo.name) : 'Piece';
         var moveCount = appState.legalMovesForSelected.length;
         return checkPrefix + turnName + ': Selected ' + pName + ' (' + sqName + ') &mdash; ' + moveCount + ' move' + (moveCount === 1 ? '' : 's');
+      }
+
+      // A move the model did not actually choose is still the model's move as
+      // far as the board shows, so the reason the engine stepped in is said
+      // out loud rather than left to look like the AI just played badly.
+      if (appState.opponentNotice) {
+        return checkPrefix + turnName + ' to move — ⚠️ AI fell back to the local engine: ' + appState.opponentNotice;
       }
 
       return checkPrefix + turnName + ' to move';
@@ -747,18 +780,20 @@
     function undoMove() {
       if (appState.gameState.history.length === 0) return false;
 
-      // Cancel any pending AI search
+      // Cancel any pending AI search, local or remote
       if (appState.aiThinkingTimeoutId) {
         clearTimeout(appState.aiThinkingTimeoutId);
         appState.aiThinkingTimeoutId = null;
       }
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
 
       clearHint();
 
       var history = appState.gameState.history;
       var stepsToUndo = 1;
 
-      if (appState.mode === 'vs-ai') {
+      if (hasComputerOpponent()) {
         var lastMove = history[history.length - 1];
         // If last move was AI, roll back 2 moves so player gets their turn back
         // If last move was player (e.g. before AI replied or game ended), roll back 1 move
@@ -788,22 +823,77 @@
       return true;
     }
 
-    function maybeTriggerAI() {
-      if (appState.mode !== 'vs-ai') return;
-      if (appState.gameState.status !== 'active') return;
-      if (appState.gameState.turn !== appState.aiColor) return;
-      els.status.textContent = (appState.aiColor === 'w' ? 'White' : 'Black') + ' (AI) is thinking...';
-      if (appState.aiThinkingTimeoutId) {
-        clearTimeout(appState.aiThinkingTimeoutId);
-      }
+    function opponentName() {
+      return appState.aiColor === 'w' ? 'White' : 'Black';
+    }
+
+    // Plays whatever the opponent chose and hands the turn on. Shared by both
+    // modes so a move reaches the board by exactly one path.
+    function playOpponentMove(move, notice) {
+      if (!move) return;
+      appState.opponentNotice = notice || null;
+      appState.gameState = OukEngine.applyMove(appState.gameState, move);
+      appState.viewMoveIndex = -1;
+      render();
+      maybeTriggerAI();
+    }
+
+    function triggerEngineMove() {
+      // The search blocks the main thread, so let the browser paint the
+      // "thinking" notice before it starts.
       appState.aiThinkingTimeoutId = setTimeout(function () {
         appState.aiThinkingTimeoutId = null;
-        var move = OukAI.chooseMove(appState.gameState, appState.aiOptions);
-        appState.gameState = OukEngine.applyMove(appState.gameState, move);
-        appState.viewMoveIndex = -1;
-        render();
-        maybeTriggerAI();
+        playOpponentMove(OukAI.chooseMove(appState.gameState, appState.aiOptions), null);
       }, 30);
+    }
+
+    function triggerLlmMove() {
+      var requestId = appState.opponentRequestId;
+      var state = appState.gameState;
+      var settings = reviewSession ? reviewSession.getSettings() : null;
+
+      OukOpponent.chooseOpponentMove(state, state.history, settings, appState.aiOptions, function (err, result) {
+        // A new game, an undo or a mode change happened while the request was
+        // out: this move answers a position that is no longer on the board.
+        if (requestId !== appState.opponentRequestId) return;
+        if (!result || !result.move) return;
+        playOpponentMove(
+          result.move,
+          result.source === 'engine' ? result.reason : null
+        );
+      });
+    }
+
+    function maybeTriggerAI() {
+      if (!hasComputerOpponent()) return;
+      if (appState.gameState.status !== 'active') return;
+      if (appState.gameState.turn !== appState.aiColor) return;
+
+      appState.opponentNotice = null;
+      els.status.textContent = opponentName() + thinkingSuffix();
+
+      if (appState.aiThinkingTimeoutId) {
+        clearTimeout(appState.aiThinkingTimeoutId);
+        appState.aiThinkingTimeoutId = null;
+      }
+
+      if (appState.mode === 'vs-llm') {
+        triggerLlmMove();
+      } else {
+        triggerEngineMove();
+      }
+    }
+
+    // Names the opponent that is actually thinking. In vs-llm that is the
+    // configured model, and saying which one is the difference between a
+    // pause the player understands and one that looks like a hang.
+    function thinkingSuffix() {
+      if (appState.mode !== 'vs-llm') return ' (Computer) is thinking...';
+      var settings = reviewSession ? reviewSession.getSettings() : null;
+      if (OukOpponent.unusableEndpointReason(settings)) {
+        return ' (Computer) is thinking...';
+      }
+      return ' (' + (settings.model || 'AI') + ') is thinking...';
     }
 
     function handleSquareClick(rank, file) {
@@ -811,7 +901,7 @@
       // position; clicking through it would move pieces in the live game.
       if (isShowingRecommendation()) return;
       if (appState.gameState.status !== 'active') return;
-      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return;
+      if (isComputerTurn()) return;
       if (appState.selectedSquare && tryMove(rank, file)) {
         render();
         maybeTriggerAI();
@@ -826,6 +916,8 @@
         clearTimeout(appState.aiThinkingTimeoutId);
         appState.aiThinkingTimeoutId = null;
       }
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
       clearHint();
       appState.gameState = OukEngine.createInitialState();
       appState.selectedSquare = null;
@@ -1015,7 +1107,8 @@
         '</div>' +
         '<label><input type="radio" name="oc-mode" value="2p"' + (appState.mode === '2p' ? ' checked' : '') + '> 2-Player</label>' +
         '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
-        '<label>Difficulty: <select id="oc-difficulty">' +
+        '<label title="The model configured in ⚙ AI Settings picks the moves"><input type="radio" name="oc-mode" value="vs-llm"' + (appState.mode === 'vs-llm' ? ' checked' : '') + '> vs AI</label>' +
+        '<label title="Strength of the local engine — in vs AI that is the fallback it plays when the model cannot answer">Difficulty: <select id="oc-difficulty">' +
         '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
         '</select></label>' +
         '<div class="oc-theme-card">' +
@@ -1055,6 +1148,8 @@
       if (hintBtnEl) hintBtnEl.addEventListener('click', requestHint);
       Array.prototype.forEach.call(els.controls.querySelectorAll('input[name="oc-mode"]'), function (radio) {
         radio.addEventListener('change', function (evt) {
+          cancelPendingOpponentMove();
+          appState.opponentNotice = null;
           appState.mode = evt.target.value;
           render();
           maybeTriggerAI();

@@ -3370,6 +3370,277 @@ body {
   }
 })(typeof window !== 'undefined' ? window : globalThis);
 
+// The LLM opponent behind "vs AI".
+//
+// "vs Computer" plays the local negamax search in src/ai.js. This module is
+// the other kind of opponent: the chat model configured in the settings
+// dialog picks the move itself. It reuses that dialog's endpoint, key and
+// proxy handling from src/review.js, because it is the same account and the
+// same request - the model is just being asked to play rather than to
+// comment.
+//
+// The engine never leaves the loop. A model naming an illegal move is common
+// in a variant this obscure, and a game that stalls on a bad reply is worse
+// than one that plays on, so every suggestion is checked against the real
+// legal move list and anything that fails falls back to the local search.
+// Callers are told which source won, the same way resolveRecommendedMove
+// reports it, so the UI can say honestly who chose the move.
+(function (root) {
+  'use strict';
+
+  var OukEngine = (typeof module !== 'undefined' && module.exports) ? require('./engine.js') : root.OukEngine;
+  var OukAI = (typeof module !== 'undefined' && module.exports) ? require('./ai.js') : root.OukAI;
+  var OukReview = (typeof module !== 'undefined' && module.exports) ? require('./review.js') : root.OukReview;
+
+  // How much history the model is shown. The board already says where every
+  // piece stands, so the move list is only here for plan continuity - a longer
+  // tail costs tokens without buying accuracy.
+  var HISTORY_PLIES = 12;
+
+  // Move choice wants the model's best guess, not its most creative one. The
+  // review panel's temperature is a separate setting for separate work, so
+  // this deliberately does not read it.
+  var MOVE_TEMPERATURE = 0.2;
+
+  var SYSTEM_PROMPT = [
+    'You are a strong player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
+    'You will be given the current position and the complete list of your legal moves. Choose the strongest one.',
+    '',
+    '### Rules & Pieces of Ouk Chaktrang:',
+    '- **Sdaach / Ang (ស្ដេច / K - King)**: 1 step in all 8 directions. First-move exception: the King may jump like a Knight if it has not moved, is not in check, and no capture has been made yet by either side.',
+    '- **Neang / Met (នាង / ម៉ែត្រ / Q - Queen/General)**: Moves exactly 1 step diagonally in 4 directions. First-move exception: it may instead advance 2 squares straight forward if the path is clear and no capture has been made yet.',
+    '- **Koul / Thom (គោល / ធំ / B - Bishop/Noble)**: Moves 1 step in the 4 diagonal directions OR 1 step straight forward (5 directions total). Never backward orthogonally.',
+    '- **Shes (សេះ / N - Knight/Horse)**: Moves exactly like a chess Knight (L-shape).',
+    '- **Touk (ទូក / R - Rook/Boat)**: Moves any number of unblocked squares orthogonally.',
+    '- **Trey / Kun (ត្រី / កូន / P - Pawn/Fish)**: Starts on Rank 3 (White) and Rank 6 (Black). Moves 1 step forward, captures 1 step diagonally forward. Promotes to Neang on reaching the opponent\'s pawn starting rank - Rank 6 for White, Rank 3 for Black, NOT the last rank.',
+    '- **Counting Rules (Daeul)**: A bare king, or a pawnless position, starts a countdown that forces a draw if mate is not delivered in time. Watch the budget when you are ahead.',
+    '',
+    'There is no castling, no en passant, and no double pawn step. The Neang is a weak piece here, not a chess queen.',
+    '',
+    '### Your Task:',
+    'Pick one move from the numbered list of legal moves you are given, and reply with valid JSON only:',
+    '{',
+    '  "from": "Origin square in algebraic form, e.g. \\"b1\\"",',
+    '  "to": "Destination square, e.g. \\"c3\\"",',
+    '  "reason": "One short sentence - at most 12 words - on why you chose it."',
+    '}',
+    '',
+    'The move you name MUST be one of the legal moves listed. Do not invent a move, do not pass, and do not return anything outside the JSON object.'
+  ].join('\n');
+
+  function squareOf(point) {
+    return OukEngine.squareName(point.rank, point.file);
+  }
+
+  // The legal move list is the whole reason this works. Asked to invent a move
+  // in an unfamiliar variant a model guesses; asked to pick a line out of a
+  // list it is doing something it is reliably good at. Each line carries the
+  // exact from/to strings the reply should quote back, and formatMoveText's
+  // notation beside them so the model, the move list and the review panel are
+  // all naming moves the same way.
+  function describeLegalMoves(moves) {
+    return moves.map(function (move, i) {
+      return (i + 1) + '. ' + squareOf(move.from) + ' -> ' + squareOf(move.to) +
+        '  (' + OukReview.formatMoveText(move) + ')';
+    }).join('\n');
+  }
+
+  function describeHistory(history) {
+    if (!history || history.length === 0) return '(no moves yet - this is the opening)';
+    var start = Math.max(0, history.length - HISTORY_PLIES);
+    var shown = history.slice(start).map(function (move, i) {
+      return OukReview.formatMoveText(move, start + i);
+    }).join('\n');
+    return start > 0 ? '(earlier moves omitted)\n' + shown : shown;
+  }
+
+  function buildOpponentPrompt(state, history, legalMoves) {
+    var colorName = state.turn === 'w' ? 'White' : 'Black';
+    var lines = [
+      'You are playing ' + colorName + '. It is your move.',
+      '',
+      '### Position (uppercase = White, lowercase = Black):',
+      OukReview.renderAsciiBoard(state),
+      '',
+      '### Moves so far:',
+      describeHistory(history),
+      ''
+    ];
+
+    if (OukEngine.isInCheck(state, state.turn)) {
+      lines.push('### YOU ARE IN CHECK. Every move listed below already answers it.');
+      lines.push('');
+    }
+
+    lines.push('### Your legal moves (choose exactly one):');
+    lines.push(describeLegalMoves(legalMoves));
+    lines.push('');
+    lines.push('Reply with JSON only: {"from": "...", "to": "...", "reason": "..."}');
+    return lines.join('\n');
+  }
+
+  // Mirrors parseAiResponse's tolerance: models wrap JSON in prose or code
+  // fences often enough that refusing those replies would throw away good
+  // moves.
+  function parseOpponentMove(rawText) {
+    if (typeof rawText !== 'string') return null;
+    var cleaned = rawText.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    }
+
+    var json = null;
+    try {
+      json = JSON.parse(cleaned);
+    } catch (e) {
+      var first = cleaned.indexOf('{');
+      var last = cleaned.lastIndexOf('}');
+      if (first === -1 || last <= first) return null;
+      try {
+        json = JSON.parse(cleaned.slice(first, last + 1));
+      } catch (e2) {
+        return null;
+      }
+    }
+
+    if (!json || typeof json !== 'object') return null;
+    if (typeof json.from !== 'string' || typeof json.to !== 'string') return null;
+    return {
+      from: json.from,
+      to: json.to,
+      reason: typeof json.reason === 'string' ? json.reason : null
+    };
+  }
+
+  function parseSquareStrict(name) {
+    if (typeof name !== 'string') return null;
+    if (!/^[a-h][1-8]$/.test(name.trim().toLowerCase())) return null;
+    return OukEngine.parseSquare(name.trim().toLowerCase());
+  }
+
+  // from/to identifies a move uniquely here: no two legal moves share both.
+  function findLegalMove(legalMoves, from, to) {
+    for (var i = 0; i < legalMoves.length; i++) {
+      var m = legalMoves[i];
+      if (m.from.rank === from.rank && m.from.file === from.file &&
+          m.to.rank === to.rank && m.to.file === to.file) {
+        return m;
+      }
+    }
+    return null;
+  }
+
+  // Turns whatever the model said into a move the engine will actually accept,
+  // or explains why it could not. `reason` is the fallback's cause, not the
+  // model's justification - that rides along as `comment`.
+  function resolveOpponentMove(legalMoves, parsed) {
+    if (!parsed) return { move: null, source: null, reason: 'the model returned no usable JSON' };
+    var from = parseSquareStrict(parsed.from);
+    var to = parseSquareStrict(parsed.to);
+    if (!from || !to) {
+      return { move: null, source: null, reason: 'the model named a square that does not exist' };
+    }
+    var match = findLegalMove(legalMoves, from, to);
+    if (!match) {
+      return {
+        move: null,
+        source: null,
+        reason: 'the model chose ' + parsed.from + '-' + parsed.to + ', which is not legal here'
+      };
+    }
+    return { move: match, source: 'llm', reason: null, comment: parsed.reason || null };
+  }
+
+  function engineFallback(state, engineOptions, reason) {
+    return {
+      move: OukAI.chooseMove(state, engineOptions || {}),
+      source: 'engine',
+      reason: reason || null,
+      comment: null
+    };
+  }
+
+  // Why these settings cannot be asked to play, or null if they can. Rather
+  // than refuse to play, the mode falls through to the local engine and says
+  // so - the same answer a failed request gets.
+  function unusableEndpointReason(settings) {
+    if (!settings) return 'no AI endpoint configured — the local engine is playing';
+    if (settings.baseURL === 'simulation' || settings.baseURL === 'demo' ||
+        settings.baseURL === 'mock' || settings.isSimulation === true) {
+      return 'Simulation mode is on — the local engine is playing';
+    }
+    // An untouched install: the shipped OpenAI endpoint with no key. A missing
+    // key on its own proves nothing, because Ollama and LM Studio genuinely
+    // do not use one - it is the base URL still being the default that says
+    // nobody has been here. Catching it saves a 401 round-trip per move.
+    if (!settings.apiKey && (settings.baseURL || '') === OukReview.DEFAULT_SETTINGS.baseURL) {
+      return 'no API key set — open ⚙ AI Settings to let the model play';
+    }
+    return null;
+  }
+
+  // Asks the configured model for a move and hands the caller something
+  // playable no matter what comes back. The callback is (err, result); err is
+  // always null, because a fallback move is not an error the game can act on -
+  // the reason travels in result.reason so the UI can say what happened
+  // without the game stopping.
+  function chooseOpponentMove(state, history, settings, engineOptions, callback) {
+    var legalMoves = OukEngine.generateLegalMoves(state, state.turn);
+    if (legalMoves.length === 0) {
+      callback(null, { move: null, source: null, reason: 'no legal moves', comment: null });
+      return;
+    }
+
+    var unusable = unusableEndpointReason(settings);
+    if (unusable) {
+      callback(null, engineFallback(state, engineOptions, unusable));
+      return;
+    }
+
+    var bodyPayload = {
+      model: settings.model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: buildOpponentPrompt(state, history, legalMoves) }
+      ],
+      temperature: MOVE_TEMPERATURE
+    };
+
+    OukReview.sendChatRequest(settings, bodyPayload)
+      .then(function (data) {
+        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!content) throw new Error('the model returned an empty response');
+        var resolved = resolveOpponentMove(legalMoves, parseOpponentMove(content));
+        if (!resolved.move) {
+          callback(null, engineFallback(state, engineOptions, resolved.reason));
+          return;
+        }
+        callback(null, resolved);
+      })
+      .catch(function (err) {
+        callback(null, engineFallback(state, engineOptions, err.message || 'the request failed'));
+      });
+  }
+
+  var api = {
+    SYSTEM_PROMPT: SYSTEM_PROMPT,
+    HISTORY_PLIES: HISTORY_PLIES,
+    describeLegalMoves: describeLegalMoves,
+    describeHistory: describeHistory,
+    buildOpponentPrompt: buildOpponentPrompt,
+    parseOpponentMove: parseOpponentMove,
+    resolveOpponentMove: resolveOpponentMove,
+    unusableEndpointReason: unusableEndpointReason,
+    chooseOpponentMove: chooseOpponentMove
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    root.OukOpponent = api;
+  }
+})(typeof window !== 'undefined' ? window : globalThis);
+
 (function (root) {
   'use strict';
 
@@ -3377,6 +3648,7 @@ body {
   var OukPieces = root.OukPieces;
   var OukAI = root.OukAI;
   var OukReview = root.OukReview;
+  var OukOpponent = root.OukOpponent;
 
   function squareColorClass(rank, file) {
     return (rank + file) % 2 === 0 ? 'dark' : 'light';
@@ -3486,10 +3758,18 @@ body {
       gameState: OukEngine.createInitialState(),
       selectedSquare: null,
       legalMovesForSelected: [],
-      mode: '2p', // '2p' | 'vs-ai'
+      // '2p' | 'vs-ai' (local negamax search) | 'vs-llm' (the configured
+      // chat model picks the moves, via src/opponent.js)
+      mode: '2p',
       aiColor: 'b',
       aiOptions: { timeLimitMs: 800, maxDepth: 5 },
       aiThinkingTimeoutId: null,
+      // An LLM reply arrives over the network, long after the position that
+      // asked for it may have been undone, reset or switched away from. Every
+      // request carries the counter's value and a reply whose value is stale
+      // is dropped rather than played onto a board it does not belong to.
+      opponentRequestId: 0,
+      opponentNotice: null, // why the engine answered instead of the model
       hintMove: null, // { move, atPly } - engine suggestion drawn on the live board
       hintTimeoutId: null,
       themeState: themeState,
@@ -3498,6 +3778,23 @@ body {
       reviewSession: reviewSession,
       moveReviews: {} // moveIndex -> review object
     };
+
+    // Both AI modes hand the same colour to a machine; only the thing that
+    // picks the move differs. Everything that just needs to know "is it the
+    // opponent's turn" asks this rather than naming a mode.
+    function hasComputerOpponent() {
+      return appState.mode === 'vs-ai' || appState.mode === 'vs-llm';
+    }
+
+    function isComputerTurn() {
+      return hasComputerOpponent() && appState.gameState.turn === appState.aiColor;
+    }
+
+    // Invalidates any LLM reply still in flight. Called wherever the position
+    // the request was asked about stops being the position on the board.
+    function cancelPendingOpponentMove() {
+      appState.opponentRequestId++;
+    }
 
     function isShowingRecommendation() {
       return appState.recommendMoveIndex !== null;
@@ -3512,7 +3809,7 @@ body {
     function canRequestHint() {
       if (appState.gameState.status !== 'active') return false;
       if (isViewingHistory() || isShowingRecommendation()) return false;
-      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return false;
+      if (isComputerTurn()) return false;
       return true;
     }
 
@@ -3630,6 +3927,13 @@ body {
         var pName = pInfo ? (pInfo.km + ' / ' + pInfo.name) : 'Piece';
         var moveCount = appState.legalMovesForSelected.length;
         return checkPrefix + turnName + ': Selected ' + pName + ' (' + sqName + ') &mdash; ' + moveCount + ' move' + (moveCount === 1 ? '' : 's');
+      }
+
+      // A move the model did not actually choose is still the model's move as
+      // far as the board shows, so the reason the engine stepped in is said
+      // out loud rather than left to look like the AI just played badly.
+      if (appState.opponentNotice) {
+        return checkPrefix + turnName + ' to move — ⚠️ AI fell back to the local engine: ' + appState.opponentNotice;
       }
 
       return checkPrefix + turnName + ' to move';
@@ -4119,18 +4423,20 @@ body {
     function undoMove() {
       if (appState.gameState.history.length === 0) return false;
 
-      // Cancel any pending AI search
+      // Cancel any pending AI search, local or remote
       if (appState.aiThinkingTimeoutId) {
         clearTimeout(appState.aiThinkingTimeoutId);
         appState.aiThinkingTimeoutId = null;
       }
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
 
       clearHint();
 
       var history = appState.gameState.history;
       var stepsToUndo = 1;
 
-      if (appState.mode === 'vs-ai') {
+      if (hasComputerOpponent()) {
         var lastMove = history[history.length - 1];
         // If last move was AI, roll back 2 moves so player gets their turn back
         // If last move was player (e.g. before AI replied or game ended), roll back 1 move
@@ -4160,22 +4466,77 @@ body {
       return true;
     }
 
-    function maybeTriggerAI() {
-      if (appState.mode !== 'vs-ai') return;
-      if (appState.gameState.status !== 'active') return;
-      if (appState.gameState.turn !== appState.aiColor) return;
-      els.status.textContent = (appState.aiColor === 'w' ? 'White' : 'Black') + ' (AI) is thinking...';
-      if (appState.aiThinkingTimeoutId) {
-        clearTimeout(appState.aiThinkingTimeoutId);
-      }
+    function opponentName() {
+      return appState.aiColor === 'w' ? 'White' : 'Black';
+    }
+
+    // Plays whatever the opponent chose and hands the turn on. Shared by both
+    // modes so a move reaches the board by exactly one path.
+    function playOpponentMove(move, notice) {
+      if (!move) return;
+      appState.opponentNotice = notice || null;
+      appState.gameState = OukEngine.applyMove(appState.gameState, move);
+      appState.viewMoveIndex = -1;
+      render();
+      maybeTriggerAI();
+    }
+
+    function triggerEngineMove() {
+      // The search blocks the main thread, so let the browser paint the
+      // "thinking" notice before it starts.
       appState.aiThinkingTimeoutId = setTimeout(function () {
         appState.aiThinkingTimeoutId = null;
-        var move = OukAI.chooseMove(appState.gameState, appState.aiOptions);
-        appState.gameState = OukEngine.applyMove(appState.gameState, move);
-        appState.viewMoveIndex = -1;
-        render();
-        maybeTriggerAI();
+        playOpponentMove(OukAI.chooseMove(appState.gameState, appState.aiOptions), null);
       }, 30);
+    }
+
+    function triggerLlmMove() {
+      var requestId = appState.opponentRequestId;
+      var state = appState.gameState;
+      var settings = reviewSession ? reviewSession.getSettings() : null;
+
+      OukOpponent.chooseOpponentMove(state, state.history, settings, appState.aiOptions, function (err, result) {
+        // A new game, an undo or a mode change happened while the request was
+        // out: this move answers a position that is no longer on the board.
+        if (requestId !== appState.opponentRequestId) return;
+        if (!result || !result.move) return;
+        playOpponentMove(
+          result.move,
+          result.source === 'engine' ? result.reason : null
+        );
+      });
+    }
+
+    function maybeTriggerAI() {
+      if (!hasComputerOpponent()) return;
+      if (appState.gameState.status !== 'active') return;
+      if (appState.gameState.turn !== appState.aiColor) return;
+
+      appState.opponentNotice = null;
+      els.status.textContent = opponentName() + thinkingSuffix();
+
+      if (appState.aiThinkingTimeoutId) {
+        clearTimeout(appState.aiThinkingTimeoutId);
+        appState.aiThinkingTimeoutId = null;
+      }
+
+      if (appState.mode === 'vs-llm') {
+        triggerLlmMove();
+      } else {
+        triggerEngineMove();
+      }
+    }
+
+    // Names the opponent that is actually thinking. In vs-llm that is the
+    // configured model, and saying which one is the difference between a
+    // pause the player understands and one that looks like a hang.
+    function thinkingSuffix() {
+      if (appState.mode !== 'vs-llm') return ' (Computer) is thinking...';
+      var settings = reviewSession ? reviewSession.getSettings() : null;
+      if (OukOpponent.unusableEndpointReason(settings)) {
+        return ' (Computer) is thinking...';
+      }
+      return ' (' + (settings.model || 'AI') + ') is thinking...';
     }
 
     function handleSquareClick(rank, file) {
@@ -4183,7 +4544,7 @@ body {
       // position; clicking through it would move pieces in the live game.
       if (isShowingRecommendation()) return;
       if (appState.gameState.status !== 'active') return;
-      if (appState.mode === 'vs-ai' && appState.gameState.turn === appState.aiColor) return;
+      if (isComputerTurn()) return;
       if (appState.selectedSquare && tryMove(rank, file)) {
         render();
         maybeTriggerAI();
@@ -4198,6 +4559,8 @@ body {
         clearTimeout(appState.aiThinkingTimeoutId);
         appState.aiThinkingTimeoutId = null;
       }
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
       clearHint();
       appState.gameState = OukEngine.createInitialState();
       appState.selectedSquare = null;
@@ -4387,7 +4750,8 @@ body {
         '</div>' +
         '<label><input type="radio" name="oc-mode" value="2p"' + (appState.mode === '2p' ? ' checked' : '') + '> 2-Player</label>' +
         '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
-        '<label>Difficulty: <select id="oc-difficulty">' +
+        '<label title="The model configured in ⚙ AI Settings picks the moves"><input type="radio" name="oc-mode" value="vs-llm"' + (appState.mode === 'vs-llm' ? ' checked' : '') + '> vs AI</label>' +
+        '<label title="Strength of the local engine — in vs AI that is the fallback it plays when the model cannot answer">Difficulty: <select id="oc-difficulty">' +
         '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
         '</select></label>' +
         '<div class="oc-theme-card">' +
@@ -4427,6 +4791,8 @@ body {
       if (hintBtnEl) hintBtnEl.addEventListener('click', requestHint);
       Array.prototype.forEach.call(els.controls.querySelectorAll('input[name="oc-mode"]'), function (radio) {
         radio.addEventListener('change', function (evt) {
+          cancelPendingOpponentMove();
+          appState.opponentNotice = null;
           appState.mode = evt.target.value;
           render();
           maybeTriggerAI();
