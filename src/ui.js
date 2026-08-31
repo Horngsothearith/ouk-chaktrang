@@ -19,7 +19,10 @@
         sq.className = 'oc-square ' + squareColorClass(rank, file);
         sq.dataset.rank = String(rank);
         sq.dataset.file = String(file);
+        sq.tabIndex = 0;
+        sq.setAttribute('role', 'button');
         var piece = OukEngine.pieceAt(gameState, rank, file);
+        sq.setAttribute('aria-label', OukEngine.squareName(rank, file) + (piece ? ', ' + piece.color + ' ' + piece.type : ', empty'));
         if (piece) sq.innerHTML = OukPieces.svgFor(piece.type, piece.color);
         containerEl.appendChild(sq);
       }
@@ -180,6 +183,13 @@
     els.board.addEventListener('click', function (evt) {
       var sq = evt.target.closest('.oc-square');
       if (!sq) return;
+      handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
+    });
+    els.board.addEventListener('keydown', function (evt) {
+      if (evt.key !== 'Enter' && evt.key !== ' ') return;
+      var sq = evt.target.closest('.oc-square');
+      if (!sq) return;
+      evt.preventDefault();
       handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
     });
 

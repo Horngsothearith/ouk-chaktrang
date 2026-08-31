@@ -15,8 +15,11 @@
 
   function svgFor(type, color) {
     var body = PATHS[type] || '';
-    var fill = color === 'w' ? '#f5efe0' : '#3a2a1a';
-    var stroke = color === 'w' ? '#7a5c30' : '#1a1008';
+    // Fixed light/dark wood tones regardless of page theme, like real game
+    // pieces - carved from pale vs. dark-stained wood, matching the
+    // parchment/teak palette.
+    var fill = color === 'w' ? '#f1e4bf' : '#3c2a1c';
+    var stroke = color === 'w' ? '#a8823a' : '#1a0f08';
     return '<svg viewBox="0 0 100 100" class="oc-piece" style="fill:' + fill + ';stroke:' + stroke + ';stroke-width:3">' + body + '</svg>';
   }
 

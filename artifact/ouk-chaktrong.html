@@ -4,58 +4,215 @@
 <meta charset="utf-8">
 <title>Ouk Chaktrang</title>
 <style>
+/* Palette grounded in the subject: Angkor sandstone (laterite), palm-leaf
+   manuscript parchment, dark teak game boards, temple gilt, jade. */
 :root {
-  --oc-light: #eadfc4;
-  --oc-dark: #a97c50;
-  --oc-highlight: #6fae4a;
-  --oc-select: #4a90d9;
-  --oc-check: #c0392b;
-  --oc-bg: #f7f3ea;
-  --oc-panel-bg: #ffffff;
-  --oc-text: #2a2016;
+  --ink: #241811;
+  --parchment: #e4d5a8;
+  --parchment-light: #f2e8c8;
+  --laterite: #b5542a;
+  --teak: #3c2a1c;
+  --teak-deep: #241a12;
+  --gilt: #a8823a;
+  --jade: #4f7a5c;
+  --danger: #a8342a;
+  --warning: #8a5a12;
+  --warning-bg: #f0dfae;
+
+  --bg: var(--parchment-light);
+  --surface: #fbf6e6;
+  --text: var(--ink);
+  --text-muted: #6b5a40;
+  --border: var(--teak);
+  --square-light: var(--parchment);
+  --square-dark: var(--laterite);
+  --accent: var(--gilt);
 }
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --oc-bg: #1c1712;
-    --oc-panel-bg: #2a2119;
-    --oc-text: #f0e9db;
+  :root:not([data-theme="light"]) {
+    --bg: var(--teak-deep);
+    --surface: #2c2015;
+    --text: #ecdfc0;
+    --text-muted: #b6a482;
+    --border: var(--gilt);
+    --square-light: #5a4530;
+    --square-dark: #7a3a22;
+    --warning-bg: #4a3a14;
+    --warning: #e0b354;
   }
 }
-body { margin: 0; }
-.oc-app { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; background: var(--oc-bg); color: var(--oc-text); font-family: system-ui, sans-serif; min-height: 100vh; box-sizing: border-box; }
-.oc-board { display: grid; grid-template-columns: repeat(8, minmax(36px, 64px)); grid-template-rows: repeat(8, minmax(36px, 64px)); border: 3px solid var(--oc-dark); width: min(90vw, 512px); aspect-ratio: 1; }
+
+:root[data-theme="dark"] {
+  --bg: var(--teak-deep);
+  --surface: #2c2015;
+  --text: #ecdfc0;
+  --text-muted: #b6a482;
+  --border: var(--gilt);
+  --square-light: #5a4530;
+  --square-dark: #7a3a22;
+  --warning-bg: #4a3a14;
+  --warning: #e0b354;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .oc-square::after, button, select { transition: opacity 0.15s ease, box-shadow 0.15s ease; }
+}
+
+.oc-app {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 32px;
+  min-height: 100vh;
+  font-family: "Work Sans", system-ui, sans-serif;
+}
+
+.oc-header {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.oc-title-km {
+  font-family: "Noto Serif Khmer", serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--laterite);
+  margin: 0;
+}
+.oc-title-en {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.oc-board-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+.oc-board {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(36px, 64px));
+  grid-template-rows: repeat(8, minmax(36px, 64px));
+  border: 4px solid var(--border);
+  border-radius: 2px;
+  width: min(90vw, 512px);
+  aspect-ratio: 1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
 .oc-square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.oc-square.light { background: var(--oc-light); }
-.oc-square.dark { background: var(--oc-dark); }
-.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-select); }
-.oc-square.legal-target::after { content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: var(--oc-highlight); opacity: 0.75; }
-.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-highlight); }
-.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--oc-check); }
+.oc-square.light { background: var(--square-light); }
+.oc-square.dark { background: var(--square-dark); }
+.oc-square.selected::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--accent); }
+.oc-square.legal-target::after { content: ''; position: absolute; width: 28%; height: 28%; border-radius: 50%; background: var(--jade); opacity: 0.85; }
+.oc-square.legal-capture::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--jade); }
+.oc-square.in-check::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 4px var(--danger); }
+.oc-square:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 .oc-piece { width: 82%; height: 82%; pointer-events: none; }
-.oc-panel { min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
-.oc-status { font-weight: 600; font-size: 1.1em; }
-.oc-counting { background: #fff3cd; color: #7a5c00; padding: 8px 12px; border-radius: 6px; font-size: 0.9em; }
-.oc-captured { display: flex; flex-wrap: wrap; gap: 4px; min-height: 28px; }
-.oc-captured .oc-piece { width: 22px; height: 22px; }
-.oc-moves { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.9em; }
-.oc-controls { display: flex; flex-direction: column; gap: 8px; }
+
+.oc-panel {
+  min-width: 260px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.oc-status {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+.oc-counting {
+  background: var(--warning-bg);
+  color: var(--warning);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.oc-section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 6px;
+}
+.oc-captured { display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; }
+.oc-captured .oc-piece { width: 20px; height: 20px; }
+
+.oc-moves {
+  max-height: 180px;
+  overflow-y: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.oc-controls { display: flex; flex-direction: column; gap: 10px; }
+.oc-controls label { font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+.oc-controls button, .oc-controls select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.oc-controls button:hover, .oc-controls select:hover { border-color: var(--accent); }
+.oc-controls button:focus-visible, .oc-controls select:focus-visible,
+.oc-controls input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#oc-new-game { background: var(--laterite); color: var(--parchment-light); border-color: var(--laterite); font-weight: 600; }
 
 </style>
 </head>
 <body>
 
 <div class="oc-app">
-  <div class="oc-board" id="board"></div>
+  <div class="oc-header">
+    <h1 class="oc-title-km">អុកចត្រង្គ</h1>
+    <span class="oc-title-en">Ouk Chaktrang &mdash; Khmer Chess</span>
+  </div>
+  <div class="oc-board-wrap">
+    <div class="oc-board" id="board"></div>
+  </div>
   <div class="oc-panel">
     <div class="oc-status" id="status">White to move</div>
     <div class="oc-counting" id="counting" hidden></div>
     <div>
-      <div>Captured by White:</div>
+      <p class="oc-section-label">Captured by White</p>
       <div class="oc-captured" id="captured-by-white"></div>
-      <div>Captured by Black:</div>
+      <p class="oc-section-label">Captured by Black</p>
       <div class="oc-captured" id="captured-by-black"></div>
     </div>
-    <div class="oc-moves" id="moves"></div>
+    <div>
+      <p class="oc-section-label">Moves</p>
+      <div class="oc-moves" id="moves"></div>
+    </div>
     <div class="oc-controls" id="controls"></div>
   </div>
 </div>
@@ -618,8 +775,11 @@ body { margin: 0; }
 
   function svgFor(type, color) {
     var body = PATHS[type] || '';
-    var fill = color === 'w' ? '#f5efe0' : '#3a2a1a';
-    var stroke = color === 'w' ? '#7a5c30' : '#1a1008';
+    // Fixed light/dark wood tones regardless of page theme, like real game
+    // pieces - carved from pale vs. dark-stained wood, matching the
+    // parchment/teak palette.
+    var fill = color === 'w' ? '#f1e4bf' : '#3c2a1c';
+    var stroke = color === 'w' ? '#a8823a' : '#1a0f08';
     return '<svg viewBox="0 0 100 100" class="oc-piece" style="fill:' + fill + ';stroke:' + stroke + ';stroke-width:3">' + body + '</svg>';
   }
 
@@ -653,7 +813,10 @@ body { margin: 0; }
         sq.className = 'oc-square ' + squareColorClass(rank, file);
         sq.dataset.rank = String(rank);
         sq.dataset.file = String(file);
+        sq.tabIndex = 0;
+        sq.setAttribute('role', 'button');
         var piece = OukEngine.pieceAt(gameState, rank, file);
+        sq.setAttribute('aria-label', OukEngine.squareName(rank, file) + (piece ? ', ' + piece.color + ' ' + piece.type : ', empty'));
         if (piece) sq.innerHTML = OukPieces.svgFor(piece.type, piece.color);
         containerEl.appendChild(sq);
       }
@@ -814,6 +977,13 @@ body { margin: 0; }
     els.board.addEventListener('click', function (evt) {
       var sq = evt.target.closest('.oc-square');
       if (!sq) return;
+      handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
+    });
+    els.board.addEventListener('keydown', function (evt) {
+      if (evt.key !== 'Enter' && evt.key !== ' ') return;
+      var sq = evt.target.closest('.oc-square');
+      if (!sq) return;
+      evt.preventDefault();
       handleSquareClick(parseInt(sq.dataset.rank, 10), parseInt(sq.dataset.file, 10));
     });
 

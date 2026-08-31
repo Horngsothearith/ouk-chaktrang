@@ -2,22 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ouk Chaktrang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Work+Sans:wght@400;500;600&family=Noto+Serif+Khmer:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="oc-app">
-  <div class="oc-board" id="board"></div>
+  <div class="oc-header">
+    <h1 class="oc-title-km">អុកចត្រង្គ</h1>
+    <span class="oc-title-en">Ouk Chaktrang &mdash; Khmer Chess</span>
+  </div>
+  <div class="oc-board-wrap">
+    <div class="oc-board" id="board"></div>
+  </div>
   <div class="oc-panel">
     <div class="oc-status" id="status">White to move</div>
     <div class="oc-counting" id="counting" hidden></div>
     <div>
-      <div>Captured by White:</div>
+      <p class="oc-section-label">Captured by White</p>
       <div class="oc-captured" id="captured-by-white"></div>
-      <div>Captured by Black:</div>
+      <p class="oc-section-label">Captured by Black</p>
       <div class="oc-captured" id="captured-by-black"></div>
     </div>
-    <div class="oc-moves" id="moves"></div>
+    <div>
+      <p class="oc-section-label">Moves</p>
+      <div class="oc-moves" id="moves"></div>
+    </div>
     <div class="oc-controls" id="controls"></div>
   </div>
 </div>
