@@ -10,7 +10,9 @@
     B: '<circle cx="50" cy="42" r="13"/><path d="M32 90 Q50 66 68 90 Z"/><circle cx="50" cy="20" r="5"/>',
     N: '<path d="M35 90 L40 50 Q30 40 38 22 Q55 18 62 34 L58 50 L68 90 Z"/>',
     R: '<rect x="32" y="26" width="36" height="14"/><path d="M30 90 Q50 62 70 90 Z"/><rect x="32" y="26" width="8" height="8"/><rect x="60" y="26" width="8" height="8"/>',
-    P: '<circle cx="50" cy="48" r="15"/><path d="M36 90 Q50 72 64 90 Z"/>'
+    // Kun (កូន) - a flat disc/ring token, distinct from the taller carved
+    // pieces above, like a coin or cowrie-shell counter laid on the square.
+    P: '<circle cx="50" cy="52" r="30" style="stroke-width:7"/>'
   };
 
   function svgFor(type, color) {
