@@ -5,6 +5,9 @@ npm-debug.log*
 # Git worktrees created for feature work (see .dockerignore).
 .worktrees/
 
+# Compose reads this for TS_AUTHKEY and friends - it holds a live auth key.
+.env
+
 # OS and editor cruft.
 .DS_Store
 Thumbs.db

@@ -164,6 +164,36 @@ ports:
   - "127.0.0.1:${PORT:-5173}:5173"
 ```
 
+### Tailscale
+
+A `tailscale` profile in the compose file does the bounding for you: the app
+joins your tailnet and is reachable from your own devices, and nowhere else.
+
+```bash
+TS_AUTHKEY=tskey-auth-... docker compose --profile tailscale up
+```
+
+Then open `https://ouk-chaktrong.<your-tailnet>.ts.net` from any device signed
+into the tailnet. Put the key in a `.env` file rather than the command line —
+it is gitignored for exactly that. `TS_HOSTNAME` changes the machine name.
+
+The sidecar runs `tailscaled` in userspace networking mode, so it needs no
+`NET_ADMIN` and no `/dev/net/tun`, and it reverse-proxies to the `web` service
+over the compose network — `web` itself is unchanged and still publishes 5173
+on the LAN. To make the tailnet the *only* way in, restrict that mapping to
+loopback as above, or drop it entirely.
+
+Two things worth knowing:
+
+- **HTTPS certificates must be enabled** for your tailnet (admin console →
+  DNS → HTTPS Certificates). Without them the `serve` config in
+  `docker/tailscale-serve.json` cannot get a certificate and the sidecar exits.
+  To run plain HTTP instead, swap that file's `"443"` / `"HTTPS": true` for
+  `"80"` / `"HTTP": true` and change the `Web` key to `${TS_CERT_DOMAIN}:80`.
+- **`AllowFunnel` stays empty.** Funnel would publish this app — an
+  unauthenticated app with a proxy attached — to the public internet. Tailscale
+  narrows the audience; it does not add authentication.
+
 ## Layout
 
 | Path | What it is |

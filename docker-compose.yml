@@ -38,3 +38,53 @@ services:
     volumes:
       - .:/app:ro
     init: true
+
+  # Optional: reach the app over your tailnet instead of over the LAN. Behind a
+  # profile, so a plain `docker compose up` is unchanged:
+  #
+  #   TS_AUTHKEY=tskey-auth-... docker compose --profile tailscale up
+  #
+  # tailscaled runs in userspace networking mode, so this needs no NET_ADMIN and
+  # no /dev/net/tun: it joins the tailnet itself and reverse-proxies to `web`
+  # over the compose network. That is why `web` above is untouched - it still
+  # publishes 5173 on the LAN. If the tailnet is meant to be the *only* way in,
+  # change that mapping to "127.0.0.1:${PORT:-5173}:5173" or delete it; the
+  # sidecar reaches the app by service name either way.
+  #
+  # This does not add authentication - it replaces "anyone on the network" with
+  # "anyone on the tailnet". Keep AllowFunnel empty in the serve config: Funnel
+  # would publish an unauthenticated app, proxy included, to the open internet.
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: ouk-chaktrong-tailscale
+    profiles: ["tailscale"]
+    environment:
+      # Auth key from https://login.tailscale.com/admin/settings/keys. Keep it
+      # in a .env file (gitignored), never in this file. Defaulted to empty so
+      # that `docker compose config` and `docker compose up` still resolve
+      # without one; containerboot fails loudly if the profile starts without it.
+      TS_AUTHKEY: "${TS_AUTHKEY:-}"
+      # The machine name on the tailnet, hence the MagicDNS name the app answers
+      # on: https://ouk-chaktrong.<your-tailnet>.ts.net
+      TS_HOSTNAME: "${TS_HOSTNAME:-ouk-chaktrong}"
+      # Userspace networking - no privileged capabilities, no tun device.
+      TS_USERSPACE: "true"
+      # Node state lives in the named volume below. Without this, every restart
+      # spends the auth key again and registers a new machine (-1, -2, ...).
+      TS_STATE_DIR: /var/lib/tailscale
+      # `tailscale serve`: terminate HTTPS on the tailnet and forward to the
+      # app. The entrypoint substitutes ${TS_CERT_DOMAIN} in that file with this
+      # node's MagicDNS name, so the file stays tailnet-agnostic.
+      TS_SERVE_CONFIG: /config/serve.json
+      # Extra flags for `tailscale up`, e.g. "--advertise-tags=tag:ouk".
+      TS_EXTRA_ARGS: "${TS_EXTRA_ARGS:-}"
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - ./docker/tailscale-serve.json:/config/serve.json:ro
+    depends_on:
+      - web
+    init: true
+    restart: unless-stopped
+
+volumes:
+  tailscale-state:
