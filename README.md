@@ -37,7 +37,7 @@ The image runs as the unprivileged `node` user and ships a healthcheck.
 node --test
 ```
 
-125 tests, `node:test` only — no framework, no install. In Docker:
+156 tests, `node:test` only — no framework, no install. In Docker:
 `docker compose run --rm test`.
 
 ## The rules it implements
@@ -60,14 +60,73 @@ directly:
   much of it has elapsed. `applyMove` resolves a spent count into the game
   status, so the search sees counting-forced draws as draws.
 
+## The engine
+
+`src/ai.js` is a negamax search with alpha-beta pruning. What it does beyond
+that is mostly about two things: getting the best move examined first, and not
+believing a score measured in the middle of a capture sequence.
+
+- **Iterative deepening** to a time budget, not a fixed depth. Each pass leaves
+  the transposition table and the history scores primed for the next, so the
+  shallow passes pay for themselves. A pass that runs out of time is discarded
+  unless it had already finished a root move, and the clock is checked inside
+  the search rather than only between moves — the budget is a budget.
+- **Quiescence search.** At depth zero the search keeps playing out captures,
+  promotions and check evasions until the position is quiet. Without it the
+  engine happily takes a defended piece one ply before the horizon and never
+  sees the recapture.
+- **A transposition table**, keyed by a Zobrist hash of the board, the side to
+  move, the three first-move flags *and the counting clock* — two identical
+  boards at different points in a count are not the same position, because one
+  of them is much closer to being a draw.
+- **Move ordering**: transposition move, then captures by most-valuable-victim,
+  then promotions, then killer moves, then a history heuristic. Plus principal
+  variation search and late move reductions on the quiet tail.
+- **An evaluation with Ouk Chaktrang in it.** Piece-square tables for each
+  piece as it actually moves here — a Koul that only goes forward, a Trey that
+  promotes on the sixth rank rather than the eighth, a Sdaach that should be
+  home early and in the middle of the board late.
+- **Endgame terms that beat the count.** Against a bare Sdaach, material says
+  every move is equally winning and the engine shuffles until the count expires
+  and the win evaporates. So the evaluation drives the lone king to the rim,
+  brings the winning king up to help, and *discounts an advantage as the count
+  runs out* — mating in eight is worth more than winning another Touk in twelve
+  when there are only ten moves left. Given a Touk and a randomly placed bare
+  king, the search converts about 12 positions in 20 where the previous one
+  converted 2.
+
+Difficulty is not only depth. Each setting also blurs the evaluation by a fixed
+number of hundredths of a Trey, consistently within a search: a shallow but
+*exact* engine still wins every material race and plays a joyless, unbeatable
+material grind, while one that misjudges positions slightly drops a pawn now
+and then — and gives a different game each time. Easy still sees a mate that is
+already on the board; difficulty costs it judgement, not eyesight.
+
+| Setting | Depth cap | Budget | Evaluation blur |
+|---|---|---|---|
+| Easy | 3 | 300 ms | ±0.60 |
+| Medium | 5 | 800 ms | ±0.12 |
+| Hard | 7 | 1500 ms | exact |
+
+The rules engine underneath was rewritten for the same reason. Checking whether
+a square is attacked now looks outward from the square instead of generating
+every enemy move, testing a move's legality makes and unmakes it on the board
+instead of cloning a whole game state, and a successor board shares the piece
+objects it did not change. Together those took a depth-4 search of the opening
+position from about 2.4 seconds to about 75 milliseconds, which is where the
+extra plies come from. `tests/engine.test.js` checks the fast attack detection
+against a generate-and-scan reference over millions of square/colour pairs,
+since the movement rules are now written down twice.
+
 ## Playing features
 
 - **2-player** on one board, **vs Computer** at three difficulties, or **vs AI**
   — the same board played against the language model you configure, rather than
   against the local search.
-- **💡 Hint** (`H`) — the engine searches your position and draws its suggested
-  move on the board. Fixed strength, independent of the opponent's difficulty:
-  a hint from the "Easy" engine would be bad advice.
+- **💡 Hint** (`H`) — the engine searches your position, draws its suggested
+  move on the board and reports what it thinks of it (`💡 b1-d2 (+0.1 at depth
+  6)`, or a mate distance when there is one). Fixed strength, independent of
+  the opponent's difficulty: a hint from the "Easy" engine would be bad advice.
 - **Undo** (`U` / `Ctrl+Z`), move list, and arrow-key navigation through history.
 - **AI Move Review** — an optional LLM pass that explains a move in English,
   Khmer, or both, and draws the line it would rather have played. It needs an
@@ -199,7 +258,7 @@ Two things worth knowing:
 | Path | What it is |
 |------|------------|
 | `src/engine.js` | Rules, move generation, counting, game status. No DOM. |
-| `src/ai.js` | Negamax with alpha-beta, iterative deepening, and the hint search. |
+| `src/ai.js` | The search: negamax, alpha-beta, quiescence, transposition table, evaluation, and the hint. |
 | `src/pieces.js` | Piece artwork — five skins, drawn as inline SVG. |
 | `src/review.js` | Prompt building and response parsing for LLM review, plus the offline simulation. |
 | `src/opponent.js` | The LLM opponent behind *vs AI*: prompt, reply parsing, legality check, engine fallback. |

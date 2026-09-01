@@ -172,6 +172,35 @@
     var STORAGE_ACTIVE_GAME = 'ouk_active_game_state';
     var STORAGE_SAVED_GAMES = 'ouk_saved_games';
 
+    // The three difficulties, in one place. Depth is only half of what makes
+    // them differ: evalNoiseCp blurs the engine's evaluation by up to that many
+    // hundredths of a Trey, so an easier setting misjudges positions rather
+    // than merely seeing fewer of them. A shallow but exact engine still wins
+    // every material race and plays joylessly straight; a slightly short-
+    // sighted one drops a pawn now and then, which is what a beginner needs.
+    var DIFFICULTIES = {
+      easy: { timeLimitMs: 300, maxDepth: 3, evalNoiseCp: 60 },
+      medium: { timeLimitMs: 800, maxDepth: 5, evalNoiseCp: 12 },
+      hard: { timeLimitMs: 1500, maxDepth: 7, evalNoiseCp: 0 }
+    };
+
+    function difficultyNameFor(options) {
+      if (!options) return 'medium';
+      for (var name in DIFFICULTIES) {
+        if (DIFFICULTIES[name].maxDepth === options.maxDepth) return name;
+      }
+      return 'medium';
+    }
+
+    // A save records both the difficulty's name and the exact options it was
+    // played at. The name wins: a game saved before these presets last changed
+    // should come back at today's "Medium", not at the one it was saved under.
+    function restoreDifficulty(meta) {
+      if (meta.difficulty && DIFFICULTIES[meta.difficulty]) return DIFFICULTIES[meta.difficulty];
+      if (meta.aiOptions) return meta.aiOptions;
+      return appState.aiOptions;
+    }
+
     var appState = {
       gameState: OukEngine.createInitialState(),
       selectedSquare: null,
@@ -180,7 +209,7 @@
       // chat model picks the moves, via src/opponent.js)
       mode: '2p',
       aiColor: 'b',
-      aiOptions: { timeLimitMs: 800, maxDepth: 5 },
+      aiOptions: DIFFICULTIES.medium,
       aiThinkingTimeoutId: null,
       // An LLM reply arrives over the network, long after the position that
       // asked for it may have been undone, reset or switched away from. Every
@@ -188,7 +217,7 @@
       // is dropped rather than played onto a board it does not belong to.
       opponentRequestId: 0,
       opponentNotice: null, // why the engine answered instead of the model
-      hintMove: null, // { move, atPly } - engine suggestion drawn on the live board
+      hintMove: null, // { move, atPly, analysis } - engine suggestion drawn on the live board
       hintTimeoutId: null,
       themeState: themeState,
       viewMoveIndex: -1, // -1 means live position; >= 0 means viewing historical move
@@ -209,7 +238,7 @@
             var meta = restored.metadata || {};
             if (meta.mode) appState.mode = meta.mode;
             if (meta.aiColor) appState.aiColor = meta.aiColor;
-            if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+            appState.aiOptions = restoreDifficulty(meta);
             if (meta.moveReviews) appState.moveReviews = meta.moveReviews;
           }
         }
@@ -281,6 +310,30 @@
       appState.hintMove = null;
     }
 
+    // A hint draws an arrow; on its own that says which move without saying
+    // why it is worth playing. The search already knows - it just scored the
+    // position - so the status line reports the score too, from the point of
+    // view of whoever is being advised.
+    function hintVerdict() {
+      var hint = appState.hintMove;
+      if (!hint || !hint.analysis) return '';
+      var move = OukEngine.squareName(hint.move.from.rank, hint.move.from.file) +
+        (hint.move.captured ? 'x' : '-') +
+        OukEngine.squareName(hint.move.to.rank, hint.move.to.file);
+      var analysis = hint.analysis;
+      var verdict;
+      if (analysis.mateIn > 0) {
+        verdict = 'mate in ' + analysis.mateIn;
+      } else if (analysis.mateIn < 0) {
+        verdict = 'mated in ' + Math.abs(analysis.mateIn);
+      } else {
+        var score = analysis.score;
+        verdict = (score >= 0 ? '+' : '−') + Math.abs(score).toFixed(1) +
+          ' at depth ' + analysis.depth;
+      }
+      return '  —  💡 ' + move + ' (' + verdict + ')';
+    }
+
     function requestHint() {
       // Second press takes the hint back down, whether it is drawn already or
       // still being searched for.
@@ -296,9 +349,9 @@
       els.status.textContent = 'Thinking of a hint...';
       appState.hintTimeoutId = setTimeout(function () {
         appState.hintTimeoutId = null;
-        var move = OukAI.suggestMove(appState.gameState);
-        appState.hintMove = move
-          ? { move: move, atPly: appState.gameState.history.length }
+        var hint = OukAI.suggest(appState.gameState);
+        appState.hintMove = hint && hint.move
+          ? { move: hint.move, atPly: appState.gameState.history.length, analysis: hint }
           : null;
         render();
       }, 30);
@@ -769,7 +822,7 @@
       }
       var displayState = currentDisplayState();
       renderBoard(displayState, els.board);
-      els.status.textContent = statusText(displayState);
+      els.status.textContent = statusText(displayState) + hintVerdict();
       renderCounting(displayState);
       renderCaptured(displayState);
       renderMoves(displayState);
@@ -1365,7 +1418,7 @@
       var meta = result.metadata || {};
       if (meta.mode) appState.mode = meta.mode;
       if (meta.aiColor) appState.aiColor = meta.aiColor;
-      if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+      appState.aiOptions = restoreDifficulty(meta);
       appState.moveReviews = meta.moveReviews || {};
       appState.selectedSquare = null;
       appState.legalMovesForSelected = [];
@@ -1534,9 +1587,7 @@
         return '<option value="' + s.id + '"' + selected + '>' + s.name + ' (' + s.nameKm + ')</option>';
       }).join('');
 
-      var selectedDiff = 'medium';
-      if (appState.aiOptions && appState.aiOptions.maxDepth === 3) selectedDiff = 'easy';
-      else if (appState.aiOptions && appState.aiOptions.maxDepth === 7) selectedDiff = 'hard';
+      var selectedDiff = difficultyNameFor(appState.aiOptions);
 
       els.controls.innerHTML =
         '<div class="oc-btn-row">' +
@@ -1601,8 +1652,7 @@
         });
       });
       document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
-        var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
-        appState.aiOptions = presets[evt.target.value];
+        appState.aiOptions = DIFFICULTIES[evt.target.value] || DIFFICULTIES.medium;
         saveActiveGame();
       });
 
