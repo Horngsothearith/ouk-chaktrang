@@ -37,7 +37,7 @@ The image runs as the unprivileged `node` user and ships a healthcheck.
 node --test
 ```
 
-117 tests, `node:test` only — no framework, no install. In Docker:
+125 tests, `node:test` only — no framework, no install. In Docker:
 `docker compose run --rm test`.
 
 ## The rules it implements
@@ -111,6 +111,21 @@ off as the model's. Difficulty picks the strength of that fallback.
 
 The consequence worth knowing: in *vs AI* every move costs an API call against
 your own key.
+
+#### Seeing what the model was asked
+
+The prompt is built and sent without ever appearing on the page, so when the AI
+plays something baffling there is nothing to look at. **Debug vs AI prompts** in
+⚙ AI Settings puts every exchange in the browser console: one collapsed group
+per phase, carrying the endpoint, the system and user prompts exactly as sent,
+the raw reply, and which move was finally played or why the engine took over.
+The API key is never part of that record.
+
+The last exchange is kept whether or not logging was on, so the question can
+also be asked after the fact from the console:
+
+    app.getLastAiExchange()   // the record: prompts, reply, resolution
+    app.logLastAiExchange()   // print that same record, in full
 
 ### Proxy security
 

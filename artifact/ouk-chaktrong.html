@@ -1716,6 +1716,10 @@ body {
         <input type="checkbox" id="oc-setting-use-proxy">
         <span>Use Local Dev Server Proxy (Bypass CORS for local / tunnel endpoints)</span>
       </label>
+      <label class="oc-checkbox-label">
+        <input type="checkbox" id="oc-setting-debug-prompts">
+        <span>Debug vs AI prompts (log the prompt, the reply and the chosen move to the browser console)</span>
+      </label>
       <div class="oc-dialog-status" id="oc-dialog-status"></div>
       <div class="oc-dialog-actions">
         <button type="button" class="oc-btn-secondary" id="oc-test-connection">Test Connection</button>
@@ -2593,7 +2597,11 @@ body {
     model: 'gpt-4o-mini',
     language: 'en', // 'en' | 'km' | 'both'
     temperature: 0.3,
-    useProxy: false
+    useProxy: false,
+    // Prints the "vs AI" prompt and reply to the browser console. Saved with
+    // the rest so it survives a reload - a bug you are chasing across moves
+    // outlives the page.
+    debugPrompts: false
   };
 
   var STORAGE_KEY = 'ouk_chaktrang_ai_review_settings';
@@ -3505,6 +3513,45 @@ body {
   // this deliberately does not read it.
   var MOVE_TEMPERATURE = 0.2;
 
+  // What the model was actually asked, kept where a developer can get at it.
+  // The prompt is built here and sent straight out, so when "vs AI" plays a
+  // move that makes no sense the first question - what did it see? - has no
+  // answer anywhere else in the app. setDebugListener hears every exchange as
+  // it happens; getLastExchange answers the same question after the fact, from
+  // the console, with nothing switched on beforehand.
+  //
+  // The record carries the endpoint but never the API key. It is written to a
+  // console log, and a debug aid that leaks the key is a worse bug than the
+  // one it was helping with.
+  var debugListener = null;
+  var lastExchange = null;
+
+  function setDebugListener(fn) {
+    debugListener = typeof fn === 'function' ? fn : null;
+  }
+
+  function getLastExchange() {
+    return lastExchange;
+  }
+
+  // One exchange is one object, updated in place as it moves from 'request' to
+  // 'response', so the listener and getLastExchange always see the whole story
+  // rather than a phase of it. A listener that throws is the debugger's
+  // problem: the game still has a move to play.
+  function emitDebug(exchange, phase, fields) {
+    exchange.phase = phase;
+    if (fields) {
+      Object.keys(fields).forEach(function (key) { exchange[key] = fields[key]; });
+    }
+    lastExchange = exchange;
+    if (!debugListener) return;
+    try {
+      debugListener(exchange);
+    } catch (e) {
+      /* a broken listener must not cost the game its move */
+    }
+  }
+
   var SYSTEM_PROMPT = [
     'You are a strong player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
     'You will be given the current position and the complete list of your legal moves. Choose the strongest one.',
@@ -3694,26 +3741,58 @@ body {
       return;
     }
 
+    var exchange = {
+      at: new Date().toISOString(),
+      phase: 'request',
+      turn: state.turn,
+      ply: history ? history.length : 0,
+      legalMoveCount: legalMoves.length,
+      endpoint: settings ? settings.baseURL : null,
+      useProxy: !!(settings && settings.useProxy),
+      model: null,
+      temperature: MOVE_TEMPERATURE,
+      systemPrompt: SYSTEM_PROMPT,
+      userPrompt: null
+    };
+
     var unusable = unusableEndpointReason(settings);
     if (unusable) {
+      // A phase rather than silence, on purpose: "nothing was sent, and here
+      // is why" is exactly what someone wondering where the model went is
+      // trying to find out.
+      emitDebug(exchange, 'skipped', { source: 'engine', reason: unusable });
       callback(null, engineFallback(state, engineOptions, unusable));
       return;
     }
 
+    var userPrompt = buildOpponentPrompt(state, history, legalMoves);
     var bodyPayload = {
       model: settings.model || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildOpponentPrompt(state, history, legalMoves) }
+        { role: 'user', content: userPrompt }
       ],
       temperature: MOVE_TEMPERATURE
     };
+
+    var startedAt = Date.now();
+    emitDebug(exchange, 'request', { model: bodyPayload.model, userPrompt: userPrompt });
 
     OukReview.sendChatRequest(settings, bodyPayload)
       .then(function (data) {
         var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
         if (!content) throw new Error('the model returned an empty response');
-        var resolved = resolveOpponentMove(legalMoves, parseOpponentMove(content));
+        var parsed = parseOpponentMove(content);
+        var resolved = resolveOpponentMove(legalMoves, parsed);
+        emitDebug(exchange, 'response', {
+          elapsedMs: Date.now() - startedAt,
+          rawReply: content,
+          parsed: parsed,
+          source: resolved.move ? 'llm' : 'engine',
+          reason: resolved.reason || null,
+          comment: resolved.comment || null,
+          chosen: resolved.move ? squareOf(resolved.move.from) + ' -> ' + squareOf(resolved.move.to) : null
+        });
         if (!resolved.move) {
           callback(null, engineFallback(state, engineOptions, resolved.reason));
           return;
@@ -3721,7 +3800,14 @@ body {
         callback(null, resolved);
       })
       .catch(function (err) {
-        callback(null, engineFallback(state, engineOptions, err.message || 'the request failed'));
+        var message = err.message || 'the request failed';
+        emitDebug(exchange, 'error', {
+          elapsedMs: Date.now() - startedAt,
+          error: message,
+          source: 'engine',
+          reason: message
+        });
+        callback(null, engineFallback(state, engineOptions, message));
       });
   }
 
@@ -3734,7 +3820,9 @@ body {
     parseOpponentMove: parseOpponentMove,
     resolveOpponentMove: resolveOpponentMove,
     unusableEndpointReason: unusableEndpointReason,
-    chooseOpponentMove: chooseOpponentMove
+    chooseOpponentMove: chooseOpponentMove,
+    setDebugListener: setDebugListener,
+    getLastExchange: getLastExchange
   };
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -3843,8 +3931,67 @@ body {
     }
   }
 
+  // Prints one "vs AI" exchange to the browser console. The prompt runs to
+  // some sixty lines, so the group is collapsed: the header answers "did it
+  // ask, what did it cost, what came back", and opening it shows the exact
+  // text that went over the wire, selectable and copyable.
+  //
+  // Each phase prints only what is new about it. One move emits two groups,
+  // and repeating the whole prompt in the second would bury the reply - the
+  // one thing the response group exists to show. `full` overrides that for
+  // logLastAiExchange, which prints a finished record with no request group
+  // above it to refer back to.
+  function logOpponentExchange(record, full) {
+    if (typeof console === 'undefined' || !record) return;
+    var open = console.groupCollapsed ? 'groupCollapsed' : 'log';
+    var showPrompt = full || record.phase === 'request';
+
+    var header = '♟ vs AI [' + record.phase + ']' +
+      (record.model ? ' ' + record.model : '') +
+      ' — ply ' + record.ply + ', ' + record.legalMoveCount + ' legal move' +
+      (record.legalMoveCount === 1 ? '' : 's');
+    if (typeof record.elapsedMs === 'number') header += ', ' + record.elapsedMs + 'ms';
+    console[open](header);
+
+    if (record.phase === 'skipped') {
+      console.log('No prompt was sent — ' + record.reason);
+    } else if (showPrompt) {
+      console.log('POST ' + (record.endpoint || '(no endpoint)') + '/chat/completions' +
+        (record.useProxy ? ' (via the dev proxy)' : '') +
+        '  ·  temperature ' + record.temperature);
+      console.log('── system prompt ──');
+      console.log(record.systemPrompt);
+      console.log('── user prompt ──');
+      console.log(record.userPrompt);
+    }
+
+    if (record.phase === 'response') {
+      console.log('── raw reply ──');
+      console.log(record.rawReply);
+      console.log(record.chosen
+        ? 'Played ' + record.chosen + ' (' + record.source + ')' +
+          (record.comment ? ' — "' + record.comment + '"' : '')
+        : 'Fell back to the local engine — ' + record.reason);
+    } else if (record.phase === 'error') {
+      console.log('Request failed — ' + record.error + '. The local engine is playing.');
+    }
+
+    if (console.groupEnd) console.groupEnd();
+  }
+
   function createApp(els) {
     var reviewSession = OukReview ? OukReview.createReviewSession() : null;
+
+    // The prompt "vs AI" sends never touches the page, so the console is where
+    // it has to surface. The setting is read per exchange rather than at
+    // wire-up, so ticking the box in ⚙ AI Settings takes effect on the next
+    // move instead of the next reload.
+    if (OukOpponent && OukOpponent.setDebugListener) {
+      OukOpponent.setDebugListener(function (record) {
+        var s = reviewSession ? reviewSession.getSettings() : null;
+        if (s && s.debugPrompts) logOpponentExchange(record);
+      });
+    }
 
     var themeState = {
       appTheme: loadSetting('ouk_app_theme', 'system'),
@@ -4802,6 +4949,7 @@ body {
       var modelInput = document.getElementById('oc-setting-model');
       var langSelect = document.getElementById('oc-setting-lang');
       var useProxyInput = document.getElementById('oc-setting-use-proxy');
+      var debugInput = document.getElementById('oc-setting-debug-prompts');
       var statusDiv = document.getElementById('oc-dialog-status');
 
       if (baseUrlInput) baseUrlInput.value = settings.baseURL || 'https://api.openai.com/v1';
@@ -4812,6 +4960,7 @@ body {
       resetModelPicker();
       if (langSelect) langSelect.value = settings.language || 'en';
       if (useProxyInput) useProxyInput.checked = !!settings.useProxy;
+      if (debugInput) debugInput.checked = !!settings.debugPrompts;
       if (statusDiv) {
         statusDiv.className = 'oc-dialog-status' + (message ? ' error' : '');
         statusDiv.textContent = message || '';
@@ -5080,6 +5229,7 @@ body {
           var mInput = document.getElementById('oc-setting-model');
           var lSelect = document.getElementById('oc-setting-lang');
           var pCheck = document.getElementById('oc-setting-use-proxy');
+          var dCheck = document.getElementById('oc-setting-debug-prompts');
 
           if (reviewSession) {
             reviewSession.updateSettings({
@@ -5087,7 +5237,8 @@ body {
               apiKey: kInput ? kInput.value.trim() : '',
               model: mInput ? mInput.value.trim() : 'gpt-4o-mini',
               language: lSelect ? lSelect.value : 'en',
-              useProxy: pCheck ? pCheck.checked : false
+              useProxy: pCheck ? pCheck.checked : false,
+              debugPrompts: dCheck ? dCheck.checked : false
             });
           }
           closeSettingsDialog();
@@ -5326,6 +5477,18 @@ body {
     return {
       handleSquareClick: handleSquareClick,
       getState: function () { return appState; },
+      // `app.getLastAiExchange()` in the console: the prompt, the reply and
+      // how the move was resolved, kept whether or not logging was on when it
+      // happened. `app.logLastAiExchange()` prints that same record.
+      getLastAiExchange: function () {
+        return OukOpponent && OukOpponent.getLastExchange ? OukOpponent.getLastExchange() : null;
+      },
+      logLastAiExchange: function () {
+        var record = OukOpponent && OukOpponent.getLastExchange ? OukOpponent.getLastExchange() : null;
+        if (record) logOpponentExchange(record, true);
+        else if (typeof console !== 'undefined') console.log('No vs AI request has been made yet.');
+        return record;
+      },
       undoMove: undoMove,
       requestHint: requestHint,
       explainMoveAtIndex: explainMoveAtIndex,

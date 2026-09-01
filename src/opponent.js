@@ -30,6 +30,45 @@
   // this deliberately does not read it.
   var MOVE_TEMPERATURE = 0.2;
 
+  // What the model was actually asked, kept where a developer can get at it.
+  // The prompt is built here and sent straight out, so when "vs AI" plays a
+  // move that makes no sense the first question - what did it see? - has no
+  // answer anywhere else in the app. setDebugListener hears every exchange as
+  // it happens; getLastExchange answers the same question after the fact, from
+  // the console, with nothing switched on beforehand.
+  //
+  // The record carries the endpoint but never the API key. It is written to a
+  // console log, and a debug aid that leaks the key is a worse bug than the
+  // one it was helping with.
+  var debugListener = null;
+  var lastExchange = null;
+
+  function setDebugListener(fn) {
+    debugListener = typeof fn === 'function' ? fn : null;
+  }
+
+  function getLastExchange() {
+    return lastExchange;
+  }
+
+  // One exchange is one object, updated in place as it moves from 'request' to
+  // 'response', so the listener and getLastExchange always see the whole story
+  // rather than a phase of it. A listener that throws is the debugger's
+  // problem: the game still has a move to play.
+  function emitDebug(exchange, phase, fields) {
+    exchange.phase = phase;
+    if (fields) {
+      Object.keys(fields).forEach(function (key) { exchange[key] = fields[key]; });
+    }
+    lastExchange = exchange;
+    if (!debugListener) return;
+    try {
+      debugListener(exchange);
+    } catch (e) {
+      /* a broken listener must not cost the game its move */
+    }
+  }
+
   var SYSTEM_PROMPT = [
     'You are a strong player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
     'You will be given the current position and the complete list of your legal moves. Choose the strongest one.',
@@ -219,26 +258,58 @@
       return;
     }
 
+    var exchange = {
+      at: new Date().toISOString(),
+      phase: 'request',
+      turn: state.turn,
+      ply: history ? history.length : 0,
+      legalMoveCount: legalMoves.length,
+      endpoint: settings ? settings.baseURL : null,
+      useProxy: !!(settings && settings.useProxy),
+      model: null,
+      temperature: MOVE_TEMPERATURE,
+      systemPrompt: SYSTEM_PROMPT,
+      userPrompt: null
+    };
+
     var unusable = unusableEndpointReason(settings);
     if (unusable) {
+      // A phase rather than silence, on purpose: "nothing was sent, and here
+      // is why" is exactly what someone wondering where the model went is
+      // trying to find out.
+      emitDebug(exchange, 'skipped', { source: 'engine', reason: unusable });
       callback(null, engineFallback(state, engineOptions, unusable));
       return;
     }
 
+    var userPrompt = buildOpponentPrompt(state, history, legalMoves);
     var bodyPayload = {
       model: settings.model || 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildOpponentPrompt(state, history, legalMoves) }
+        { role: 'user', content: userPrompt }
       ],
       temperature: MOVE_TEMPERATURE
     };
+
+    var startedAt = Date.now();
+    emitDebug(exchange, 'request', { model: bodyPayload.model, userPrompt: userPrompt });
 
     OukReview.sendChatRequest(settings, bodyPayload)
       .then(function (data) {
         var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
         if (!content) throw new Error('the model returned an empty response');
-        var resolved = resolveOpponentMove(legalMoves, parseOpponentMove(content));
+        var parsed = parseOpponentMove(content);
+        var resolved = resolveOpponentMove(legalMoves, parsed);
+        emitDebug(exchange, 'response', {
+          elapsedMs: Date.now() - startedAt,
+          rawReply: content,
+          parsed: parsed,
+          source: resolved.move ? 'llm' : 'engine',
+          reason: resolved.reason || null,
+          comment: resolved.comment || null,
+          chosen: resolved.move ? squareOf(resolved.move.from) + ' -> ' + squareOf(resolved.move.to) : null
+        });
         if (!resolved.move) {
           callback(null, engineFallback(state, engineOptions, resolved.reason));
           return;
@@ -246,7 +317,14 @@
         callback(null, resolved);
       })
       .catch(function (err) {
-        callback(null, engineFallback(state, engineOptions, err.message || 'the request failed'));
+        var message = err.message || 'the request failed';
+        emitDebug(exchange, 'error', {
+          elapsedMs: Date.now() - startedAt,
+          error: message,
+          source: 'engine',
+          reason: message
+        });
+        callback(null, engineFallback(state, engineOptions, message));
       });
   }
 
@@ -259,7 +337,9 @@
     parseOpponentMove: parseOpponentMove,
     resolveOpponentMove: resolveOpponentMove,
     unusableEndpointReason: unusableEndpointReason,
-    chooseOpponentMove: chooseOpponentMove
+    chooseOpponentMove: chooseOpponentMove,
+    setDebugListener: setDebugListener,
+    getLastExchange: getLastExchange
   };
 
   if (typeof module !== 'undefined' && module.exports) {

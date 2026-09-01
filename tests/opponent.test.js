@@ -22,6 +22,23 @@ async function withChatResponse(impl, run) {
   }
 }
 
+// Captures the debug records one call produces and always unhooks, so a
+// failing test cannot leave a listener attached to the shared module.
+async function withDebugCapture(run) {
+  const records = [];
+  OukOpponent.setDebugListener((record) => {
+    // The record is one object mutated across phases, so snapshot each emit -
+    // holding the reference would give every entry the final phase's fields.
+    records.push(Object.assign({}, record));
+  });
+  try {
+    const value = await run();
+    return { records, value };
+  } finally {
+    OukOpponent.setDebugListener(null);
+  }
+}
+
 function replyWith(content) {
   return () => Promise.resolve({ choices: [{ message: { content } }] });
 }
@@ -250,4 +267,134 @@ test('a position with no legal moves yields no move at all', async () => {
   const { result } = await chooseMove(state, LIVE_SETTINGS);
   assert.equal(result.move, null);
   assert.equal(result.reason, 'no legal moves');
+});
+
+test('the debug listener is handed the exact prompt that was sent', async () => {
+  const state = OukEngine.createInitialState();
+  const { records } = await withDebugCapture(() =>
+    withChatResponse(
+      replyWith('{"from":"e3","to":"e4","reason":"centre"}'),
+      () => chooseMove(state, LIVE_SETTINGS)
+    )
+  );
+
+  const request = records.find((r) => r.phase === 'request');
+  assert.ok(request, 'a request phase is emitted');
+  assert.equal(request.model, LIVE_SETTINGS.model);
+  assert.equal(request.endpoint, LIVE_SETTINGS.baseURL);
+  assert.equal(request.temperature, 0.2);
+  assert.equal(request.ply, 0);
+  assert.equal(request.legalMoveCount, OukEngine.generateLegalMoves(state, 'w').length);
+  assert.equal(request.systemPrompt, OukOpponent.SYSTEM_PROMPT);
+  // Not "looks like the prompt": the same string the request body carries.
+  assert.equal(
+    request.userPrompt,
+    OukOpponent.buildOpponentPrompt(state, [], OukEngine.generateLegalMoves(state, 'w'))
+  );
+});
+
+test('the debug record never carries the API key', async () => {
+  const state = OukEngine.createInitialState();
+  const settings = { baseURL: 'https://example.test/v1', apiKey: 'sk-secret-key', model: 'm' };
+  const { records } = await withDebugCapture(() =>
+    withChatResponse(replyWith('{"from":"e3","to":"e4"}'), () => chooseMove(state, settings))
+  );
+
+  // Debug output ends up in console logs and pasted bug reports.
+  records.forEach((record) => {
+    assert.ok(!JSON.stringify(record).includes('sk-secret-key'), record.phase + ' phase leaked the key');
+  });
+});
+
+test('the debug listener sees the raw reply and the move it resolved to', async () => {
+  const state = OukEngine.createInitialState();
+  const { records } = await withDebugCapture(() =>
+    withChatResponse(
+      replyWith('{"from":"e3","to":"e4","reason":"claim the centre"}'),
+      () => chooseMove(state, LIVE_SETTINGS)
+    )
+  );
+
+  const response = records.find((r) => r.phase === 'response');
+  assert.ok(response, 'a response phase is emitted');
+  assert.match(response.rawReply, /claim the centre/);
+  assert.deepEqual(response.parsed, { from: 'e3', to: 'e4', reason: 'claim the centre' });
+  assert.equal(response.source, 'llm');
+  assert.equal(response.chosen, 'e3 -> e4');
+  assert.equal(response.reason, null);
+  assert.equal(typeof response.elapsedMs, 'number');
+});
+
+test('the debug record says when the engine took the move back off the model', async () => {
+  const state = OukEngine.createInitialState();
+  const { records } = await withDebugCapture(() =>
+    withChatResponse(
+      replyWith('{"from":"e3","to":"e5","reason":"double step"}'),
+      () => chooseMove(state, LIVE_SETTINGS)
+    )
+  );
+
+  const response = records.find((r) => r.phase === 'response');
+  assert.equal(response.source, 'engine');
+  assert.equal(response.chosen, null);
+  assert.match(response.reason, /not legal/);
+  // The prompt is still on the record: an illegal answer is exactly when you
+  // want to read what was asked.
+  assert.match(response.userPrompt, /Your legal moves/);
+});
+
+test('a failed request is reported to the debug listener rather than swallowed', async () => {
+  const state = OukEngine.createInitialState();
+  const { records } = await withDebugCapture(() =>
+    withChatResponse(
+      () => Promise.reject(new Error('CORS / Network Error')),
+      () => chooseMove(state, LIVE_SETTINGS)
+    )
+  );
+
+  const failure = records.find((r) => r.phase === 'error');
+  assert.ok(failure, 'an error phase is emitted');
+  assert.ok(failure.error.includes('CORS / Network Error'));
+  assert.equal(failure.source, 'engine');
+});
+
+test('an endpoint that cannot be called is logged as skipped, with no prompt built', async () => {
+  const state = OukEngine.createInitialState();
+  const { records } = await withDebugCapture(() =>
+    chooseMove(state, { baseURL: 'simulation', model: 'ouk-grandmaster-v1' })
+  );
+
+  assert.equal(records.length, 1);
+  assert.equal(records[0].phase, 'skipped');
+  assert.match(records[0].reason, /Simulation mode/);
+  assert.equal(records[0].userPrompt, null, 'nothing was built, because nothing was sent');
+});
+
+test('the last exchange is kept for after-the-fact inspection with nothing listening', async () => {
+  const state = OukEngine.createInitialState();
+  await withChatResponse(
+    replyWith('{"from":"e3","to":"e4","reason":"centre"}'),
+    () => chooseMove(state, LIVE_SETTINGS)
+  );
+
+  const last = OukOpponent.getLastExchange();
+  assert.equal(last.phase, 'response');
+  assert.equal(last.systemPrompt, OukOpponent.SYSTEM_PROMPT);
+  assert.match(last.userPrompt, /You are playing White/);
+  assert.equal(last.chosen, 'e3 -> e4');
+});
+
+test('a listener that throws does not cost the game its move', async () => {
+  const state = OukEngine.createInitialState();
+  OukOpponent.setDebugListener(() => { throw new Error('broken listener'); });
+  try {
+    const { result } = await withChatResponse(
+      replyWith('{"from":"e3","to":"e4"}'),
+      () => chooseMove(state, LIVE_SETTINGS)
+    );
+    assert.equal(result.source, 'llm');
+    assert.deepEqual(result.move.to, OukEngine.parseSquare('e4'));
+  } finally {
+    OukOpponent.setDebugListener(null);
+  }
 });
