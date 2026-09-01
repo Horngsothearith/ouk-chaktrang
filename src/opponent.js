@@ -70,7 +70,7 @@
   }
 
   var SYSTEM_PROMPT = [
-    'You are a strong player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
+    'You are a strong grandmaster player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
     'You will be given the current position and the complete list of your legal moves. Choose the strongest one.',
     '',
     '### Rules & Pieces of Ouk Chaktrang:',
@@ -84,15 +84,15 @@
     '',
     'There is no castling, no en passant, and no double pawn step. The Neang is a weak piece here, not a chess queen.',
     '',
-    '### Your Task:',
-    'Pick one move from the numbered list of legal moves you are given, and reply with valid JSON only:',
+    '### Output Format (CRITICAL):',
+    'Respond ONLY with a JSON object. Do NOT output conversational preamble or thinking monologues outside the JSON.',
     '{',
-    '  "from": "Origin square in algebraic form, e.g. \\"b1\\"",',
-    '  "to": "Destination square, e.g. \\"c3\\"",',
-    '  "reason": "One short sentence - at most 12 words - on why you chose it."',
+    '  "from": "Origin square from your legal moves list, e.g. \\"e6\\"",',
+    '  "to": "Destination square from your legal moves list, e.g. \\"e5\\"",',
+    '  "reason": "Short explanation (at most 10 words)"',
     '}',
     '',
-    'The move you name MUST be one of the legal moves listed. Do not invent a move, do not pass, and do not return anything outside the JSON object.'
+    'The move you name MUST be one of the legal moves listed for your side. Do not invent a move and do not repeat previous turns.'
   ].join('\n');
 
   function squareOf(point) {
@@ -122,9 +122,12 @@
   }
 
   function buildOpponentPrompt(state, history, legalMoves) {
-    var colorName = state.turn === 'w' ? 'White' : 'Black';
+    var isWhite = state.turn === 'w';
+    var colorName = isWhite ? 'White' : 'Black';
+    var pieceSide = isWhite ? 'White (uppercase letters on ranks 1-3)' : 'Black (lowercase letters on ranks 6-8)';
     var lines = [
       'You are playing ' + colorName + '. It is your move.',
+      'You control ' + pieceSide + '.',
       '',
       '### Position (uppercase = White, lowercase = Black):',
       OukReview.renderAsciiBoard(state),
@@ -139,44 +142,195 @@
       lines.push('');
     }
 
-    lines.push('### Your legal moves (choose exactly one):');
+    lines.push('### Your legal moves (choose exactly one from this list):');
     lines.push(describeLegalMoves(legalMoves));
     lines.push('');
+    lines.push('IMPORTANT: You must pick ONE move from the numbered legal moves above. Copy its exact "from" and "to" squares.');
+    lines.push('Do NOT repeat a previous move or play a move for the opponent.');
     lines.push('Reply with JSON only: {"from": "...", "to": "...", "reason": "..."}');
     return lines.join('\n');
+  }
+
+  function cleanJsonString(str) {
+    if (!str || typeof str !== 'string') return '';
+    var s = str.trim();
+    // Strip code fences
+    s = s.replace(/```(?:json)?\s*/gi, '').replace(/\s*```/gi, '').trim();
+    // Remove single line comments
+    s = s.replace(/\/\/.*$/gm, '');
+    // Replace single quotes with double quotes
+    s = s.replace(/'/g, '"');
+    // Remove trailing commas before } or ]
+    s = s.replace(/,\s*([}\]])/g, '$1');
+    return s;
+  }
+
+  function tryExtractJson(text) {
+    if (!text || typeof text !== 'string') return null;
+    var trimmed = text.trim();
+    
+    // Direct parse
+    try {
+      var direct = JSON.parse(trimmed);
+      if (direct && typeof direct === 'object') return direct;
+    } catch (e) {}
+
+    // Extract inside markdown code fences
+    var fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fenceMatch && fenceMatch[1]) {
+      try {
+        var parsedFence = JSON.parse(cleanJsonString(fenceMatch[1]));
+        if (parsedFence && typeof parsedFence === 'object') return parsedFence;
+      } catch (e) {}
+    }
+
+    // Extract between { and }
+    var first = trimmed.indexOf('{');
+    var last = trimmed.lastIndexOf('}');
+    if (first !== -1 && last > first) {
+      var candidate = trimmed.slice(first, last + 1);
+      try {
+        var parsedObj = JSON.parse(candidate);
+        if (parsedObj && typeof parsedObj === 'object') return parsedObj;
+      } catch (e) {
+        try {
+          var cleanedCand = JSON.parse(cleanJsonString(candidate));
+          if (cleanedCand && typeof cleanedCand === 'object') return cleanedCand;
+        } catch (e2) {}
+      }
+    }
+
+    return null;
   }
 
   // Mirrors parseAiResponse's tolerance: models wrap JSON in prose or code
   // fences often enough that refusing those replies would throw away good
   // moves.
-  function parseOpponentMove(rawText) {
+  function parseOpponentMove(rawText, legalMoves) {
     if (typeof rawText !== 'string') return null;
     var cleaned = rawText.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-    }
+    // Strip reasoning / thinking tags (including unclosed <think> blocks)
+    cleaned = cleaned.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
 
-    var json = null;
-    try {
-      json = JSON.parse(cleaned);
-    } catch (e) {
-      var first = cleaned.indexOf('{');
-      var last = cleaned.lastIndexOf('}');
-      if (first === -1 || last <= first) return null;
-      try {
-        json = JSON.parse(cleaned.slice(first, last + 1));
-      } catch (e2) {
-        return null;
+    var json = tryExtractJson(cleaned);
+
+    var fromStr = null;
+    var toStr = null;
+    var reasonStr = null;
+
+    if (json && typeof json === 'object') {
+      // 1. Direct from/to or aliases
+      fromStr = json.from || json.fromSquare || json.source || json.start || json.src || null;
+      toStr = json.to || json.toSquare || json.target || json.destination || json.dest || json.dst || null;
+      reasonStr = typeof json.reason === 'string' ? json.reason : (typeof json.comment === 'string' ? json.comment : null);
+
+      // 2. Move string field: e.g. {"move": "e3 -> e4"} or {"move": "1. e3-e4"}
+      if ((!fromStr || !toStr) && typeof json.move === 'string') {
+        var moveMatch = json.move.match(/([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])/i);
+        if (moveMatch) {
+          fromStr = moveMatch[1];
+          toStr = moveMatch[2];
+        } else if (Array.isArray(legalMoves)) {
+          // Check if json.move is an index like "1" or "Move 1"
+          var numMatch = json.move.match(/\b(\d+)\b/);
+          if (numMatch) {
+            var idx = parseInt(numMatch[1], 10) - 1;
+            if (idx >= 0 && idx < legalMoves.length) {
+              fromStr = squareOf(legalMoves[idx].from);
+              toStr = squareOf(legalMoves[idx].to);
+            }
+          }
+        }
+      }
+
+      // 3. Move number field: e.g. {"choice": 1} or {"moveIndex": 1}
+      if ((!fromStr || !toStr) && Array.isArray(legalMoves)) {
+        var choiceNum = json.choice || json.moveIndex || json.number || json.id;
+        if (typeof choiceNum === 'number') {
+          var cIdx = choiceNum - 1;
+          if (cIdx >= 0 && cIdx < legalMoves.length) {
+            fromStr = squareOf(legalMoves[cIdx].from);
+            toStr = squareOf(legalMoves[cIdx].to);
+          }
+        }
       }
     }
 
-    if (!json || typeof json !== 'object') return null;
-    if (typeof json.from !== 'string' || typeof json.to !== 'string') return null;
-    return {
-      from: json.from,
-      to: json.to,
-      reason: typeof json.reason === 'string' ? json.reason : null
-    };
+    // 4. If JSON was found and has from/to, validate/return it
+    if (fromStr && toStr) {
+      var fromClean = String(fromStr).match(/([a-h][1-8])/i);
+      var toClean = String(toStr).match(/([a-h][1-8])/i);
+      if (fromClean && toClean) {
+        return {
+          from: fromClean[1].toLowerCase(),
+          to: toClean[1].toLowerCase(),
+          reason: reasonStr
+        };
+      }
+    }
+
+    // 5. Fallback for text / monologue:
+    // Search the text from the END backwards for ANY move that is in legalMoves!
+    if (Array.isArray(legalMoves) && legalMoves.length > 0) {
+      var regex = /\b([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])\b/gi;
+      var matches = [];
+      var match;
+      while ((match = regex.exec(cleaned)) !== null) {
+        var candFrom = match[1].toLowerCase();
+        var candTo = match[2].toLowerCase();
+        // Check if this move is actually in legalMoves
+        var isLegal = false;
+        for (var i = 0; i < legalMoves.length; i++) {
+          var lm = legalMoves[i];
+          if (squareOf(lm.from) === candFrom && squareOf(lm.to) === candTo) {
+            isLegal = true;
+            break;
+          }
+        }
+        if (isLegal) {
+          matches.push({ from: candFrom, to: candTo });
+        }
+      }
+
+      // The last legal move mentioned in the text is the model's final conclusion
+      if (matches.length > 0) {
+        var lastLegalMatch = matches[matches.length - 1];
+        return {
+          from: lastLegalMatch.from,
+          to: lastLegalMatch.to,
+          reason: reasonStr
+        };
+      }
+
+      // Check numbered choice in text: e.g. "choice 5", "move 5", or "#5"
+      var textNumMatch = cleaned.match(/(?:move|choice|#)\s*(\d+)/gi);
+      if (textNumMatch && textNumMatch.length > 0) {
+        var lastNumStr = textNumMatch[textNumMatch.length - 1];
+        var numDigits = lastNumStr.match(/\d+/);
+        if (numDigits) {
+          var mIdx = parseInt(numDigits[0], 10) - 1;
+          if (mIdx >= 0 && mIdx < legalMoves.length) {
+            return {
+              from: squareOf(legalMoves[mIdx].from),
+              to: squareOf(legalMoves[mIdx].to),
+              reason: reasonStr
+            };
+          }
+        }
+      }
+    }
+
+    // 6. Generic regex fallback if legalMoves was not supplied
+    var genericMatch = cleaned.match(/\b([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])\b/i);
+    if (genericMatch) {
+      return {
+        from: genericMatch[1].toLowerCase(),
+        to: genericMatch[2].toLowerCase(),
+        reason: reasonStr
+      };
+    }
+
+    return null;
   }
 
   function parseSquareStrict(name) {
@@ -289,17 +443,20 @@
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
+      max_tokens: 1000,
       temperature: MOVE_TEMPERATURE
     };
 
     var startedAt = Date.now();
     emitDebug(exchange, 'request', { model: bodyPayload.model, userPrompt: userPrompt });
 
-    OukReview.sendChatRequest(settings, bodyPayload)
+    OukReview.sendChatRequest(settings, bodyPayload, { timeoutMs: 15000 })
       .then(function (data) {
-        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        var content = (OukReview && OukReview.extractContentFromResponse)
+          ? OukReview.extractContentFromResponse(data)
+          : (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content);
         if (!content) throw new Error('the model returned an empty response');
-        var parsed = parseOpponentMove(content);
+        var parsed = parseOpponentMove(content, legalMoves);
         var resolved = resolveOpponentMove(legalMoves, parsed);
         emitDebug(exchange, 'response', {
           elapsedMs: Date.now() - startedAt,

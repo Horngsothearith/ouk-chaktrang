@@ -1286,6 +1286,231 @@ body {
   margin-top: 6px;
 }
 
+/* Save / Load Dialog */
+.oc-save-dialog-content {
+  max-width: 580px;
+}
+.oc-dialog-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oc-dialog-title-km {
+  font-family: "Noto Serif Khmer", serif;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.oc-save-card {
+  background: rgba(168, 130, 58, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.oc-save-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-save-card-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--laterite);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.oc-save-count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.oc-save-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.oc-save-input-group input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  min-width: 0;
+}
+.oc-save-input-group input:focus {
+  outline: 2px solid var(--accent);
+}
+.oc-saved-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.oc-saved-game-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.oc-saved-game-card:hover {
+  border-color: var(--accent);
+}
+.oc-saved-game-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.oc-saved-game-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oc-saved-game-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.oc-saved-badge {
+  background: var(--surface-alt);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+.oc-saved-badge.oc-badge-mode {
+  background: rgba(181, 84, 42, 0.15);
+  color: var(--laterite);
+  border-color: var(--laterite);
+}
+.oc-saved-badge.oc-badge-status {
+  color: var(--jade);
+}
+.oc-saved-date {
+  opacity: 0.8;
+  margin-left: auto;
+}
+.oc-saved-game-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oc-saved-game-actions button {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.oc-btn-danger {
+  background: rgba(168, 52, 42, 0.12);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.oc-btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.oc-saved-games-empty {
+  text-align: center;
+  padding: 16px 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.oc-saved-games-empty p {
+  margin: 4px 0 0 0;
+}
+.oc-empty-icon {
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 2px;
+}
+.oc-empty-hint {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+.oc-import-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.oc-import-export-actions button,
+.oc-file-upload-label {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.oc-file-upload-label:hover,
+.oc-import-export-actions button:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.15);
+}
+.oc-import-paste-details {
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+.oc-import-paste-summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.oc-import-paste-summary:hover {
+  color: var(--text);
+}
+.oc-paste-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.oc-paste-wrap textarea {
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+.oc-paste-wrap textarea:focus {
+  outline: 2px solid var(--accent);
+}
+
 /* =========================================================================
    Responsive layout
    -------------------------------------------------------------------------
@@ -1374,9 +1599,10 @@ body {
     max-height: 30vh;
   }
 
-  /* New Game / Undo / Hint: three across is right, but the desktop padding
-     forces "New Game" onto two lines and the row goes ragged. */
+  /* New Game / Save / Undo / Hint: 2x2 grid on mobile so labels stay legible */
   .oc-btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
   .oc-btn-row button {
@@ -1726,6 +1952,68 @@ body {
         <button type="submit" class="oc-btn-accent" id="oc-save-settings">Save Settings</button>
       </div>
     </form>
+  </div>
+</dialog>
+
+<!-- Save / Load Game Dialog -->
+<dialog class="oc-dialog" id="oc-save-dialog">
+  <div class="oc-dialog-content oc-save-dialog-content">
+    <div class="oc-dialog-header">
+      <div class="oc-dialog-title-wrap">
+        <span class="oc-dialog-title-km">រក្សាទុក / ផ្ទុកហ្គេម</span>
+        <h2>💾 Save &amp; Load Games</h2>
+      </div>
+      <button class="oc-dialog-close" id="oc-close-save-dialog" aria-label="Close save dialog">&times;</button>
+    </div>
+    <p class="oc-dialog-desc">Manage saved games in your browser, or import and export JSON game files.</p>
+
+    <!-- Save Current Game Section -->
+    <div class="oc-save-card">
+      <h3 class="oc-save-card-title">Save Current Game</h3>
+      <form class="oc-save-form" id="oc-save-current-form">
+        <div class="oc-save-input-group">
+          <input type="text" id="oc-save-game-name" placeholder="Game Name (e.g. Match 1 vs AI)" maxlength="60" required>
+          <button type="submit" class="oc-btn-accent" id="oc-save-game-btn">Save Game</button>
+        </div>
+      </form>
+      <div class="oc-dialog-status" id="oc-save-status"></div>
+    </div>
+
+    <!-- Saved Games List Section -->
+    <div class="oc-save-card">
+      <div class="oc-save-card-header">
+        <h3 class="oc-save-card-title">Saved Games in Browser</h3>
+        <span class="oc-save-count" id="oc-saved-count">0 games</span>
+      </div>
+      <div class="oc-saved-games-list" id="oc-saved-games-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Import & Export Section -->
+    <div class="oc-save-card">
+      <h3 class="oc-save-card-title">Import &amp; Export</h3>
+      <div class="oc-import-export-actions">
+        <button type="button" class="oc-btn-secondary" id="oc-export-current-btn" title="Download current game as JSON file">⬇ Download Current (JSON)</button>
+        <button type="button" class="oc-btn-secondary" id="oc-copy-notation-btn" title="Copy move notation to clipboard">📋 Copy Moves Notation</button>
+        <label class="oc-file-upload-label oc-btn-secondary" title="Import game from JSON file">
+          📁 Import File (.json)
+          <input type="file" id="oc-import-file-input" accept=".json,application/json" style="display:none">
+        </label>
+      </div>
+
+      <details class="oc-import-paste-details">
+        <summary class="oc-import-paste-summary">Paste Game JSON text</summary>
+        <div class="oc-paste-wrap">
+          <textarea id="oc-paste-json-area" placeholder="Paste saved game JSON here..." rows="3"></textarea>
+          <button type="button" class="oc-btn-secondary" id="oc-import-paste-btn">Load Pasted JSON</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="oc-dialog-actions">
+      <button type="button" class="oc-btn-secondary" id="oc-dismiss-save-dialog">Close</button>
+    </div>
   </div>
 </dialog>
 
@@ -2126,6 +2414,143 @@ body {
     return { status: 'active', winner: null };
   }
 
+  function formatSingleMove(mv) {
+    var from = squareName(mv.from.rank, mv.from.file);
+    var to = squareName(mv.to.rank, mv.to.file);
+    var sep = mv.captured ? 'x' : '-';
+    var promo = mv.special === 'promotion' ? '=Q' : '';
+    return from + sep + to + promo;
+  }
+
+  function exportMoveNotation(history) {
+    if (!history || history.length === 0) return '';
+    var pairs = [];
+    for (var i = 0; i < history.length; i += 2) {
+      var moveNum = Math.floor(i / 2) + 1;
+      var wMove = formatSingleMove(history[i]);
+      var bMove = (i + 1 < history.length) ? ' ' + formatSingleMove(history[i + 1]) : '';
+      pairs.push(moveNum + '. ' + wMove + bMove);
+    }
+    return pairs.join(' ');
+  }
+
+  function serializeGame(state, metadata) {
+    metadata = metadata || {};
+    var history = (state && state.history) || [];
+    var moves = history.map(function (mv) {
+      return {
+        from: squareName(mv.from.rank, mv.from.file),
+        to: squareName(mv.to.rank, mv.to.file),
+        piece: mv.piece ? mv.piece.type : null,
+        captured: mv.captured ? mv.captured.type : null,
+        special: mv.special || null
+      };
+    });
+
+    return {
+      version: 1,
+      format: 'ouk-chaktrong',
+      id: metadata.id || ('ouk_game_' + Date.now()),
+      name: metadata.name || ('Game ' + new Date().toLocaleDateString()),
+      savedAt: metadata.savedAt || new Date().toISOString(),
+      mode: metadata.mode || '2p',
+      aiColor: metadata.aiColor || 'b',
+      difficulty: metadata.difficulty || 'medium',
+      aiOptions: metadata.aiOptions || null,
+      moveReviews: metadata.moveReviews || {},
+      moves: moves,
+      notation: exportMoveNotation(history),
+      status: state ? state.status : 'active',
+      winner: state ? state.winner : null,
+      plyCount: history.length
+    };
+  }
+
+  function deserializeGame(data) {
+    if (!data) throw new Error('No data provided to deserializeGame');
+    var obj = data;
+    if (typeof data === 'string') {
+      try {
+        obj = JSON.parse(data);
+      } catch (e) {
+        throw new Error('Invalid JSON format: ' + e.message);
+      }
+    }
+    if (!obj || typeof obj !== 'object') {
+      throw new Error('Invalid game data structure');
+    }
+
+    var rawMoves = obj.moves || obj.history || [];
+    if (!Array.isArray(rawMoves)) {
+      throw new Error('Game moves must be an array');
+    }
+
+    var state = createInitialState();
+    for (var i = 0; i < rawMoves.length; i++) {
+      var item = rawMoves[i];
+      var fromRank, fromFile, toRank, toFile, specialReq = null;
+
+      if (typeof item === 'string') {
+        // e.g. "e3-e4" or "e3xe4" or "c6-c7=Q"
+        var clean = item.replace(/^\d+\.\s*/, '').trim();
+        var parts = clean.split(/[-x]/);
+        if (parts.length < 2) throw new Error('Invalid move string format at ply ' + (i + 1) + ': ' + item);
+        var fSq = parseSquare(parts[0].slice(-2));
+        var tSq = parseSquare(parts[1].slice(0, 2));
+        fromRank = fSq.rank; fromFile = fSq.file;
+        toRank = tSq.rank; toFile = tSq.file;
+      } else if (item && typeof item === 'object') {
+        if (typeof item.from === 'string') {
+          var f = parseSquare(item.from);
+          fromRank = f.rank; fromFile = f.file;
+        } else if (item.from && typeof item.from.rank === 'number') {
+          fromRank = item.from.rank; fromFile = item.from.file;
+        }
+        if (typeof item.to === 'string') {
+          var t = parseSquare(item.to);
+          toRank = t.rank; toFile = t.file;
+        } else if (item.to && typeof item.to.rank === 'number') {
+          toRank = item.to.rank; toFile = item.to.file;
+        }
+        specialReq = item.special || null;
+      }
+
+      if (fromRank === undefined || fromFile === undefined || toRank === undefined || toFile === undefined) {
+        throw new Error('Malformed move coordinates at ply ' + (i + 1));
+      }
+
+      var legals = generateLegalMoves(state, state.turn);
+      var match = legals.find(function (m) {
+        if (m.from.rank !== fromRank || m.from.file !== fromFile) return false;
+        if (m.to.rank !== toRank || m.to.file !== toFile) return false;
+        if (specialReq && m.special !== specialReq) return false;
+        return true;
+      });
+
+      if (!match) {
+        var fromName = squareName(fromRank, fromFile);
+        var toName = squareName(toRank, toFile);
+        throw new Error('Illegal move at ply ' + (i + 1) + ': ' + fromName + '-' + toName + ' for ' + (state.turn === 'w' ? 'White' : 'Black'));
+      }
+
+      state = applyMove(state, match);
+    }
+
+    return {
+      gameState: state,
+      metadata: {
+        id: obj.id || ('ouk_game_' + Date.now()),
+        name: obj.name || 'Imported Game',
+        savedAt: obj.savedAt || new Date().toISOString(),
+        mode: obj.mode || '2p',
+        aiColor: obj.aiColor || 'b',
+        difficulty: obj.difficulty || 'medium',
+        aiOptions: obj.aiOptions || null,
+        moveReviews: obj.moveReviews || {}
+      }
+    };
+  }
+
   var api = {
     squareName: squareName,
     parseSquare: parseSquare,
@@ -2146,7 +2571,10 @@ body {
     countAllPieces: countAllPieces,
     hasPawns: hasPawns,
     isBareKing: isBareKing,
-    undoMove: undoMove
+    undoMove: undoMove,
+    exportMoveNotation: exportMoveNotation,
+    serializeGame: serializeGame,
+    deserializeGame: deserializeGame
   };
 
   function undoMove(state) {
@@ -3058,7 +3486,10 @@ body {
   }
 
   function parseAiResponse(rawText, fallbackClassification) {
+    if (typeof rawText !== 'string') rawText = '';
     var cleaned = rawText.trim();
+    // Strip reasoning / thinking tags from models like DeepSeek-R1 / QwQ
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     // Strip markdown code fences if wrapped in ```json ... ```
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -3076,11 +3507,33 @@ body {
         betterMoveTo: json.betterMoveTo || null
       };
     } catch (e) {
+      // Fallback: extract JSON substring if wrapped in non-JSON prefix/suffix
+      var firstBrace = cleaned.indexOf('{');
+      var lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          var extracted = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+          if (extracted && typeof extracted === 'object') {
+            return {
+              classification: extracted.classification || fallbackClassification.key,
+              title: extracted.title || 'Move Analysis',
+              explanation: extracted.explanation || cleaned,
+              tags: Array.isArray(extracted.tags) ? extracted.tags : ['Analysis'],
+              betterMove: extracted.betterMove || null,
+              betterMoveFrom: extracted.betterMoveFrom || null,
+              betterMoveTo: extracted.betterMoveTo || null
+            };
+          }
+        } catch (e2) {
+          // ignore
+        }
+      }
+
       // Fallback if model returned plain text
       return {
         classification: fallbackClassification.key,
         title: 'Move Commentary',
-        explanation: cleaned,
+        explanation: cleaned || rawText,
         tags: ['Review'],
         betterMove: null,
         betterMoveFrom: null,
@@ -3171,13 +3624,14 @@ body {
   // One request to the configured endpoint, carrying the CORS dance every
   // caller needs: try the endpoint directly, and on the network/CORS failure
   // browsers report for endpoints that send no CORS headers, retry through the
-  // dev server's proxy. `options` is { path, method, body } - body omitted for
+  // dev server's proxy. `options` is { path, method, body, timeoutMs } - body omitted for
   // a GET.
   function apiRequest(settings, options) {
     var baseURL = (settings.baseURL || DEFAULT_SETTINGS.baseURL).replace(/\/+$/, '');
     var directUrl = baseURL + options.path;
     var method = options.method || 'POST';
     var apiKey = settings.apiKey || '';
+    var timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : (options.path === '/chat/completions' ? 25000 : 10000);
 
     var headers = {
       'Content-Type': 'application/json'
@@ -3194,28 +3648,48 @@ body {
         fetchHeaders['x-target-url'] = targetUrl;
       }
 
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timedOut = false;
+      var timeoutId = null;
+      if (controller && timeoutMs > 0) {
+        timeoutId = setTimeout(function () {
+          timedOut = true;
+          controller.abort();
+        }, timeoutMs);
+      }
+
       var init = { method: method, headers: fetchHeaders };
+      if (controller) init.signal = controller.signal;
       if (options.body !== undefined) init.body = JSON.stringify(options.body);
 
-      return fetch(fetchUrl, init).then(function (res) {
-        return res.text().then(function (rawBody) {
-          var data = parseChatResponseBody(rawBody);
+      return fetch(fetchUrl, init)
+        .then(function (res) {
+          if (timeoutId) clearTimeout(timeoutId);
+          return res.text().then(function (rawBody) {
+            var data = parseChatResponseBody(rawBody);
 
-          if (!res.ok) {
-            var errMsg = (data && data.error && data.error.message) ||
-                         (rawBody && rawBody.includes('Not found') ? 'Proxy endpoint returned 404 Not Found. Please restart your dev-server (`node scripts/dev-server.js`).' : null) ||
-                         (rawBody && rawBody.length < 200 ? rawBody : null) ||
-                         ('HTTP error ' + res.status + ' (' + res.statusText + ')');
-            throw new Error(errMsg);
+            if (!res.ok) {
+              var errMsg = (data && data.error && data.error.message) ||
+                           (rawBody && rawBody.includes('Not found') ? 'Proxy endpoint returned 404 Not Found. Please restart your dev-server (`node scripts/dev-server.js`).' : null) ||
+                           (rawBody && rawBody.length < 200 ? rawBody : null) ||
+                           ('HTTP error ' + res.status + ' (' + res.statusText + ')');
+              throw new Error(errMsg);
+            }
+
+            if (!data) {
+              throw new Error('Received unexpected non-JSON response from server: ' + (rawBody.slice(0, 100) || 'Empty body'));
+            }
+
+            return data;
+          });
+        })
+        .catch(function (fetchErr) {
+          if (timeoutId) clearTimeout(timeoutId);
+          if (timedOut || (fetchErr && fetchErr.name === 'AbortError')) {
+            throw new Error('Request timed out after ' + Math.round(timeoutMs / 1000) + 's');
           }
-
-          if (!data) {
-            throw new Error('Received unexpected non-JSON response from server: ' + (rawBody.slice(0, 100) || 'Empty body'));
-          }
-
-          return data;
+          throw fetchErr;
         });
-      });
     }
 
     if (settings.useProxy) {
@@ -3248,13 +3722,13 @@ body {
     });
   }
 
-  function sendChatRequest(settings, bodyPayload) {
-    return apiRequest(settings, {
+  function sendChatRequest(settings, bodyPayload, requestOptions) {
+    var opts = Object.assign({
       path: '/chat/completions',
       method: 'POST',
-      // Clone payload and ensure stream: false is explicitly set unless specified
       body: Object.assign({ stream: false }, bodyPayload)
-    });
+    }, requestOptions || {});
+    return apiRequest(settings, opts);
   }
 
   // What an OpenAI-compatible /models response can look like varies more than
@@ -3287,13 +3761,43 @@ body {
   }
 
   function listModels(settings) {
-    return apiRequest(settings, { path: '/models', method: 'GET' }).then(function (data) {
+    return apiRequest(settings, { path: '/models', method: 'GET', timeoutMs: 10000 }).then(function (data) {
       var ids = parseModelList(data);
       if (ids.length === 0) {
         throw new Error('The endpoint answered but listed no models.');
       }
       return ids;
     });
+  }
+
+  function extractContentFromResponse(data) {
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    if (data.choices && data.choices[0]) {
+      var choice = data.choices[0];
+      if (choice.message) {
+        if (typeof choice.message.content === 'string' && choice.message.content.trim()) {
+          return choice.message.content;
+        }
+        // If content is empty or omitted, check reasoning_content (DeepSeek / thinking models)
+        if (typeof choice.message.reasoning_content === 'string' && choice.message.reasoning_content.trim()) {
+          return choice.message.reasoning_content;
+        }
+      }
+      if (typeof choice.text === 'string' && choice.text.trim()) {
+        return choice.text;
+      }
+      if (choice.delta && typeof choice.delta.content === 'string' && choice.delta.content.trim()) {
+        return choice.delta.content;
+      }
+      if (choice.delta && typeof choice.delta.reasoning_content === 'string' && choice.delta.reasoning_content.trim()) {
+        return choice.delta.reasoning_content;
+      }
+    }
+    if (typeof data.response === 'string' && data.response.trim()) {
+      return data.response;
+    }
+    return '';
   }
 
   function requestMoveReview(history, moveIndex, settings, callback) {
@@ -3321,12 +3825,13 @@ body {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
+      max_tokens: 1500,
       temperature: typeof settings.temperature === 'number' ? settings.temperature : 0.3
     };
 
     sendChatRequest(settings, bodyPayload)
       .then(function (data) {
-        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        var content = extractContentFromResponse(data);
         if (!content) throw new Error('Received empty response from AI model.');
         var parsed = parseAiResponse(content, promptCtx.contextData.classification);
         callback(null, {
@@ -3471,6 +3976,7 @@ body {
     parseModelList: parseModelList,
     listModels: listModels,
     parseChatResponseBody: parseChatResponseBody,
+    extractContentFromResponse: extractContentFromResponse,
     SYSTEM_PROMPT: SYSTEM_PROMPT
   };
 
@@ -3553,7 +4059,7 @@ body {
   }
 
   var SYSTEM_PROMPT = [
-    'You are a strong player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
+    'You are a strong grandmaster player of Ouk Chaktrang (អុកចត្រង្គ - Traditional Cambodian / Khmer Chess), playing a game against a human opponent.',
     'You will be given the current position and the complete list of your legal moves. Choose the strongest one.',
     '',
     '### Rules & Pieces of Ouk Chaktrang:',
@@ -3567,15 +4073,15 @@ body {
     '',
     'There is no castling, no en passant, and no double pawn step. The Neang is a weak piece here, not a chess queen.',
     '',
-    '### Your Task:',
-    'Pick one move from the numbered list of legal moves you are given, and reply with valid JSON only:',
+    '### Output Format (CRITICAL):',
+    'Respond ONLY with a JSON object. Do NOT output conversational preamble or thinking monologues outside the JSON.',
     '{',
-    '  "from": "Origin square in algebraic form, e.g. \\"b1\\"",',
-    '  "to": "Destination square, e.g. \\"c3\\"",',
-    '  "reason": "One short sentence - at most 12 words - on why you chose it."',
+    '  "from": "Origin square from your legal moves list, e.g. \\"e6\\"",',
+    '  "to": "Destination square from your legal moves list, e.g. \\"e5\\"",',
+    '  "reason": "Short explanation (at most 10 words)"',
     '}',
     '',
-    'The move you name MUST be one of the legal moves listed. Do not invent a move, do not pass, and do not return anything outside the JSON object.'
+    'The move you name MUST be one of the legal moves listed for your side. Do not invent a move and do not repeat previous turns.'
   ].join('\n');
 
   function squareOf(point) {
@@ -3605,9 +4111,12 @@ body {
   }
 
   function buildOpponentPrompt(state, history, legalMoves) {
-    var colorName = state.turn === 'w' ? 'White' : 'Black';
+    var isWhite = state.turn === 'w';
+    var colorName = isWhite ? 'White' : 'Black';
+    var pieceSide = isWhite ? 'White (uppercase letters on ranks 1-3)' : 'Black (lowercase letters on ranks 6-8)';
     var lines = [
       'You are playing ' + colorName + '. It is your move.',
+      'You control ' + pieceSide + '.',
       '',
       '### Position (uppercase = White, lowercase = Black):',
       OukReview.renderAsciiBoard(state),
@@ -3622,44 +4131,195 @@ body {
       lines.push('');
     }
 
-    lines.push('### Your legal moves (choose exactly one):');
+    lines.push('### Your legal moves (choose exactly one from this list):');
     lines.push(describeLegalMoves(legalMoves));
     lines.push('');
+    lines.push('IMPORTANT: You must pick ONE move from the numbered legal moves above. Copy its exact "from" and "to" squares.');
+    lines.push('Do NOT repeat a previous move or play a move for the opponent.');
     lines.push('Reply with JSON only: {"from": "...", "to": "...", "reason": "..."}');
     return lines.join('\n');
+  }
+
+  function cleanJsonString(str) {
+    if (!str || typeof str !== 'string') return '';
+    var s = str.trim();
+    // Strip code fences
+    s = s.replace(/```(?:json)?\s*/gi, '').replace(/\s*```/gi, '').trim();
+    // Remove single line comments
+    s = s.replace(/\/\/.*$/gm, '');
+    // Replace single quotes with double quotes
+    s = s.replace(/'/g, '"');
+    // Remove trailing commas before } or ]
+    s = s.replace(/,\s*([}\]])/g, '$1');
+    return s;
+  }
+
+  function tryExtractJson(text) {
+    if (!text || typeof text !== 'string') return null;
+    var trimmed = text.trim();
+    
+    // Direct parse
+    try {
+      var direct = JSON.parse(trimmed);
+      if (direct && typeof direct === 'object') return direct;
+    } catch (e) {}
+
+    // Extract inside markdown code fences
+    var fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fenceMatch && fenceMatch[1]) {
+      try {
+        var parsedFence = JSON.parse(cleanJsonString(fenceMatch[1]));
+        if (parsedFence && typeof parsedFence === 'object') return parsedFence;
+      } catch (e) {}
+    }
+
+    // Extract between { and }
+    var first = trimmed.indexOf('{');
+    var last = trimmed.lastIndexOf('}');
+    if (first !== -1 && last > first) {
+      var candidate = trimmed.slice(first, last + 1);
+      try {
+        var parsedObj = JSON.parse(candidate);
+        if (parsedObj && typeof parsedObj === 'object') return parsedObj;
+      } catch (e) {
+        try {
+          var cleanedCand = JSON.parse(cleanJsonString(candidate));
+          if (cleanedCand && typeof cleanedCand === 'object') return cleanedCand;
+        } catch (e2) {}
+      }
+    }
+
+    return null;
   }
 
   // Mirrors parseAiResponse's tolerance: models wrap JSON in prose or code
   // fences often enough that refusing those replies would throw away good
   // moves.
-  function parseOpponentMove(rawText) {
+  function parseOpponentMove(rawText, legalMoves) {
     if (typeof rawText !== 'string') return null;
     var cleaned = rawText.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-    }
+    // Strip reasoning / thinking tags (including unclosed <think> blocks)
+    cleaned = cleaned.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
 
-    var json = null;
-    try {
-      json = JSON.parse(cleaned);
-    } catch (e) {
-      var first = cleaned.indexOf('{');
-      var last = cleaned.lastIndexOf('}');
-      if (first === -1 || last <= first) return null;
-      try {
-        json = JSON.parse(cleaned.slice(first, last + 1));
-      } catch (e2) {
-        return null;
+    var json = tryExtractJson(cleaned);
+
+    var fromStr = null;
+    var toStr = null;
+    var reasonStr = null;
+
+    if (json && typeof json === 'object') {
+      // 1. Direct from/to or aliases
+      fromStr = json.from || json.fromSquare || json.source || json.start || json.src || null;
+      toStr = json.to || json.toSquare || json.target || json.destination || json.dest || json.dst || null;
+      reasonStr = typeof json.reason === 'string' ? json.reason : (typeof json.comment === 'string' ? json.comment : null);
+
+      // 2. Move string field: e.g. {"move": "e3 -> e4"} or {"move": "1. e3-e4"}
+      if ((!fromStr || !toStr) && typeof json.move === 'string') {
+        var moveMatch = json.move.match(/([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])/i);
+        if (moveMatch) {
+          fromStr = moveMatch[1];
+          toStr = moveMatch[2];
+        } else if (Array.isArray(legalMoves)) {
+          // Check if json.move is an index like "1" or "Move 1"
+          var numMatch = json.move.match(/\b(\d+)\b/);
+          if (numMatch) {
+            var idx = parseInt(numMatch[1], 10) - 1;
+            if (idx >= 0 && idx < legalMoves.length) {
+              fromStr = squareOf(legalMoves[idx].from);
+              toStr = squareOf(legalMoves[idx].to);
+            }
+          }
+        }
+      }
+
+      // 3. Move number field: e.g. {"choice": 1} or {"moveIndex": 1}
+      if ((!fromStr || !toStr) && Array.isArray(legalMoves)) {
+        var choiceNum = json.choice || json.moveIndex || json.number || json.id;
+        if (typeof choiceNum === 'number') {
+          var cIdx = choiceNum - 1;
+          if (cIdx >= 0 && cIdx < legalMoves.length) {
+            fromStr = squareOf(legalMoves[cIdx].from);
+            toStr = squareOf(legalMoves[cIdx].to);
+          }
+        }
       }
     }
 
-    if (!json || typeof json !== 'object') return null;
-    if (typeof json.from !== 'string' || typeof json.to !== 'string') return null;
-    return {
-      from: json.from,
-      to: json.to,
-      reason: typeof json.reason === 'string' ? json.reason : null
-    };
+    // 4. If JSON was found and has from/to, validate/return it
+    if (fromStr && toStr) {
+      var fromClean = String(fromStr).match(/([a-h][1-8])/i);
+      var toClean = String(toStr).match(/([a-h][1-8])/i);
+      if (fromClean && toClean) {
+        return {
+          from: fromClean[1].toLowerCase(),
+          to: toClean[1].toLowerCase(),
+          reason: reasonStr
+        };
+      }
+    }
+
+    // 5. Fallback for text / monologue:
+    // Search the text from the END backwards for ANY move that is in legalMoves!
+    if (Array.isArray(legalMoves) && legalMoves.length > 0) {
+      var regex = /\b([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])\b/gi;
+      var matches = [];
+      var match;
+      while ((match = regex.exec(cleaned)) !== null) {
+        var candFrom = match[1].toLowerCase();
+        var candTo = match[2].toLowerCase();
+        // Check if this move is actually in legalMoves
+        var isLegal = false;
+        for (var i = 0; i < legalMoves.length; i++) {
+          var lm = legalMoves[i];
+          if (squareOf(lm.from) === candFrom && squareOf(lm.to) === candTo) {
+            isLegal = true;
+            break;
+          }
+        }
+        if (isLegal) {
+          matches.push({ from: candFrom, to: candTo });
+        }
+      }
+
+      // The last legal move mentioned in the text is the model's final conclusion
+      if (matches.length > 0) {
+        var lastLegalMatch = matches[matches.length - 1];
+        return {
+          from: lastLegalMatch.from,
+          to: lastLegalMatch.to,
+          reason: reasonStr
+        };
+      }
+
+      // Check numbered choice in text: e.g. "choice 5", "move 5", or "#5"
+      var textNumMatch = cleaned.match(/(?:move|choice|#)\s*(\d+)/gi);
+      if (textNumMatch && textNumMatch.length > 0) {
+        var lastNumStr = textNumMatch[textNumMatch.length - 1];
+        var numDigits = lastNumStr.match(/\d+/);
+        if (numDigits) {
+          var mIdx = parseInt(numDigits[0], 10) - 1;
+          if (mIdx >= 0 && mIdx < legalMoves.length) {
+            return {
+              from: squareOf(legalMoves[mIdx].from),
+              to: squareOf(legalMoves[mIdx].to),
+              reason: reasonStr
+            };
+          }
+        }
+      }
+    }
+
+    // 6. Generic regex fallback if legalMoves was not supplied
+    var genericMatch = cleaned.match(/\b([a-h][1-8])\s*(?:->|-->|-|to|\s)\s*([a-h][1-8])\b/i);
+    if (genericMatch) {
+      return {
+        from: genericMatch[1].toLowerCase(),
+        to: genericMatch[2].toLowerCase(),
+        reason: reasonStr
+      };
+    }
+
+    return null;
   }
 
   function parseSquareStrict(name) {
@@ -3772,17 +4432,20 @@ body {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
+      max_tokens: 1000,
       temperature: MOVE_TEMPERATURE
     };
 
     var startedAt = Date.now();
     emitDebug(exchange, 'request', { model: bodyPayload.model, userPrompt: userPrompt });
 
-    OukReview.sendChatRequest(settings, bodyPayload)
+    OukReview.sendChatRequest(settings, bodyPayload, { timeoutMs: 15000 })
       .then(function (data) {
-        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        var content = (OukReview && OukReview.extractContentFromResponse)
+          ? OukReview.extractContentFromResponse(data)
+          : (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content);
         if (!content) throw new Error('the model returned an empty response');
-        var parsed = parseOpponentMove(content);
+        var parsed = parseOpponentMove(content, legalMoves);
         var resolved = resolveOpponentMove(legalMoves, parsed);
         emitDebug(exchange, 'response', {
           elapsedMs: Date.now() - startedAt,
@@ -4003,6 +4666,8 @@ body {
     applyAppTheme(themeState.appTheme);
     applyBoardTheme(themeState.boardTheme);
     applyPieceSkin(themeState.pieceSkin);
+    var STORAGE_ACTIVE_GAME = 'ouk_active_game_state';
+    var STORAGE_SAVED_GAMES = 'ouk_saved_games';
 
     var appState = {
       gameState: OukEngine.createInitialState(),
@@ -4028,6 +4693,48 @@ body {
       reviewSession: reviewSession,
       moveReviews: {} // moveIndex -> review object
     };
+
+    // Auto-restore previous active game if available in localStorage
+    (function restoreActiveGame() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var raw = localStorage.getItem(STORAGE_ACTIVE_GAME);
+        if (raw) {
+          var restored = OukEngine.deserializeGame(raw);
+          if (restored && restored.gameState) {
+            appState.gameState = restored.gameState;
+            var meta = restored.metadata || {};
+            if (meta.mode) appState.mode = meta.mode;
+            if (meta.aiColor) appState.aiColor = meta.aiColor;
+            if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+            if (meta.moveReviews) appState.moveReviews = meta.moveReviews;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore active game from localStorage:', e);
+      }
+    })();
+
+    function saveActiveGame() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var diffEl = document.getElementById('oc-difficulty');
+        var diff = diffEl ? diffEl.value : 'medium';
+        var serialized = OukEngine.serializeGame(appState.gameState, {
+          id: 'active_game',
+          name: 'Active Game',
+          savedAt: new Date().toISOString(),
+          mode: appState.mode,
+          aiColor: appState.aiColor,
+          difficulty: diff,
+          aiOptions: appState.aiOptions,
+          moveReviews: appState.moveReviews
+        });
+        localStorage.setItem(STORAGE_ACTIVE_GAME, JSON.stringify(serialized));
+      } catch (e) {
+        // Storage unavailable or full
+      }
+    }
 
     // Both AI modes hand the same colour to a machine; only the thing that
     // picks the move differs. Everything that just needs to know "is it the
@@ -4667,6 +5374,7 @@ body {
       appState.selectedSquare = null;
       appState.legalMovesForSelected = [];
       appState.viewMoveIndex = -1;
+      saveActiveGame();
       return true;
     }
 
@@ -4712,6 +5420,7 @@ body {
       appState.legalMovesForSelected = [];
       appState.viewMoveIndex = -1;
 
+      saveActiveGame();
       render();
       return true;
     }
@@ -4727,6 +5436,7 @@ body {
       appState.opponentNotice = notice || null;
       appState.gameState = OukEngine.applyMove(appState.gameState, move);
       appState.viewMoveIndex = -1;
+      saveActiveGame();
       render();
       maybeTriggerAI();
     }
@@ -4818,6 +5528,7 @@ body {
       appState.viewMoveIndex = -1;
       appState.moveReviews = {};
       if (reviewSession) reviewSession.clearCache();
+      saveActiveGame();
       render();
       maybeTriggerAI();
     }
@@ -4837,6 +5548,7 @@ body {
         review: simReview,
         raw: JSON.stringify(simReview)
       };
+      saveActiveGame();
       render();
     }
 
@@ -4886,6 +5598,7 @@ body {
         }
 
         appState.moveReviews[idx] = result;
+        saveActiveGame();
         render();
       });
     }
@@ -4914,6 +5627,7 @@ body {
           if (progressText) progressText.textContent = 'Analyzing move ' + current + ' of ' + total + ' (' + pct + '%)...';
           if (result && typeof result.moveIndex === 'number') {
             appState.moveReviews[result.moveIndex] = result;
+            saveActiveGame();
             renderMoves(appState.gameState);
           }
         },
@@ -4932,6 +5646,7 @@ body {
             results.forEach(function (r) {
               if (r.result) appState.moveReviews[r.moveIndex] = r.result;
             });
+            saveActiveGame();
           }
           appState.viewMoveIndex = 0;
           render();
@@ -5070,6 +5785,238 @@ body {
       }
     }
 
+    // ==========================================
+    // Save & Load Game Management
+    // ==========================================
+
+    function getSavedGames() {
+      if (typeof localStorage === 'undefined') return [];
+      try {
+        var raw = localStorage.getItem(STORAGE_SAVED_GAMES);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load saved games:', e);
+      }
+      return [];
+    }
+
+    function saveGameToSlot(customName) {
+      var list = getSavedGames();
+      var diffEl = document.getElementById('oc-difficulty');
+      var diff = diffEl ? diffEl.value : 'medium';
+      var id = 'ouk_save_' + Date.now();
+      var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+      var movesCount = Math.ceil(appState.gameState.history.length / 2);
+      var defaultName = 'Game vs ' + (modeLabels[appState.mode] || appState.mode) + ' (' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ')';
+      var name = (customName && customName.trim()) ? customName.trim() : defaultName;
+
+      var serialized = OukEngine.serializeGame(appState.gameState, {
+        id: id,
+        name: name,
+        savedAt: new Date().toISOString(),
+        mode: appState.mode,
+        aiColor: appState.aiColor,
+        difficulty: diff,
+        aiOptions: appState.aiOptions,
+        moveReviews: appState.moveReviews
+      });
+
+      list.unshift(serialized);
+      if (list.length > 50) list = list.slice(0, 50);
+      try {
+        localStorage.setItem(STORAGE_SAVED_GAMES, JSON.stringify(list));
+      } catch (e) {
+        throw new Error('Unable to save game: browser storage is full or disabled.');
+      }
+      renderSavedGamesList();
+      return serialized;
+    }
+
+    function loadSavedGameById(id) {
+      var list = getSavedGames();
+      var item = list.find(function (g) { return g.id === id; });
+      if (!item) throw new Error('Saved game not found');
+      loadGameFromData(item);
+      closeSaveDialog();
+    }
+
+    function deleteSavedGameById(id) {
+      var list = getSavedGames().filter(function (g) { return g.id !== id; });
+      try {
+        localStorage.setItem(STORAGE_SAVED_GAMES, JSON.stringify(list));
+      } catch (e) {}
+      renderSavedGamesList();
+    }
+
+    function loadGameFromData(data) {
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
+      clearHint();
+      clearRecommendation();
+
+      var result = OukEngine.deserializeGame(data);
+      appState.gameState = result.gameState;
+      var meta = result.metadata || {};
+      if (meta.mode) appState.mode = meta.mode;
+      if (meta.aiColor) appState.aiColor = meta.aiColor;
+      if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+      appState.moveReviews = meta.moveReviews || {};
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      appState.viewMoveIndex = -1;
+
+      if (els.controls) {
+        var radio = els.controls.querySelector('input[name="oc-mode"][value="' + appState.mode + '"]');
+        if (radio) radio.checked = true;
+        var diffSelect = document.getElementById('oc-difficulty');
+        if (diffSelect && meta.difficulty) diffSelect.value = meta.difficulty;
+      }
+
+      saveActiveGame();
+      render();
+      maybeTriggerAI();
+      return result;
+    }
+
+    function setSaveStatus(type, msg) {
+      var statusEl = document.getElementById('oc-save-status');
+      if (!statusEl) return;
+      statusEl.className = 'oc-dialog-status' + (type ? ' ' + type : '');
+      statusEl.textContent = msg || '';
+    }
+
+    function downloadJsonFile(filename, text) {
+      var blob = new Blob([text], { type: 'application/json;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function renderSavedGamesList() {
+      var listEl = document.getElementById('oc-saved-games-list');
+      var countEl = document.getElementById('oc-saved-count');
+      if (!listEl) return;
+
+      var games = getSavedGames();
+      if (countEl) countEl.textContent = games.length + (games.length === 1 ? ' game' : ' games');
+
+      if (games.length === 0) {
+        listEl.innerHTML = '<div class="oc-saved-games-empty"><span class="oc-empty-icon">📭</span><p>No saved games found in browser.</p><p class="oc-empty-hint">Click <strong>Save Game</strong> above to save the current match.</p></div>';
+        return;
+      }
+
+      var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+
+      listEl.innerHTML = games.map(function (g) {
+        var dateStr = '';
+        try {
+          var d = new Date(g.savedAt);
+          dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+          dateStr = g.savedAt || '';
+        }
+
+        var modeName = modeLabels[g.mode] || g.mode || '2-Player';
+        var plies = (g.moves && g.moves.length) || (g.history && g.history.length) || 0;
+        var movesCount = Math.ceil(plies / 2);
+        var statusText = g.status === 'checkmate'
+          ? (g.winner === 'w' ? 'White won' : 'Black won')
+          : (g.status === 'active' ? 'Active' : 'Draw');
+
+        var safeName = (g.name || 'Untitled Game').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        return '<div class="oc-saved-game-card" data-id="' + g.id + '">' +
+          '<div class="oc-saved-game-info">' +
+            '<div class="oc-saved-game-title">' + safeName + '</div>' +
+            '<div class="oc-saved-game-meta">' +
+              '<span class="oc-saved-badge oc-badge-mode">' + modeName + '</span>' +
+              '<span class="oc-saved-badge">' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ' (' + plies + ' plies)</span>' +
+              '<span class="oc-saved-badge oc-badge-status">' + statusText + '</span>' +
+              '<span class="oc-saved-date">' + dateStr + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="oc-saved-game-actions">' +
+            '<button type="button" class="oc-btn-accent oc-btn-load" data-id="' + g.id + '" title="Load this game">▶ Load</button>' +
+            '<button type="button" class="oc-btn-secondary oc-btn-export" data-id="' + g.id + '" title="Download JSON">⬇ JSON</button>' +
+            '<button type="button" class="oc-btn-danger oc-btn-delete" data-id="' + g.id + '" title="Delete save">🗑</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-load'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          try {
+            loadSavedGameById(id);
+          } catch (err) {
+            setSaveStatus('error', 'Error loading game: ' + err.message);
+          }
+        });
+      });
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-export'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          var item = games.find(function (g) { return g.id === id; });
+          if (item) {
+            var filename = (item.name || 'ouk-chaktrong-game').replace(/[^a-z0-9_-]/gi, '_').toLowerCase() + '.json';
+            downloadJsonFile(filename, JSON.stringify(item, null, 2));
+          }
+        });
+      });
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-delete'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          var item = games.find(function (g) { return g.id === id; });
+          var name = item ? ('"' + item.name + '"') : 'this saved game';
+          if (confirm('Delete ' + name + '?')) {
+            deleteSavedGameById(id);
+            setSaveStatus('success', 'Game deleted.');
+          }
+        });
+      });
+    }
+
+    function openSaveDialog(initialStatus) {
+      var dialog = document.getElementById('oc-save-dialog');
+      if (!dialog) return;
+
+      var nameInput = document.getElementById('oc-save-game-name');
+      if (nameInput) {
+        var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+        var movesCount = Math.ceil(appState.gameState.history.length / 2);
+        nameInput.value = 'Game vs ' + (modeLabels[appState.mode] || appState.mode) + ' (' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ')';
+      }
+
+      setSaveStatus(initialStatus ? initialStatus.type : '', initialStatus ? initialStatus.text : '');
+      renderSavedGamesList();
+
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    function closeSaveDialog() {
+      var dialog = document.getElementById('oc-save-dialog');
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
     function renderControls() {
       var skins = OukPieces.getAvailableSkins ? OukPieces.getAvailableSkins() : [
         { id: 'ivory-teak', name: 'Ivory & Teak', nameKm: 'ភ្លុក & ឈើប្រណិត' },
@@ -5084,9 +6031,14 @@ body {
         return '<option value="' + s.id + '"' + selected + '>' + s.name + ' (' + s.nameKm + ')</option>';
       }).join('');
 
+      var selectedDiff = 'medium';
+      if (appState.aiOptions && appState.aiOptions.maxDepth === 3) selectedDiff = 'easy';
+      else if (appState.aiOptions && appState.aiOptions.maxDepth === 7) selectedDiff = 'hard';
+
       els.controls.innerHTML =
         '<div class="oc-btn-row">' +
         '<button id="oc-new-game">New Game</button>' +
+        '<button id="oc-save-load-btn" title="Save or Load Game (Ctrl+S / S)" aria-label="Save or Load Game">💾 Save / Load</button>' +
         '<button id="oc-undo-btn" title="Undo last move (Ctrl+Z / U)" aria-label="Undo Move" ' + (appState.gameState.history.length === 0 ? 'disabled' : '') + '>↶ Undo</button>' +
         '<button id="oc-hint-btn" title="Show the suggested move (H)" aria-label="Show Hint" aria-pressed="false" ' + (canRequestHint() ? '' : 'disabled') + '>💡 Hint</button>' +
         '</div>' +
@@ -5094,7 +6046,9 @@ body {
         '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
         '<label title="The model configured in ⚙ AI Settings picks the moves"><input type="radio" name="oc-mode" value="vs-llm"' + (appState.mode === 'vs-llm' ? ' checked' : '') + '> vs AI</label>' +
         '<label title="Strength of the local engine — in vs AI that is the fallback it plays when the model cannot answer">Difficulty: <select id="oc-difficulty">' +
-        '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
+        '<option value="easy"' + (selectedDiff === 'easy' ? ' selected' : '') + '>Easy</option>' +
+        '<option value="medium"' + (selectedDiff === 'medium' ? ' selected' : '') + '>Medium</option>' +
+        '<option value="hard"' + (selectedDiff === 'hard' ? ' selected' : '') + '>Hard</option>' +
         '</select></label>' +
         '<div class="oc-theme-card">' +
         '<div class="oc-theme-card-title"><span>🎨</span> Themes & Skins</div>' +
@@ -5127,6 +6081,8 @@ body {
         '</div>';
 
       document.getElementById('oc-new-game').addEventListener('click', newGame);
+      var saveLoadBtnEl = document.getElementById('oc-save-load-btn');
+      if (saveLoadBtnEl) saveLoadBtnEl.addEventListener('click', function () { openSaveDialog(); });
       var undoBtnEl = document.getElementById('oc-undo-btn');
       if (undoBtnEl) undoBtnEl.addEventListener('click', undoMove);
       var hintBtnEl = document.getElementById('oc-hint-btn');
@@ -5136,6 +6092,7 @@ body {
           cancelPendingOpponentMove();
           appState.opponentNotice = null;
           appState.mode = evt.target.value;
+          saveActiveGame();
           render();
           maybeTriggerAI();
         });
@@ -5143,6 +6100,7 @@ body {
       document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
         var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
         appState.aiOptions = presets[evt.target.value];
+        saveActiveGame();
       });
 
       // Theme event listeners
@@ -5286,7 +6244,7 @@ body {
           };
 
           if (OukReview && OukReview.sendChatRequest) {
-            OukReview.sendChatRequest(testSettings, payload)
+            OukReview.sendChatRequest(testSettings, payload, { timeoutMs: 10000 })
               .then(function () {
                 if (statusDiv) {
                   statusDiv.className = 'oc-dialog-status success';
@@ -5404,6 +6362,106 @@ body {
           render();
         });
       }
+
+      // Save / Load dialog wire-up
+      var closeSaveBtn = document.getElementById('oc-close-save-dialog');
+      var dismissSaveBtn = document.getElementById('oc-dismiss-save-dialog');
+      var saveCurrentForm = document.getElementById('oc-save-current-form');
+      var exportCurrentBtn = document.getElementById('oc-export-current-btn');
+      var copyNotationBtn = document.getElementById('oc-copy-notation-btn');
+      var importFileInput = document.getElementById('oc-import-file-input');
+      var importPasteBtn = document.getElementById('oc-import-paste-btn');
+
+      if (closeSaveBtn) closeSaveBtn.addEventListener('click', closeSaveDialog);
+      if (dismissSaveBtn) dismissSaveBtn.addEventListener('click', closeSaveDialog);
+
+      if (saveCurrentForm) {
+        saveCurrentForm.addEventListener('submit', function (evt) {
+          evt.preventDefault();
+          var nameInput = document.getElementById('oc-save-game-name');
+          var customName = nameInput ? nameInput.value.trim() : '';
+          try {
+            var saved = saveGameToSlot(customName);
+            setSaveStatus('success', '✅ Saved "' + saved.name + '" successfully!');
+          } catch (err) {
+            setSaveStatus('error', '❌ ' + err.message);
+          }
+        });
+      }
+
+      if (exportCurrentBtn) {
+        exportCurrentBtn.addEventListener('click', function () {
+          var diffEl = document.getElementById('oc-difficulty');
+          var diff = diffEl ? diffEl.value : 'medium';
+          var serialized = OukEngine.serializeGame(appState.gameState, {
+            name: 'Ouk Chaktrang Match',
+            mode: appState.mode,
+            aiColor: appState.aiColor,
+            difficulty: diff,
+            aiOptions: appState.aiOptions,
+            moveReviews: appState.moveReviews
+          });
+          var filename = 'ouk_chaktrang_game_' + Date.now() + '.json';
+          downloadJsonFile(filename, JSON.stringify(serialized, null, 2));
+          setSaveStatus('success', '✅ Game downloaded as ' + filename);
+        });
+      }
+
+      if (copyNotationBtn) {
+        copyNotationBtn.addEventListener('click', function () {
+          var notation = OukEngine.exportMoveNotation(appState.gameState.history);
+          if (!notation) {
+            setSaveStatus('error', '❌ No moves played yet to export notation.');
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(notation).then(function () {
+              setSaveStatus('success', '✅ Moves notation copied to clipboard: ' + notation);
+            }).catch(function () {
+              setSaveStatus('', 'Moves notation: ' + notation);
+            });
+          } else {
+            setSaveStatus('', 'Moves notation: ' + notation);
+          }
+        });
+      }
+
+      if (importFileInput) {
+        importFileInput.addEventListener('change', function (evt) {
+          var file = evt.target.files && evt.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              var content = e.target.result;
+              loadGameFromData(content);
+              closeSaveDialog();
+            } catch (err) {
+              setSaveStatus('error', '❌ Failed to import file: ' + err.message);
+            }
+          };
+          reader.readAsText(file);
+          evt.target.value = '';
+        });
+      }
+
+      if (importPasteBtn) {
+        importPasteBtn.addEventListener('click', function () {
+          var area = document.getElementById('oc-paste-json-area');
+          var text = area ? area.value.trim() : '';
+          if (!text) {
+            setSaveStatus('error', '❌ Please paste saved game JSON first.');
+            return;
+          }
+          try {
+            loadGameFromData(text);
+            if (area) area.value = '';
+            closeSaveDialog();
+          } catch (err) {
+            setSaveStatus('error', '❌ Failed to load pasted JSON: ' + err.message);
+          }
+        });
+      }
     }
 
     if (els.moves) {
@@ -5443,6 +6501,16 @@ body {
       if (evt.key.toLowerCase() === 'u' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
         evt.preventDefault();
         undoMove();
+        return;
+      }
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === 's') {
+        evt.preventDefault();
+        openSaveDialog();
+        return;
+      }
+      if (evt.key.toLowerCase() === 's' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
+        evt.preventDefault();
+        openSaveDialog();
         return;
       }
       if (evt.key.toLowerCase() === 'h' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
@@ -5492,6 +6560,24 @@ body {
       undoMove: undoMove,
       requestHint: requestHint,
       explainMoveAtIndex: explainMoveAtIndex,
+      openSaveDialog: openSaveDialog,
+      closeSaveDialog: closeSaveDialog,
+      saveGame: saveGameToSlot,
+      loadGame: loadSavedGameById,
+      deleteGame: deleteSavedGameById,
+      getSavedGames: getSavedGames,
+      importGame: loadGameFromData,
+      exportGame: function () {
+        var diffEl = document.getElementById('oc-difficulty');
+        var diff = diffEl ? diffEl.value : 'medium';
+        return OukEngine.serializeGame(appState.gameState, {
+          mode: appState.mode,
+          aiColor: appState.aiColor,
+          difficulty: diff,
+          aiOptions: appState.aiOptions,
+          moveReviews: appState.moveReviews
+        });
+      },
       setTheme: function (theme) {
         themeState.appTheme = theme;
         saveSetting('ouk_app_theme', theme);

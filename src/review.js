@@ -480,7 +480,10 @@
   }
 
   function parseAiResponse(rawText, fallbackClassification) {
+    if (typeof rawText !== 'string') rawText = '';
     var cleaned = rawText.trim();
+    // Strip reasoning / thinking tags from models like DeepSeek-R1 / QwQ
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     // Strip markdown code fences if wrapped in ```json ... ```
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -498,11 +501,33 @@
         betterMoveTo: json.betterMoveTo || null
       };
     } catch (e) {
+      // Fallback: extract JSON substring if wrapped in non-JSON prefix/suffix
+      var firstBrace = cleaned.indexOf('{');
+      var lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          var extracted = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+          if (extracted && typeof extracted === 'object') {
+            return {
+              classification: extracted.classification || fallbackClassification.key,
+              title: extracted.title || 'Move Analysis',
+              explanation: extracted.explanation || cleaned,
+              tags: Array.isArray(extracted.tags) ? extracted.tags : ['Analysis'],
+              betterMove: extracted.betterMove || null,
+              betterMoveFrom: extracted.betterMoveFrom || null,
+              betterMoveTo: extracted.betterMoveTo || null
+            };
+          }
+        } catch (e2) {
+          // ignore
+        }
+      }
+
       // Fallback if model returned plain text
       return {
         classification: fallbackClassification.key,
         title: 'Move Commentary',
-        explanation: cleaned,
+        explanation: cleaned || rawText,
         tags: ['Review'],
         betterMove: null,
         betterMoveFrom: null,
@@ -593,13 +618,14 @@
   // One request to the configured endpoint, carrying the CORS dance every
   // caller needs: try the endpoint directly, and on the network/CORS failure
   // browsers report for endpoints that send no CORS headers, retry through the
-  // dev server's proxy. `options` is { path, method, body } - body omitted for
+  // dev server's proxy. `options` is { path, method, body, timeoutMs } - body omitted for
   // a GET.
   function apiRequest(settings, options) {
     var baseURL = (settings.baseURL || DEFAULT_SETTINGS.baseURL).replace(/\/+$/, '');
     var directUrl = baseURL + options.path;
     var method = options.method || 'POST';
     var apiKey = settings.apiKey || '';
+    var timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : (options.path === '/chat/completions' ? 25000 : 10000);
 
     var headers = {
       'Content-Type': 'application/json'
@@ -616,28 +642,48 @@
         fetchHeaders['x-target-url'] = targetUrl;
       }
 
+      var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timedOut = false;
+      var timeoutId = null;
+      if (controller && timeoutMs > 0) {
+        timeoutId = setTimeout(function () {
+          timedOut = true;
+          controller.abort();
+        }, timeoutMs);
+      }
+
       var init = { method: method, headers: fetchHeaders };
+      if (controller) init.signal = controller.signal;
       if (options.body !== undefined) init.body = JSON.stringify(options.body);
 
-      return fetch(fetchUrl, init).then(function (res) {
-        return res.text().then(function (rawBody) {
-          var data = parseChatResponseBody(rawBody);
+      return fetch(fetchUrl, init)
+        .then(function (res) {
+          if (timeoutId) clearTimeout(timeoutId);
+          return res.text().then(function (rawBody) {
+            var data = parseChatResponseBody(rawBody);
 
-          if (!res.ok) {
-            var errMsg = (data && data.error && data.error.message) ||
-                         (rawBody && rawBody.includes('Not found') ? 'Proxy endpoint returned 404 Not Found. Please restart your dev-server (`node scripts/dev-server.js`).' : null) ||
-                         (rawBody && rawBody.length < 200 ? rawBody : null) ||
-                         ('HTTP error ' + res.status + ' (' + res.statusText + ')');
-            throw new Error(errMsg);
+            if (!res.ok) {
+              var errMsg = (data && data.error && data.error.message) ||
+                           (rawBody && rawBody.includes('Not found') ? 'Proxy endpoint returned 404 Not Found. Please restart your dev-server (`node scripts/dev-server.js`).' : null) ||
+                           (rawBody && rawBody.length < 200 ? rawBody : null) ||
+                           ('HTTP error ' + res.status + ' (' + res.statusText + ')');
+              throw new Error(errMsg);
+            }
+
+            if (!data) {
+              throw new Error('Received unexpected non-JSON response from server: ' + (rawBody.slice(0, 100) || 'Empty body'));
+            }
+
+            return data;
+          });
+        })
+        .catch(function (fetchErr) {
+          if (timeoutId) clearTimeout(timeoutId);
+          if (timedOut || (fetchErr && fetchErr.name === 'AbortError')) {
+            throw new Error('Request timed out after ' + Math.round(timeoutMs / 1000) + 's');
           }
-
-          if (!data) {
-            throw new Error('Received unexpected non-JSON response from server: ' + (rawBody.slice(0, 100) || 'Empty body'));
-          }
-
-          return data;
+          throw fetchErr;
         });
-      });
     }
 
     if (settings.useProxy) {
@@ -670,13 +716,13 @@
     });
   }
 
-  function sendChatRequest(settings, bodyPayload) {
-    return apiRequest(settings, {
+  function sendChatRequest(settings, bodyPayload, requestOptions) {
+    var opts = Object.assign({
       path: '/chat/completions',
       method: 'POST',
-      // Clone payload and ensure stream: false is explicitly set unless specified
       body: Object.assign({ stream: false }, bodyPayload)
-    });
+    }, requestOptions || {});
+    return apiRequest(settings, opts);
   }
 
   // What an OpenAI-compatible /models response can look like varies more than
@@ -709,13 +755,43 @@
   }
 
   function listModels(settings) {
-    return apiRequest(settings, { path: '/models', method: 'GET' }).then(function (data) {
+    return apiRequest(settings, { path: '/models', method: 'GET', timeoutMs: 10000 }).then(function (data) {
       var ids = parseModelList(data);
       if (ids.length === 0) {
         throw new Error('The endpoint answered but listed no models.');
       }
       return ids;
     });
+  }
+
+  function extractContentFromResponse(data) {
+    if (!data) return '';
+    if (typeof data === 'string') return data;
+    if (data.choices && data.choices[0]) {
+      var choice = data.choices[0];
+      if (choice.message) {
+        if (typeof choice.message.content === 'string' && choice.message.content.trim()) {
+          return choice.message.content;
+        }
+        // If content is empty or omitted, check reasoning_content (DeepSeek / thinking models)
+        if (typeof choice.message.reasoning_content === 'string' && choice.message.reasoning_content.trim()) {
+          return choice.message.reasoning_content;
+        }
+      }
+      if (typeof choice.text === 'string' && choice.text.trim()) {
+        return choice.text;
+      }
+      if (choice.delta && typeof choice.delta.content === 'string' && choice.delta.content.trim()) {
+        return choice.delta.content;
+      }
+      if (choice.delta && typeof choice.delta.reasoning_content === 'string' && choice.delta.reasoning_content.trim()) {
+        return choice.delta.reasoning_content;
+      }
+    }
+    if (typeof data.response === 'string' && data.response.trim()) {
+      return data.response;
+    }
+    return '';
   }
 
   function requestMoveReview(history, moveIndex, settings, callback) {
@@ -743,12 +819,13 @@
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
+      max_tokens: 1500,
       temperature: typeof settings.temperature === 'number' ? settings.temperature : 0.3
     };
 
     sendChatRequest(settings, bodyPayload)
       .then(function (data) {
-        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        var content = extractContentFromResponse(data);
         if (!content) throw new Error('Received empty response from AI model.');
         var parsed = parseAiResponse(content, promptCtx.contextData.classification);
         callback(null, {
@@ -893,6 +970,7 @@
     parseModelList: parseModelList,
     listModels: listModels,
     parseChatResponseBody: parseChatResponseBody,
+    extractContentFromResponse: extractContentFromResponse,
     SYSTEM_PROMPT: SYSTEM_PROMPT
   };
 

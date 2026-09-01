@@ -163,6 +163,68 @@
   </div>
 </dialog>
 
+<!-- Save / Load Game Dialog -->
+<dialog class="oc-dialog" id="oc-save-dialog">
+  <div class="oc-dialog-content oc-save-dialog-content">
+    <div class="oc-dialog-header">
+      <div class="oc-dialog-title-wrap">
+        <span class="oc-dialog-title-km">រក្សាទុក / ផ្ទុកហ្គេម</span>
+        <h2>💾 Save &amp; Load Games</h2>
+      </div>
+      <button class="oc-dialog-close" id="oc-close-save-dialog" aria-label="Close save dialog">&times;</button>
+    </div>
+    <p class="oc-dialog-desc">Manage saved games in your browser, or import and export JSON game files.</p>
+
+    <!-- Save Current Game Section -->
+    <div class="oc-save-card">
+      <h3 class="oc-save-card-title">Save Current Game</h3>
+      <form class="oc-save-form" id="oc-save-current-form">
+        <div class="oc-save-input-group">
+          <input type="text" id="oc-save-game-name" placeholder="Game Name (e.g. Match 1 vs AI)" maxlength="60" required>
+          <button type="submit" class="oc-btn-accent" id="oc-save-game-btn">Save Game</button>
+        </div>
+      </form>
+      <div class="oc-dialog-status" id="oc-save-status"></div>
+    </div>
+
+    <!-- Saved Games List Section -->
+    <div class="oc-save-card">
+      <div class="oc-save-card-header">
+        <h3 class="oc-save-card-title">Saved Games in Browser</h3>
+        <span class="oc-save-count" id="oc-saved-count">0 games</span>
+      </div>
+      <div class="oc-saved-games-list" id="oc-saved-games-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Import & Export Section -->
+    <div class="oc-save-card">
+      <h3 class="oc-save-card-title">Import &amp; Export</h3>
+      <div class="oc-import-export-actions">
+        <button type="button" class="oc-btn-secondary" id="oc-export-current-btn" title="Download current game as JSON file">⬇ Download Current (JSON)</button>
+        <button type="button" class="oc-btn-secondary" id="oc-copy-notation-btn" title="Copy move notation to clipboard">📋 Copy Moves Notation</button>
+        <label class="oc-file-upload-label oc-btn-secondary" title="Import game from JSON file">
+          📁 Import File (.json)
+          <input type="file" id="oc-import-file-input" accept=".json,application/json" style="display:none">
+        </label>
+      </div>
+
+      <details class="oc-import-paste-details">
+        <summary class="oc-import-paste-summary">Paste Game JSON text</summary>
+        <div class="oc-paste-wrap">
+          <textarea id="oc-paste-json-area" placeholder="Paste saved game JSON here..." rows="3"></textarea>
+          <button type="button" class="oc-btn-secondary" id="oc-import-paste-btn">Load Pasted JSON</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="oc-dialog-actions">
+      <button type="button" class="oc-btn-secondary" id="oc-dismiss-save-dialog">Close</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="src/engine.js"></script>
 <script src="src/ai.js"></script>
 <script src="src/pieces.js"></script>

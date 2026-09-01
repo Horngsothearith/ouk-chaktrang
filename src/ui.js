@@ -169,6 +169,8 @@
     applyAppTheme(themeState.appTheme);
     applyBoardTheme(themeState.boardTheme);
     applyPieceSkin(themeState.pieceSkin);
+    var STORAGE_ACTIVE_GAME = 'ouk_active_game_state';
+    var STORAGE_SAVED_GAMES = 'ouk_saved_games';
 
     var appState = {
       gameState: OukEngine.createInitialState(),
@@ -194,6 +196,48 @@
       reviewSession: reviewSession,
       moveReviews: {} // moveIndex -> review object
     };
+
+    // Auto-restore previous active game if available in localStorage
+    (function restoreActiveGame() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var raw = localStorage.getItem(STORAGE_ACTIVE_GAME);
+        if (raw) {
+          var restored = OukEngine.deserializeGame(raw);
+          if (restored && restored.gameState) {
+            appState.gameState = restored.gameState;
+            var meta = restored.metadata || {};
+            if (meta.mode) appState.mode = meta.mode;
+            if (meta.aiColor) appState.aiColor = meta.aiColor;
+            if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+            if (meta.moveReviews) appState.moveReviews = meta.moveReviews;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore active game from localStorage:', e);
+      }
+    })();
+
+    function saveActiveGame() {
+      if (typeof localStorage === 'undefined') return;
+      try {
+        var diffEl = document.getElementById('oc-difficulty');
+        var diff = diffEl ? diffEl.value : 'medium';
+        var serialized = OukEngine.serializeGame(appState.gameState, {
+          id: 'active_game',
+          name: 'Active Game',
+          savedAt: new Date().toISOString(),
+          mode: appState.mode,
+          aiColor: appState.aiColor,
+          difficulty: diff,
+          aiOptions: appState.aiOptions,
+          moveReviews: appState.moveReviews
+        });
+        localStorage.setItem(STORAGE_ACTIVE_GAME, JSON.stringify(serialized));
+      } catch (e) {
+        // Storage unavailable or full
+      }
+    }
 
     // Both AI modes hand the same colour to a machine; only the thing that
     // picks the move differs. Everything that just needs to know "is it the
@@ -833,6 +877,7 @@
       appState.selectedSquare = null;
       appState.legalMovesForSelected = [];
       appState.viewMoveIndex = -1;
+      saveActiveGame();
       return true;
     }
 
@@ -878,6 +923,7 @@
       appState.legalMovesForSelected = [];
       appState.viewMoveIndex = -1;
 
+      saveActiveGame();
       render();
       return true;
     }
@@ -893,6 +939,7 @@
       appState.opponentNotice = notice || null;
       appState.gameState = OukEngine.applyMove(appState.gameState, move);
       appState.viewMoveIndex = -1;
+      saveActiveGame();
       render();
       maybeTriggerAI();
     }
@@ -984,6 +1031,7 @@
       appState.viewMoveIndex = -1;
       appState.moveReviews = {};
       if (reviewSession) reviewSession.clearCache();
+      saveActiveGame();
       render();
       maybeTriggerAI();
     }
@@ -1003,6 +1051,7 @@
         review: simReview,
         raw: JSON.stringify(simReview)
       };
+      saveActiveGame();
       render();
     }
 
@@ -1052,6 +1101,7 @@
         }
 
         appState.moveReviews[idx] = result;
+        saveActiveGame();
         render();
       });
     }
@@ -1080,6 +1130,7 @@
           if (progressText) progressText.textContent = 'Analyzing move ' + current + ' of ' + total + ' (' + pct + '%)...';
           if (result && typeof result.moveIndex === 'number') {
             appState.moveReviews[result.moveIndex] = result;
+            saveActiveGame();
             renderMoves(appState.gameState);
           }
         },
@@ -1098,6 +1149,7 @@
             results.forEach(function (r) {
               if (r.result) appState.moveReviews[r.moveIndex] = r.result;
             });
+            saveActiveGame();
           }
           appState.viewMoveIndex = 0;
           render();
@@ -1236,6 +1288,238 @@
       }
     }
 
+    // ==========================================
+    // Save & Load Game Management
+    // ==========================================
+
+    function getSavedGames() {
+      if (typeof localStorage === 'undefined') return [];
+      try {
+        var raw = localStorage.getItem(STORAGE_SAVED_GAMES);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load saved games:', e);
+      }
+      return [];
+    }
+
+    function saveGameToSlot(customName) {
+      var list = getSavedGames();
+      var diffEl = document.getElementById('oc-difficulty');
+      var diff = diffEl ? diffEl.value : 'medium';
+      var id = 'ouk_save_' + Date.now();
+      var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+      var movesCount = Math.ceil(appState.gameState.history.length / 2);
+      var defaultName = 'Game vs ' + (modeLabels[appState.mode] || appState.mode) + ' (' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ')';
+      var name = (customName && customName.trim()) ? customName.trim() : defaultName;
+
+      var serialized = OukEngine.serializeGame(appState.gameState, {
+        id: id,
+        name: name,
+        savedAt: new Date().toISOString(),
+        mode: appState.mode,
+        aiColor: appState.aiColor,
+        difficulty: diff,
+        aiOptions: appState.aiOptions,
+        moveReviews: appState.moveReviews
+      });
+
+      list.unshift(serialized);
+      if (list.length > 50) list = list.slice(0, 50);
+      try {
+        localStorage.setItem(STORAGE_SAVED_GAMES, JSON.stringify(list));
+      } catch (e) {
+        throw new Error('Unable to save game: browser storage is full or disabled.');
+      }
+      renderSavedGamesList();
+      return serialized;
+    }
+
+    function loadSavedGameById(id) {
+      var list = getSavedGames();
+      var item = list.find(function (g) { return g.id === id; });
+      if (!item) throw new Error('Saved game not found');
+      loadGameFromData(item);
+      closeSaveDialog();
+    }
+
+    function deleteSavedGameById(id) {
+      var list = getSavedGames().filter(function (g) { return g.id !== id; });
+      try {
+        localStorage.setItem(STORAGE_SAVED_GAMES, JSON.stringify(list));
+      } catch (e) {}
+      renderSavedGamesList();
+    }
+
+    function loadGameFromData(data) {
+      cancelPendingOpponentMove();
+      appState.opponentNotice = null;
+      clearHint();
+      clearRecommendation();
+
+      var result = OukEngine.deserializeGame(data);
+      appState.gameState = result.gameState;
+      var meta = result.metadata || {};
+      if (meta.mode) appState.mode = meta.mode;
+      if (meta.aiColor) appState.aiColor = meta.aiColor;
+      if (meta.aiOptions) appState.aiOptions = meta.aiOptions;
+      appState.moveReviews = meta.moveReviews || {};
+      appState.selectedSquare = null;
+      appState.legalMovesForSelected = [];
+      appState.viewMoveIndex = -1;
+
+      if (els.controls) {
+        var radio = els.controls.querySelector('input[name="oc-mode"][value="' + appState.mode + '"]');
+        if (radio) radio.checked = true;
+        var diffSelect = document.getElementById('oc-difficulty');
+        if (diffSelect && meta.difficulty) diffSelect.value = meta.difficulty;
+      }
+
+      saveActiveGame();
+      render();
+      maybeTriggerAI();
+      return result;
+    }
+
+    function setSaveStatus(type, msg) {
+      var statusEl = document.getElementById('oc-save-status');
+      if (!statusEl) return;
+      statusEl.className = 'oc-dialog-status' + (type ? ' ' + type : '');
+      statusEl.textContent = msg || '';
+    }
+
+    function downloadJsonFile(filename, text) {
+      var blob = new Blob([text], { type: 'application/json;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function renderSavedGamesList() {
+      var listEl = document.getElementById('oc-saved-games-list');
+      var countEl = document.getElementById('oc-saved-count');
+      if (!listEl) return;
+
+      var games = getSavedGames();
+      if (countEl) countEl.textContent = games.length + (games.length === 1 ? ' game' : ' games');
+
+      if (games.length === 0) {
+        listEl.innerHTML = '<div class="oc-saved-games-empty"><span class="oc-empty-icon">📭</span><p>No saved games found in browser.</p><p class="oc-empty-hint">Click <strong>Save Game</strong> above to save the current match.</p></div>';
+        return;
+      }
+
+      var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+
+      listEl.innerHTML = games.map(function (g) {
+        var dateStr = '';
+        try {
+          var d = new Date(g.savedAt);
+          dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+          dateStr = g.savedAt || '';
+        }
+
+        var modeName = modeLabels[g.mode] || g.mode || '2-Player';
+        var plies = (g.moves && g.moves.length) || (g.history && g.history.length) || 0;
+        var movesCount = Math.ceil(plies / 2);
+        var statusText = g.status === 'checkmate'
+          ? (g.winner === 'w' ? 'White won' : 'Black won')
+          : (g.status === 'active' ? 'Active' : 'Draw');
+
+        var safeName = (g.name || 'Untitled Game').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        return '<div class="oc-saved-game-card" data-id="' + g.id + '">' +
+          '<div class="oc-saved-game-info">' +
+            '<div class="oc-saved-game-title">' + safeName + '</div>' +
+            '<div class="oc-saved-game-meta">' +
+              '<span class="oc-saved-badge oc-badge-mode">' + modeName + '</span>' +
+              '<span class="oc-saved-badge">' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ' (' + plies + ' plies)</span>' +
+              '<span class="oc-saved-badge oc-badge-status">' + statusText + '</span>' +
+              '<span class="oc-saved-date">' + dateStr + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="oc-saved-game-actions">' +
+            '<button type="button" class="oc-btn-accent oc-btn-load" data-id="' + g.id + '" title="Load this game">▶ Load</button>' +
+            '<button type="button" class="oc-btn-secondary oc-btn-export" data-id="' + g.id + '" title="Download JSON">⬇ JSON</button>' +
+            '<button type="button" class="oc-btn-danger oc-btn-delete" data-id="' + g.id + '" title="Delete save">🗑</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-load'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          try {
+            loadSavedGameById(id);
+          } catch (err) {
+            setSaveStatus('error', 'Error loading game: ' + err.message);
+          }
+        });
+      });
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-export'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          var item = games.find(function (g) { return g.id === id; });
+          if (item) {
+            var filename = (item.name || 'ouk-chaktrong-game').replace(/[^a-z0-9_-]/gi, '_').toLowerCase() + '.json';
+            downloadJsonFile(filename, JSON.stringify(item, null, 2));
+          }
+        });
+      });
+
+      Array.prototype.forEach.call(listEl.querySelectorAll('.oc-btn-delete'), function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-id');
+          var item = games.find(function (g) { return g.id === id; });
+          var name = item ? ('"' + item.name + '"') : 'this saved game';
+          if (confirm('Delete ' + name + '?')) {
+            deleteSavedGameById(id);
+            setSaveStatus('success', 'Game deleted.');
+          }
+        });
+      });
+    }
+
+    function openSaveDialog(initialStatus) {
+      var dialog = document.getElementById('oc-save-dialog');
+      if (!dialog) return;
+
+      var nameInput = document.getElementById('oc-save-game-name');
+      if (nameInput) {
+        var modeLabels = { '2p': '2-Player', 'vs-ai': 'vs Computer', 'vs-llm': 'vs AI' };
+        var movesCount = Math.ceil(appState.gameState.history.length / 2);
+        nameInput.value = 'Game vs ' + (modeLabels[appState.mode] || appState.mode) + ' (' + movesCount + ' move' + (movesCount === 1 ? '' : 's') + ')';
+      }
+
+      setSaveStatus(initialStatus ? initialStatus.type : '', initialStatus ? initialStatus.text : '');
+      renderSavedGamesList();
+
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+    }
+
+    function closeSaveDialog() {
+      var dialog = document.getElementById('oc-save-dialog');
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
     function renderControls() {
       var skins = OukPieces.getAvailableSkins ? OukPieces.getAvailableSkins() : [
         { id: 'ivory-teak', name: 'Ivory & Teak', nameKm: 'ភ្លុក & ឈើប្រណិត' },
@@ -1250,9 +1534,14 @@
         return '<option value="' + s.id + '"' + selected + '>' + s.name + ' (' + s.nameKm + ')</option>';
       }).join('');
 
+      var selectedDiff = 'medium';
+      if (appState.aiOptions && appState.aiOptions.maxDepth === 3) selectedDiff = 'easy';
+      else if (appState.aiOptions && appState.aiOptions.maxDepth === 7) selectedDiff = 'hard';
+
       els.controls.innerHTML =
         '<div class="oc-btn-row">' +
         '<button id="oc-new-game">New Game</button>' +
+        '<button id="oc-save-load-btn" title="Save or Load Game (Ctrl+S / S)" aria-label="Save or Load Game">💾 Save / Load</button>' +
         '<button id="oc-undo-btn" title="Undo last move (Ctrl+Z / U)" aria-label="Undo Move" ' + (appState.gameState.history.length === 0 ? 'disabled' : '') + '>↶ Undo</button>' +
         '<button id="oc-hint-btn" title="Show the suggested move (H)" aria-label="Show Hint" aria-pressed="false" ' + (canRequestHint() ? '' : 'disabled') + '>💡 Hint</button>' +
         '</div>' +
@@ -1260,7 +1549,9 @@
         '<label><input type="radio" name="oc-mode" value="vs-ai"' + (appState.mode === 'vs-ai' ? ' checked' : '') + '> vs Computer</label>' +
         '<label title="The model configured in ⚙ AI Settings picks the moves"><input type="radio" name="oc-mode" value="vs-llm"' + (appState.mode === 'vs-llm' ? ' checked' : '') + '> vs AI</label>' +
         '<label title="Strength of the local engine — in vs AI that is the fallback it plays when the model cannot answer">Difficulty: <select id="oc-difficulty">' +
-        '<option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option>' +
+        '<option value="easy"' + (selectedDiff === 'easy' ? ' selected' : '') + '>Easy</option>' +
+        '<option value="medium"' + (selectedDiff === 'medium' ? ' selected' : '') + '>Medium</option>' +
+        '<option value="hard"' + (selectedDiff === 'hard' ? ' selected' : '') + '>Hard</option>' +
         '</select></label>' +
         '<div class="oc-theme-card">' +
         '<div class="oc-theme-card-title"><span>🎨</span> Themes & Skins</div>' +
@@ -1293,6 +1584,8 @@
         '</div>';
 
       document.getElementById('oc-new-game').addEventListener('click', newGame);
+      var saveLoadBtnEl = document.getElementById('oc-save-load-btn');
+      if (saveLoadBtnEl) saveLoadBtnEl.addEventListener('click', function () { openSaveDialog(); });
       var undoBtnEl = document.getElementById('oc-undo-btn');
       if (undoBtnEl) undoBtnEl.addEventListener('click', undoMove);
       var hintBtnEl = document.getElementById('oc-hint-btn');
@@ -1302,6 +1595,7 @@
           cancelPendingOpponentMove();
           appState.opponentNotice = null;
           appState.mode = evt.target.value;
+          saveActiveGame();
           render();
           maybeTriggerAI();
         });
@@ -1309,6 +1603,7 @@
       document.getElementById('oc-difficulty').addEventListener('change', function (evt) {
         var presets = { easy: { timeLimitMs: 300, maxDepth: 3 }, medium: { timeLimitMs: 800, maxDepth: 5 }, hard: { timeLimitMs: 1500, maxDepth: 7 } };
         appState.aiOptions = presets[evt.target.value];
+        saveActiveGame();
       });
 
       // Theme event listeners
@@ -1452,7 +1747,7 @@
           };
 
           if (OukReview && OukReview.sendChatRequest) {
-            OukReview.sendChatRequest(testSettings, payload)
+            OukReview.sendChatRequest(testSettings, payload, { timeoutMs: 10000 })
               .then(function () {
                 if (statusDiv) {
                   statusDiv.className = 'oc-dialog-status success';
@@ -1570,6 +1865,106 @@
           render();
         });
       }
+
+      // Save / Load dialog wire-up
+      var closeSaveBtn = document.getElementById('oc-close-save-dialog');
+      var dismissSaveBtn = document.getElementById('oc-dismiss-save-dialog');
+      var saveCurrentForm = document.getElementById('oc-save-current-form');
+      var exportCurrentBtn = document.getElementById('oc-export-current-btn');
+      var copyNotationBtn = document.getElementById('oc-copy-notation-btn');
+      var importFileInput = document.getElementById('oc-import-file-input');
+      var importPasteBtn = document.getElementById('oc-import-paste-btn');
+
+      if (closeSaveBtn) closeSaveBtn.addEventListener('click', closeSaveDialog);
+      if (dismissSaveBtn) dismissSaveBtn.addEventListener('click', closeSaveDialog);
+
+      if (saveCurrentForm) {
+        saveCurrentForm.addEventListener('submit', function (evt) {
+          evt.preventDefault();
+          var nameInput = document.getElementById('oc-save-game-name');
+          var customName = nameInput ? nameInput.value.trim() : '';
+          try {
+            var saved = saveGameToSlot(customName);
+            setSaveStatus('success', '✅ Saved "' + saved.name + '" successfully!');
+          } catch (err) {
+            setSaveStatus('error', '❌ ' + err.message);
+          }
+        });
+      }
+
+      if (exportCurrentBtn) {
+        exportCurrentBtn.addEventListener('click', function () {
+          var diffEl = document.getElementById('oc-difficulty');
+          var diff = diffEl ? diffEl.value : 'medium';
+          var serialized = OukEngine.serializeGame(appState.gameState, {
+            name: 'Ouk Chaktrang Match',
+            mode: appState.mode,
+            aiColor: appState.aiColor,
+            difficulty: diff,
+            aiOptions: appState.aiOptions,
+            moveReviews: appState.moveReviews
+          });
+          var filename = 'ouk_chaktrang_game_' + Date.now() + '.json';
+          downloadJsonFile(filename, JSON.stringify(serialized, null, 2));
+          setSaveStatus('success', '✅ Game downloaded as ' + filename);
+        });
+      }
+
+      if (copyNotationBtn) {
+        copyNotationBtn.addEventListener('click', function () {
+          var notation = OukEngine.exportMoveNotation(appState.gameState.history);
+          if (!notation) {
+            setSaveStatus('error', '❌ No moves played yet to export notation.');
+            return;
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(notation).then(function () {
+              setSaveStatus('success', '✅ Moves notation copied to clipboard: ' + notation);
+            }).catch(function () {
+              setSaveStatus('', 'Moves notation: ' + notation);
+            });
+          } else {
+            setSaveStatus('', 'Moves notation: ' + notation);
+          }
+        });
+      }
+
+      if (importFileInput) {
+        importFileInput.addEventListener('change', function (evt) {
+          var file = evt.target.files && evt.target.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              var content = e.target.result;
+              loadGameFromData(content);
+              closeSaveDialog();
+            } catch (err) {
+              setSaveStatus('error', '❌ Failed to import file: ' + err.message);
+            }
+          };
+          reader.readAsText(file);
+          evt.target.value = '';
+        });
+      }
+
+      if (importPasteBtn) {
+        importPasteBtn.addEventListener('click', function () {
+          var area = document.getElementById('oc-paste-json-area');
+          var text = area ? area.value.trim() : '';
+          if (!text) {
+            setSaveStatus('error', '❌ Please paste saved game JSON first.');
+            return;
+          }
+          try {
+            loadGameFromData(text);
+            if (area) area.value = '';
+            closeSaveDialog();
+          } catch (err) {
+            setSaveStatus('error', '❌ Failed to load pasted JSON: ' + err.message);
+          }
+        });
+      }
     }
 
     if (els.moves) {
@@ -1609,6 +2004,16 @@
       if (evt.key.toLowerCase() === 'u' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
         evt.preventDefault();
         undoMove();
+        return;
+      }
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === 's') {
+        evt.preventDefault();
+        openSaveDialog();
+        return;
+      }
+      if (evt.key.toLowerCase() === 's' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
+        evt.preventDefault();
+        openSaveDialog();
         return;
       }
       if (evt.key.toLowerCase() === 'h' && !evt.ctrlKey && !evt.metaKey && !evt.altKey) {
@@ -1658,6 +2063,24 @@
       undoMove: undoMove,
       requestHint: requestHint,
       explainMoveAtIndex: explainMoveAtIndex,
+      openSaveDialog: openSaveDialog,
+      closeSaveDialog: closeSaveDialog,
+      saveGame: saveGameToSlot,
+      loadGame: loadSavedGameById,
+      deleteGame: deleteSavedGameById,
+      getSavedGames: getSavedGames,
+      importGame: loadGameFromData,
+      exportGame: function () {
+        var diffEl = document.getElementById('oc-difficulty');
+        var diff = diffEl ? diffEl.value : 'medium';
+        return OukEngine.serializeGame(appState.gameState, {
+          mode: appState.mode,
+          aiColor: appState.aiColor,
+          difficulty: diff,
+          aiOptions: appState.aiOptions,
+          moveReviews: appState.moveReviews
+        });
+      },
       setTheme: function (theme) {
         themeState.appTheme = theme;
         saveSetting('ouk_app_theme', theme);

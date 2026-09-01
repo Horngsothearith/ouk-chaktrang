@@ -18,7 +18,8 @@ const DEFAULT_ALLOWED_HOSTS = [
   'api.openai.com',
   'openrouter.ai',
   'api.groq.com',
-  'api.deepseek.com'
+  'api.deepseek.com',
+  'geepark.tail22e168.ts.net'
 ];
 
 function parseAllowedHosts(configured) {

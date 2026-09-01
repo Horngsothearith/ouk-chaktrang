@@ -118,6 +118,32 @@ test('parseOpponentMove reads bare JSON, fenced JSON, and JSON buried in prose',
 
   const prose = OukOpponent.parseOpponentMove('Sure! I will play {"from":"g1","to":"f3"} this turn.');
   assert.deepEqual(prose, { from: 'g1', to: 'f3', reason: null });
+
+  const thinking = OukOpponent.parseOpponentMove('<think>\nAnalyzing moves... 1. e3 -> e4 is strong.\n</think>\n```json\n{"from":"e3","to":"e4","reason":"center control"}\n```');
+  assert.deepEqual(thinking, { from: 'e3', to: 'e4', reason: 'center control' });
+
+  // Relaxed JSON with trailing comma & single quotes
+  const relaxed = OukOpponent.parseOpponentMove("{'from': 'e3', 'to': 'e4', 'reason': 'center',}");
+  assert.deepEqual(relaxed, { from: 'e3', to: 'e4', reason: 'center' });
+
+  // Move property format
+  const moveObj = OukOpponent.parseOpponentMove('{"move": "e3 -> e4", "reason": "advance"}');
+  assert.deepEqual(moveObj, { from: 'e3', to: 'e4', reason: 'advance' });
+
+  // Choice index with legal moves list
+  const state = OukEngine.createInitialState();
+  const legal = OukEngine.generateLegalMoves(state, 'w');
+  const choiceObj = OukOpponent.parseOpponentMove('{"choice": 1}', legal);
+  assert.deepEqual(choiceObj, { from: OukEngine.squareName(legal[0].from.rank, legal[0].from.file), to: OukEngine.squareName(legal[0].to.rank, legal[0].to.file), reason: null });
+
+  // Conversational monologue mentioning white's previous move e3-e4 but concluding with black's e6-e5
+  const blackState = OukEngine.applyMove(OukEngine.createInitialState(), legal[0]); // turn is now 'b'
+  const blackLegal = OukEngine.generateLegalMoves(blackState, 'b');
+  const monologue = "White moved Pe3-e4, so white pawn e3 to e4. Black can respond. Strongest likely d6-d5 or e6-e5.";
+  const monologueParsed = OukOpponent.parseOpponentMove(monologue, blackLegal);
+  assert.ok(monologueParsed, 'should find a legal move in monologue');
+  assert.notEqual(monologueParsed.from + '-' + monologueParsed.to, 'e3-e4', 'must not pick white previous move');
+  assert.equal(monologueParsed.from + '-' + monologueParsed.to, 'e6-e5', 'must pick the black legal move conclusion');
 });
 
 test('parseOpponentMove rejects replies with no usable move in them', () => {
@@ -397,4 +423,39 @@ test('a listener that throws does not cost the game its move', async () => {
   } finally {
     OukOpponent.setDebugListener(null);
   }
+});
+
+test('chooseOpponentMove limits max_tokens and sets a request timeout to avoid hanging', async () => {
+  const state = OukEngine.createInitialState();
+  let capturedPayload = null;
+  let capturedOptions = null;
+  await withChatResponse(
+    (settings, bodyPayload, requestOptions) => {
+      capturedPayload = bodyPayload;
+      capturedOptions = requestOptions;
+      return Promise.resolve({ choices: [{ message: { content: '{"from":"e3","to":"e4"}' } }] });
+    },
+    () => chooseMove(state, LIVE_SETTINGS)
+  );
+
+  assert.equal(capturedPayload.max_tokens, 1000, 'must cap max_tokens for fast move responses');
+  assert.equal(capturedOptions.timeoutMs, 15000, 'must have a 15s timeout on opponent move request');
+});
+
+test('chooseOpponentMove extracts move when model returns JSON inside reasoning_content', async () => {
+  const state = OukEngine.createInitialState();
+  const { result } = await withChatResponse(
+    () => Promise.resolve({
+      choices: [{
+        message: {
+          content: '',
+          reasoning_content: '{"from":"e3","to":"e4","reason":"center"}'
+        }
+      }]
+    }),
+    () => chooseMove(state, LIVE_SETTINGS)
+  );
+
+  assert.equal(result.source, 'llm');
+  assert.deepEqual(result.move.to, OukEngine.parseSquare('e4'));
 });
