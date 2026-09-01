@@ -3714,8 +3714,9 @@ body {
           settings.useProxy = true;
           saveSettings(Object.assign({}, loadSettings(), { useProxy: true }));
           return proxyResult;
-        }).catch(function () {
-          throw new Error('CORS / Network Error: Browser blocked direct access to ' + directUrl + '. Enable "Use Local Proxy" in Settings or run dev-server (node scripts/dev-server.js).');
+        }).catch(function (proxyErr) {
+          var proxyMsg = (proxyErr && proxyErr.message) || String(proxyErr);
+          throw new Error('Direct access blocked (' + directErr.message + ') & Dev Proxy failed: ' + proxyMsg);
         });
       }
       throw directErr;

@@ -9,5 +9,7 @@ Dockerfile
 .dockerignore
 docker-compose.yml
 docker-compose.*.yml
+docker
+.env
 *.md
 .worktrees
