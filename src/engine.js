@@ -136,23 +136,28 @@
     return out;
   }
 
+  // Squares hold plain {type, color} value objects that nothing in the codebase
+  // ever mutates — a piece changing type or colour is always a *new* object
+  // written into a square. So a successor board can share them and only the
+  // 64-slot array itself has to be copied, instead of copying every piece on it.
   function cloneBoard(board) {
-    return board.map(function (p) { return p ? { type: p.type, color: p.color } : null; });
+    return board.slice();
   }
 
   // Board/bookkeeping transition only — deliberately does NOT compute
-  // status or counting. generateLegalMoves calls this (via isInCheck) once
-  // per candidate move to test king safety; if it called the full applyMove
-  // instead, computing one move's status would recursively require
-  // computing every future ply's status too (deriveStatus ->
-  // generateLegalMoves -> applyMove -> deriveStatus -> ...), which never
-  // terminates. Only the public applyMove (below) finalizes status.
+  // status or counting. The public applyMove (below) is the only caller that
+  // finalizes status, and it must be the only one: deriveStatus needs
+  // generateLegalMoves, so if the raw transition resolved status too,
+  // computing one move's status would recursively require computing every
+  // future ply's status as well (deriveStatus -> generateLegalMoves ->
+  // applyMoveRaw -> deriveStatus -> ...), which never terminates.
   function applyMoveRaw(state, move) {
     var board = cloneBoard(state.board);
     var fromIdx = move.from.rank * 8 + move.from.file;
     var toIdx = move.to.rank * 8 + move.to.file;
-    var movedPiece = { type: move.piece.type, color: move.piece.color };
-    if (move.special === 'promotion') movedPiece.type = 'Q';
+    var movedPiece = move.special === 'promotion'
+      ? { type: 'Q', color: move.piece.color }
+      : move.piece;
     board[fromIdx] = null;
     board[toIdx] = movedPiece;
 
@@ -278,43 +283,80 @@
     return next;
   }
 
-  // Attack detection deliberately does NOT reuse pawnMoves()'s forward-step
-  // logic: a pawn's forward move requires an empty destination and is not a
-  // threat, while its diagonal squares are threatened regardless of whether
-  // anything currently occupies them. Reusing generateBaseMoves verbatim for
-  // pawns would report the empty square ahead as "attacked", which is wrong.
-  function pawnAttackSquares(rank, file, color) {
-    var dir = color === 'w' ? 1 : -1;
-    var r1 = rank + dir;
-    var squares = [];
-    [-1, 1].forEach(function (df) {
-      var f2 = file + df;
-      if (inBounds(r1, f2)) squares.push({ rank: r1, file: f2 });
-    });
-    return squares;
-  }
-
+  // Asked the other way round from move generation: instead of sweeping the
+  // board and generating every move each enemy piece could make, look outward
+  // from the square itself and ask which of its neighbours could be standing
+  // there. Same answer, a few dozen array reads instead of a few hundred
+  // throwaway move objects — and this runs once per candidate move of every
+  // position the search looks at, so it is the hottest function in the app.
+  // tests/engine.test.js checks it against a generate-and-scan reference over
+  // randomly played positions, which is what keeps the two readings of the
+  // rules from drifting apart.
+  //
+  // Base patterns only: the first-move exceptions (the Sdaach's jump, the
+  // Neang's double step) are move options, not standing threats, and counting
+  // them here would make isInCheck depend circularly on their own eligibility.
   function isSquareAttacked(state, rank, file, byColor) {
-    for (var r = 0; r < 8; r++) {
-      for (var f = 0; f < 8; f++) {
-        var p = pieceAt(state, r, f);
-        if (!p || p.color !== byColor) continue;
-        if (p.type === 'P') {
-          var attacks = pawnAttackSquares(r, f, byColor);
-          for (var k = 0; k < attacks.length; k++) {
-            if (attacks[k].rank === rank && attacks[k].file === file) return true;
-          }
-          continue;
-        }
-        // Base patterns only: the first-move exceptions (Task 6) are move
-        // options, not standing threats, and including them here would make
-        // isInCheck depend circularly on their own eligibility check.
-        var moves = generateBaseMoves(state, r, f);
-        for (var i = 0; i < moves.length; i++) {
-          if (moves[i].to.rank === rank && moves[i].to.file === file) return true;
-        }
+    var board = state.board;
+    var forward = byColor === 'w' ? 1 : -1;
+
+    // Trey. Its threat is unconditional: the two diagonal squares ahead of a
+    // Trey are attacked whatever is standing on them, and its forward step is
+    // not an attack at all — which is exactly why attack detection cannot
+    // reuse the pawn's move generation.
+    var pawnRank = rank - forward;
+    if (inBounds(pawnRank, file)) {
+      for (var pf = file - 1; pf <= file + 1; pf += 2) {
+        if (!inBounds(pawnRank, pf)) continue;
+        var trey = board[pawnRank * 8 + pf];
+        if (trey && trey.color === byColor && trey.type === 'P') return true;
       }
     }
+
+    // Every other piece declines to attack a square its own side occupies,
+    // exactly as generateBaseMoves declines to move onto one.
+    var occupant = board[rank * 8 + file];
+    if (occupant && occupant.color === byColor) return false;
+
+    // Ses.
+    for (var k = 0; k < KNIGHT_STEPS.length; k++) {
+      var kr = rank + KNIGHT_STEPS[k][0], kf = file + KNIGHT_STEPS[k][1];
+      if (!inBounds(kr, kf)) continue;
+      var ses = board[kr * 8 + kf];
+      if (ses && ses.color === byColor && ses.type === 'N') return true;
+    }
+
+    // Sdaach, Neang and Koul all move one square, so any of them attacking
+    // this square is standing on one of its eight neighbours.
+    for (var n = 0; n < KING_STEPS.length; n++) {
+      var dr = KING_STEPS[n][0], df = KING_STEPS[n][1];
+      if (!inBounds(rank + dr, file + df)) continue;
+      var neighbour = board[(rank + dr) * 8 + (file + df)];
+      if (!neighbour || neighbour.color !== byColor) continue;
+      if (neighbour.type === 'K') return true;
+      if (dr !== 0 && df !== 0) {
+        if (neighbour.type === 'Q' || neighbour.type === 'B') return true;
+      } else if (neighbour.type === 'B' && df === 0 && dr === -forward) {
+        // The Koul's one straight move is forward, so the Koul making it is
+        // the neighbour directly behind this square.
+        return true;
+      }
+    }
+
+    // Touk, along its four rays until something blocks the line.
+    for (var d = 0; d < ORTHOGONAL_DIRS.length; d++) {
+      var rr = rank + ORTHOGONAL_DIRS[d][0], rf = file + ORTHOGONAL_DIRS[d][1];
+      while (inBounds(rr, rf)) {
+        var blocker = board[rr * 8 + rf];
+        if (blocker) {
+          if (blocker.color === byColor && blocker.type === 'R') return true;
+          break;
+        }
+        rr += ORTHOGONAL_DIRS[d][0];
+        rf += ORTHOGONAL_DIRS[d][1];
+      }
+    }
+
     return false;
   }
 
@@ -368,6 +410,30 @@
     return out;
   }
 
+  // King-safety test for one candidate move, done by mutating the board and
+  // putting it back. The obvious implementation is applyMoveRaw + isInCheck,
+  // but that clones all 64 squares, allocates a whole successor state and
+  // copies the entire move history for EVERY candidate move of EVERY position
+  // the search looks at - and isInCheck reads nothing but the board. Making
+  // and unmaking the two squares in place is the same test without that cost.
+  // Nothing here can throw between the make and the unmake, so the board is
+  // always restored.
+  function leavesOwnKingInCheck(state, move) {
+    var board = state.board;
+    var fromIdx = move.from.rank * 8 + move.from.file;
+    var toIdx = move.to.rank * 8 + move.to.file;
+    var moved = board[fromIdx];
+    var displaced = board[toIdx];
+
+    board[fromIdx] = null;
+    board[toIdx] = move.special === 'promotion' ? { type: 'Q', color: moved.color } : moved;
+    var exposed = isInCheck(state, moved.color);
+    board[fromIdx] = moved;
+    board[toIdx] = displaced;
+
+    return exposed;
+  }
+
   function generateLegalMoves(state, color) {
     var legal = [];
     for (var r = 0; r < 8; r++) {
@@ -376,8 +442,7 @@
         if (!p || p.color !== color) continue;
         var candidates = generatePseudoMoves(state, r, f);
         for (var i = 0; i < candidates.length; i++) {
-          var resulting = applyMoveRaw(state, candidates[i]);
-          if (!isInCheck(resulting, color)) legal.push(candidates[i]);
+          if (!leavesOwnKingInCheck(state, candidates[i])) legal.push(candidates[i]);
         }
       }
     }

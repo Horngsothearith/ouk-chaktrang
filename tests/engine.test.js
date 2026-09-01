@@ -484,3 +484,146 @@ test('undoMove rolls back state accurately and returns to initial state', () => 
   assert.equal(OukEngine.pieceAt(undone, 2, 4).type, 'P');
 });
 
+
+// --- Guards for the two optimizations the search leans on ------------------
+
+// src/engine.js answers "is this square attacked?" by looking outward from the
+// square rather than by generating every enemy move, which means the movement
+// rules are written down twice. This is the test that keeps the two readings
+// in agreement: a generate-and-scan reference, run over positions from real
+// games and over scattered piece soups that a real game would never reach.
+function attackedByGeneration(state, rank, file, byColor) {
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const p = OukEngine.pieceAt(state, r, f);
+      if (!p || p.color !== byColor) continue;
+      if (p.type === 'P') {
+        // A Trey threatens its two forward diagonals whatever stands on them,
+        // and its forward step threatens nothing.
+        const dir = byColor === 'w' ? 1 : -1;
+        if (r + dir === rank && Math.abs(f - file) === 1) return true;
+        continue;
+      }
+      for (const m of OukEngine.generateBaseMoves(state, r, f)) {
+        if (m.to.rank === rank && m.to.file === file) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function seededRandom(seed) {
+  let s = seed;
+  return () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+}
+
+test('isSquareAttacked agrees with generate-and-scan across played-out games', () => {
+  const random = seededRandom(4242);
+  let compared = 0;
+  for (let game = 0; game < 6; game++) {
+    let state = OukEngine.createInitialState();
+    for (let ply = 0; ply < 40 && state.status === 'active'; ply++) {
+      for (let square = 0; square < 64; square++) {
+        for (const color of ['w', 'b']) {
+          const rank = square >> 3, file = square & 7;
+          assert.equal(
+            OukEngine.isSquareAttacked(state, rank, file, color),
+            attackedByGeneration(state, rank, file, color),
+            `${OukEngine.squareName(rank, file)} by ${color}, game ${game} ply ${ply}`
+          );
+          compared++;
+        }
+      }
+      const moves = OukEngine.generateLegalMoves(state, state.turn);
+      if (!moves.length) break;
+      state = OukEngine.applyMove(state, moves[Math.floor(random() * moves.length)]);
+    }
+  }
+  assert.ok(compared > 10000, 'expected a broad sample, compared ' + compared);
+});
+
+test('isSquareAttacked agrees with generate-and-scan on arbitrary piece placements', () => {
+  const random = seededRandom(1337);
+  const types = ['R', 'N', 'B', 'Q', 'P', 'K'];
+  for (let trial = 0; trial < 300; trial++) {
+    const state = OukEngine.createInitialState();
+    state.board = new Array(64).fill(null);
+    const pieces = 2 + Math.floor(random() * 12);
+    for (let i = 0; i < pieces; i++) {
+      state.board[Math.floor(random() * 64)] = {
+        type: types[Math.floor(random() * types.length)],
+        color: random() < 0.5 ? 'w' : 'b'
+      };
+    }
+    for (let square = 0; square < 64; square++) {
+      for (const color of ['w', 'b']) {
+        const rank = square >> 3, file = square & 7;
+        assert.equal(
+          OukEngine.isSquareAttacked(state, rank, file, color),
+          attackedByGeneration(state, rank, file, color),
+          `${OukEngine.squareName(rank, file)} by ${color}, trial ${trial}`
+        );
+      }
+    }
+  }
+});
+
+// generateLegalMoves tests king safety by making each candidate move on the
+// board and taking it back again. If it ever failed to take one back, move
+// generation would quietly start answering about a position nobody is in.
+test('generateLegalMoves leaves the board it was asked about untouched', () => {
+  const random = seededRandom(31337);
+  let state = OukEngine.createInitialState();
+  for (let ply = 0; ply < 30 && state.status === 'active'; ply++) {
+    const before = state.board.map((p) => (p ? p.color + p.type : '.')).join('');
+    OukEngine.generateLegalMoves(state, 'w');
+    OukEngine.generateLegalMoves(state, 'b');
+    const after = state.board.map((p) => (p ? p.color + p.type : '.')).join('');
+    assert.equal(after, before, 'board changed at ply ' + ply);
+    const moves = OukEngine.generateLegalMoves(state, state.turn);
+    if (!moves.length) break;
+    state = OukEngine.applyMove(state, moves[Math.floor(random() * moves.length)]);
+  }
+});
+
+// Successor boards share their piece objects with the board they came from, so
+// applyMove writing into a square must never be visible in the earlier state.
+test('applyMove does not disturb the position it was given', () => {
+  const start = OukEngine.createInitialState();
+  const snapshot = start.board.map((p) => (p ? p.color + p.type : '.')).join('');
+  const moves = OukEngine.generateLegalMoves(start, 'w');
+
+  for (const move of moves) {
+    const next = OukEngine.applyMove(start, move);
+    assert.equal(
+      start.board.map((p) => (p ? p.color + p.type : '.')).join(''),
+      snapshot,
+      'applying ' + OukEngine.squareName(move.from.rank, move.from.file) + ' mutated the source board'
+    );
+    assert.notEqual(next.board, start.board, 'successor must own its own array');
+  }
+});
+
+test('a promoted Trey becomes a Neang without changing the piece it was', () => {
+  const state = OukEngine.createInitialState();
+  state.board = new Array(64).fill(null);
+  const put = (name, piece) => {
+    const sq = OukEngine.parseSquare(name);
+    state.board[sq.rank * 8 + sq.file] = piece;
+  };
+  put('a1', { type: 'K', color: 'w' });
+  put('h8', { type: 'K', color: 'b' });
+  put('c5', { type: 'P', color: 'w' });
+  const derived = OukEngine.deriveStatus(state);
+  state.status = derived.status;
+
+  const promotion = OukEngine.generateLegalMoves(state, 'w')
+    .find((m) => m.special === 'promotion');
+  assert.ok(promotion, 'a Trey on rank 5 should have a promoting move');
+
+  const pawn = OukEngine.pieceAt(state, 4, 2);
+  const next = OukEngine.applyMove(state, promotion);
+  assert.equal(OukEngine.pieceAt(next, 5, 2).type, 'Q');
+  assert.equal(pawn.type, 'P', 'the original Trey object must be left alone');
+  assert.equal(OukEngine.pieceAt(state, 4, 2).type, 'P');
+});
