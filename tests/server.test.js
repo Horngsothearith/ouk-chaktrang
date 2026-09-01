@@ -98,3 +98,25 @@ test('DEFAULT_ALLOWED_HOSTS contains only the public preset API hosts', () => {
     'geepark.tail22e168.ts.net'
   ]);
 });
+
+test('setCorsHeaders sets proper CORS and Private Network headers for origins', () => {
+  const { setCorsHeaders } = require('../scripts/dev-server.js');
+  const headers = {};
+  const mockRes = {
+    setHeader: (k, v) => { headers[k.toLowerCase()] = v; }
+  };
+  const mockReq = {
+    headers: {
+      origin: 'https://geepark.tail22e168.ts.net',
+      'access-control-request-headers': 'authorization, content-type, x-target-url',
+      'access-control-request-private-network': 'true'
+    }
+  };
+
+  setCorsHeaders(mockReq, mockRes);
+  assert.equal(headers['access-control-allow-origin'], 'https://geepark.tail22e168.ts.net');
+  assert.equal(headers['access-control-allow-headers'], 'authorization, content-type, x-target-url');
+  assert.equal(headers['access-control-allow-private-network'], 'true');
+  assert.ok(headers['access-control-allow-methods'].includes('OPTIONS'));
+});
+
