@@ -64,11 +64,19 @@ http.createServer(async (req, res) => {
       if (req.headers['content-type']) forwardHeaders['Content-Type'] = req.headers['content-type'];
       else forwardHeaders['Content-Type'] = 'application/json';
 
-      const forwardRes = await fetch(targetUrl, {
-        method: req.method,
-        headers: forwardHeaders,
-        body: bodyBuffer.length > 0 ? bodyBuffer : undefined
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(new Error('upstream connection timed out after 30s')), 30000);
+      let forwardRes;
+      try {
+        forwardRes = await fetch(targetUrl, {
+          method: req.method,
+          headers: forwardHeaders,
+          body: bodyBuffer.length > 0 ? bodyBuffer : undefined,
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       const resBody = await forwardRes.text();
       res.writeHead(forwardRes.status, {

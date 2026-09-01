@@ -1275,6 +1275,231 @@ body {
   margin-top: 6px;
 }
 
+/* Save / Load Dialog */
+.oc-save-dialog-content {
+  max-width: 580px;
+}
+.oc-dialog-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oc-dialog-title-km {
+  font-family: "Noto Serif Khmer", serif;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.oc-save-card {
+  background: rgba(168, 130, 58, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.oc-save-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.oc-save-card-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--laterite);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.oc-save-count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.oc-save-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.oc-save-input-group input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  min-width: 0;
+}
+.oc-save-input-group input:focus {
+  outline: 2px solid var(--accent);
+}
+.oc-saved-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.oc-saved-game-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.oc-saved-game-card:hover {
+  border-color: var(--accent);
+}
+.oc-saved-game-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.oc-saved-game-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.oc-saved-game-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.oc-saved-badge {
+  background: var(--surface-alt);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+.oc-saved-badge.oc-badge-mode {
+  background: rgba(181, 84, 42, 0.15);
+  color: var(--laterite);
+  border-color: var(--laterite);
+}
+.oc-saved-badge.oc-badge-status {
+  color: var(--jade);
+}
+.oc-saved-date {
+  opacity: 0.8;
+  margin-left: auto;
+}
+.oc-saved-game-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.oc-saved-game-actions button {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.oc-btn-danger {
+  background: rgba(168, 52, 42, 0.12);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+.oc-btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.oc-saved-games-empty {
+  text-align: center;
+  padding: 16px 12px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.oc-saved-games-empty p {
+  margin: 4px 0 0 0;
+}
+.oc-empty-icon {
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 2px;
+}
+.oc-empty-hint {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+.oc-import-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.oc-import-export-actions button,
+.oc-file-upload-label {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.oc-file-upload-label:hover,
+.oc-import-export-actions button:hover {
+  border-color: var(--accent);
+  background: rgba(168, 130, 58, 0.15);
+}
+.oc-import-paste-details {
+  margin-top: 4px;
+  font-size: 0.82rem;
+}
+.oc-import-paste-summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.oc-import-paste-summary:hover {
+  color: var(--text);
+}
+.oc-paste-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.oc-paste-wrap textarea {
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+.oc-paste-wrap textarea:focus {
+  outline: 2px solid var(--accent);
+}
+
 /* =========================================================================
    Responsive layout
    -------------------------------------------------------------------------
@@ -1363,9 +1588,10 @@ body {
     max-height: 30vh;
   }
 
-  /* New Game / Undo / Hint: three across is right, but the desktop padding
-     forces "New Game" onto two lines and the row goes ragged. */
+  /* New Game / Save / Undo / Hint: 2x2 grid on mobile so labels stay legible */
   .oc-btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
   .oc-btn-row button {

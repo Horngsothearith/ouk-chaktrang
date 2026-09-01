@@ -393,6 +393,143 @@
     return { status: 'active', winner: null };
   }
 
+  function formatSingleMove(mv) {
+    var from = squareName(mv.from.rank, mv.from.file);
+    var to = squareName(mv.to.rank, mv.to.file);
+    var sep = mv.captured ? 'x' : '-';
+    var promo = mv.special === 'promotion' ? '=Q' : '';
+    return from + sep + to + promo;
+  }
+
+  function exportMoveNotation(history) {
+    if (!history || history.length === 0) return '';
+    var pairs = [];
+    for (var i = 0; i < history.length; i += 2) {
+      var moveNum = Math.floor(i / 2) + 1;
+      var wMove = formatSingleMove(history[i]);
+      var bMove = (i + 1 < history.length) ? ' ' + formatSingleMove(history[i + 1]) : '';
+      pairs.push(moveNum + '. ' + wMove + bMove);
+    }
+    return pairs.join(' ');
+  }
+
+  function serializeGame(state, metadata) {
+    metadata = metadata || {};
+    var history = (state && state.history) || [];
+    var moves = history.map(function (mv) {
+      return {
+        from: squareName(mv.from.rank, mv.from.file),
+        to: squareName(mv.to.rank, mv.to.file),
+        piece: mv.piece ? mv.piece.type : null,
+        captured: mv.captured ? mv.captured.type : null,
+        special: mv.special || null
+      };
+    });
+
+    return {
+      version: 1,
+      format: 'ouk-chaktrong',
+      id: metadata.id || ('ouk_game_' + Date.now()),
+      name: metadata.name || ('Game ' + new Date().toLocaleDateString()),
+      savedAt: metadata.savedAt || new Date().toISOString(),
+      mode: metadata.mode || '2p',
+      aiColor: metadata.aiColor || 'b',
+      difficulty: metadata.difficulty || 'medium',
+      aiOptions: metadata.aiOptions || null,
+      moveReviews: metadata.moveReviews || {},
+      moves: moves,
+      notation: exportMoveNotation(history),
+      status: state ? state.status : 'active',
+      winner: state ? state.winner : null,
+      plyCount: history.length
+    };
+  }
+
+  function deserializeGame(data) {
+    if (!data) throw new Error('No data provided to deserializeGame');
+    var obj = data;
+    if (typeof data === 'string') {
+      try {
+        obj = JSON.parse(data);
+      } catch (e) {
+        throw new Error('Invalid JSON format: ' + e.message);
+      }
+    }
+    if (!obj || typeof obj !== 'object') {
+      throw new Error('Invalid game data structure');
+    }
+
+    var rawMoves = obj.moves || obj.history || [];
+    if (!Array.isArray(rawMoves)) {
+      throw new Error('Game moves must be an array');
+    }
+
+    var state = createInitialState();
+    for (var i = 0; i < rawMoves.length; i++) {
+      var item = rawMoves[i];
+      var fromRank, fromFile, toRank, toFile, specialReq = null;
+
+      if (typeof item === 'string') {
+        // e.g. "e3-e4" or "e3xe4" or "c6-c7=Q"
+        var clean = item.replace(/^\d+\.\s*/, '').trim();
+        var parts = clean.split(/[-x]/);
+        if (parts.length < 2) throw new Error('Invalid move string format at ply ' + (i + 1) + ': ' + item);
+        var fSq = parseSquare(parts[0].slice(-2));
+        var tSq = parseSquare(parts[1].slice(0, 2));
+        fromRank = fSq.rank; fromFile = fSq.file;
+        toRank = tSq.rank; toFile = tSq.file;
+      } else if (item && typeof item === 'object') {
+        if (typeof item.from === 'string') {
+          var f = parseSquare(item.from);
+          fromRank = f.rank; fromFile = f.file;
+        } else if (item.from && typeof item.from.rank === 'number') {
+          fromRank = item.from.rank; fromFile = item.from.file;
+        }
+        if (typeof item.to === 'string') {
+          var t = parseSquare(item.to);
+          toRank = t.rank; toFile = t.file;
+        } else if (item.to && typeof item.to.rank === 'number') {
+          toRank = item.to.rank; toFile = item.to.file;
+        }
+        specialReq = item.special || null;
+      }
+
+      if (fromRank === undefined || fromFile === undefined || toRank === undefined || toFile === undefined) {
+        throw new Error('Malformed move coordinates at ply ' + (i + 1));
+      }
+
+      var legals = generateLegalMoves(state, state.turn);
+      var match = legals.find(function (m) {
+        if (m.from.rank !== fromRank || m.from.file !== fromFile) return false;
+        if (m.to.rank !== toRank || m.to.file !== toFile) return false;
+        if (specialReq && m.special !== specialReq) return false;
+        return true;
+      });
+
+      if (!match) {
+        var fromName = squareName(fromRank, fromFile);
+        var toName = squareName(toRank, toFile);
+        throw new Error('Illegal move at ply ' + (i + 1) + ': ' + fromName + '-' + toName + ' for ' + (state.turn === 'w' ? 'White' : 'Black'));
+      }
+
+      state = applyMove(state, match);
+    }
+
+    return {
+      gameState: state,
+      metadata: {
+        id: obj.id || ('ouk_game_' + Date.now()),
+        name: obj.name || 'Imported Game',
+        savedAt: obj.savedAt || new Date().toISOString(),
+        mode: obj.mode || '2p',
+        aiColor: obj.aiColor || 'b',
+        difficulty: obj.difficulty || 'medium',
+        aiOptions: obj.aiOptions || null,
+        moveReviews: obj.moveReviews || {}
+      }
+    };
+  }
+
   var api = {
     squareName: squareName,
     parseSquare: parseSquare,
@@ -413,7 +550,10 @@
     countAllPieces: countAllPieces,
     hasPawns: hasPawns,
     isBareKing: isBareKing,
-    undoMove: undoMove
+    undoMove: undoMove,
+    exportMoveNotation: exportMoveNotation,
+    serializeGame: serializeGame,
+    deserializeGame: deserializeGame
   };
 
   function undoMove(state) {

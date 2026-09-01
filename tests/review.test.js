@@ -91,6 +91,13 @@ test('parseAiResponse handles JSON fences and fallback parsing gracefully', () =
   const fallbackParsed = OukReview.parseAiResponse(plainText, fallback);
   assert.equal(fallbackParsed.classification, 'good');
   assert.equal(fallbackParsed.explanation, plainText);
+
+  // Thinking tag handling (DeepSeek-R1 / QwQ reasoning models)
+  const thinkResponse = '<think>\nEvaluating board state... White controls e4.\n</think>\n```json\n{"classification": "best", "title": "Strong Knight Move", "explanation": "Controls e4."}\n```';
+  const thinkParsed = OukReview.parseAiResponse(thinkResponse, fallback);
+  assert.equal(thinkParsed.classification, 'best');
+  assert.equal(thinkParsed.title, 'Strong Knight Move');
+  assert.equal(thinkParsed.explanation, 'Controls e4.');
 });
 
 test('createReviewSession handles settings and cache correctly', () => {

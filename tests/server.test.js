@@ -94,6 +94,7 @@ test('DEFAULT_ALLOWED_HOSTS contains only the public preset API hosts', () => {
     'api.openai.com',
     'openrouter.ai',
     'api.groq.com',
-    'api.deepseek.com'
+    'api.deepseek.com',
+    'geepark.tail22e168.ts.net'
   ]);
 });
