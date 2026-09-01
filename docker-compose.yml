@@ -23,6 +23,8 @@ services:
     # live edits with no rebuild. Read-only: the app never writes to disk.
     volumes:
       - .:/app:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     init: true
     restart: unless-stopped
 

@@ -19,7 +19,8 @@ const DEFAULT_ALLOWED_HOSTS = [
   'openrouter.ai',
   'api.groq.com',
   'api.deepseek.com',
-  'geepark.tail22e168.ts.net'
+  'geepark.tail22e168.ts.net',
+  'host.docker.internal'
 ];
 
 function parseAllowedHosts(configured) {
