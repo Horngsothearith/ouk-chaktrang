@@ -18,21 +18,33 @@ const MIME = {
   '.json': 'application/json; charset=utf-8'
 };
 
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+  const reqHeaders = req.headers['access-control-request-headers'];
+  res.setHeader('Access-Control-Allow-Headers', reqHeaders || 'Authorization, Content-Type, x-target-url, *');
+  res.setHeader('Access-Control-Expose-Headers', '*');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  if (req.headers['access-control-request-private-network']) {
+    res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  }
 }
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
+  setCorsHeaders(req, res);
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let reqPath = decodeURIComponent(urlObj.pathname);
 
   // Handle /api/proxy to forward OpenAI-compatible requests and bypass browser CORS
   if (reqPath === '/api/proxy') {
-    // Deliberately no CORS headers on this route: the app calls it
-    // same-origin, and a wildcard would let any page open in the browser
-    // drive the relay.
     const targetUrl = req.headers['x-target-url'] || urlObj.searchParams.get('url');
     if (!targetUrl) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -90,14 +102,6 @@ http.createServer(async (req, res) => {
     return;
   }
 
-  setCorsHeaders(res);
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
   if (reqPath === '/') reqPath = '/index.html';
   const filePath = path.join(root, reqPath);
 
@@ -128,7 +132,13 @@ http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     res.end(data);
   });
-}).listen(port, () => {
-  console.log('Serving ' + root + ' at http://localhost:' + port);
 });
+
+if (require.main === module) {
+  server.listen(port, () => {
+    console.log('Serving ' + root + ' at http://localhost:' + port);
+  });
+}
+
+module.exports = { setCorsHeaders, server };
 
