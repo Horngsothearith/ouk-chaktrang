@@ -19,7 +19,11 @@
     model: 'gpt-4o-mini',
     language: 'en', // 'en' | 'km' | 'both'
     temperature: 0.3,
-    useProxy: false
+    useProxy: false,
+    // Prints the "vs AI" prompt and reply to the browser console. Saved with
+    // the rest so it survives a reload - a bug you are chasing across moves
+    // outlives the page.
+    debugPrompts: false
   };
 
   var STORAGE_KEY = 'ouk_chaktrang_ai_review_settings';

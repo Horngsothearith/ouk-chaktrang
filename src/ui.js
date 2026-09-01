@@ -97,8 +97,67 @@
     }
   }
 
+  // Prints one "vs AI" exchange to the browser console. The prompt runs to
+  // some sixty lines, so the group is collapsed: the header answers "did it
+  // ask, what did it cost, what came back", and opening it shows the exact
+  // text that went over the wire, selectable and copyable.
+  //
+  // Each phase prints only what is new about it. One move emits two groups,
+  // and repeating the whole prompt in the second would bury the reply - the
+  // one thing the response group exists to show. `full` overrides that for
+  // logLastAiExchange, which prints a finished record with no request group
+  // above it to refer back to.
+  function logOpponentExchange(record, full) {
+    if (typeof console === 'undefined' || !record) return;
+    var open = console.groupCollapsed ? 'groupCollapsed' : 'log';
+    var showPrompt = full || record.phase === 'request';
+
+    var header = '♟ vs AI [' + record.phase + ']' +
+      (record.model ? ' ' + record.model : '') +
+      ' — ply ' + record.ply + ', ' + record.legalMoveCount + ' legal move' +
+      (record.legalMoveCount === 1 ? '' : 's');
+    if (typeof record.elapsedMs === 'number') header += ', ' + record.elapsedMs + 'ms';
+    console[open](header);
+
+    if (record.phase === 'skipped') {
+      console.log('No prompt was sent — ' + record.reason);
+    } else if (showPrompt) {
+      console.log('POST ' + (record.endpoint || '(no endpoint)') + '/chat/completions' +
+        (record.useProxy ? ' (via the dev proxy)' : '') +
+        '  ·  temperature ' + record.temperature);
+      console.log('── system prompt ──');
+      console.log(record.systemPrompt);
+      console.log('── user prompt ──');
+      console.log(record.userPrompt);
+    }
+
+    if (record.phase === 'response') {
+      console.log('── raw reply ──');
+      console.log(record.rawReply);
+      console.log(record.chosen
+        ? 'Played ' + record.chosen + ' (' + record.source + ')' +
+          (record.comment ? ' — "' + record.comment + '"' : '')
+        : 'Fell back to the local engine — ' + record.reason);
+    } else if (record.phase === 'error') {
+      console.log('Request failed — ' + record.error + '. The local engine is playing.');
+    }
+
+    if (console.groupEnd) console.groupEnd();
+  }
+
   function createApp(els) {
     var reviewSession = OukReview ? OukReview.createReviewSession() : null;
+
+    // The prompt "vs AI" sends never touches the page, so the console is where
+    // it has to surface. The setting is read per exchange rather than at
+    // wire-up, so ticking the box in ⚙ AI Settings takes effect on the next
+    // move instead of the next reload.
+    if (OukOpponent && OukOpponent.setDebugListener) {
+      OukOpponent.setDebugListener(function (record) {
+        var s = reviewSession ? reviewSession.getSettings() : null;
+        if (s && s.debugPrompts) logOpponentExchange(record);
+      });
+    }
 
     var themeState = {
       appTheme: loadSetting('ouk_app_theme', 'system'),
@@ -1056,6 +1115,7 @@
       var modelInput = document.getElementById('oc-setting-model');
       var langSelect = document.getElementById('oc-setting-lang');
       var useProxyInput = document.getElementById('oc-setting-use-proxy');
+      var debugInput = document.getElementById('oc-setting-debug-prompts');
       var statusDiv = document.getElementById('oc-dialog-status');
 
       if (baseUrlInput) baseUrlInput.value = settings.baseURL || 'https://api.openai.com/v1';
@@ -1066,6 +1126,7 @@
       resetModelPicker();
       if (langSelect) langSelect.value = settings.language || 'en';
       if (useProxyInput) useProxyInput.checked = !!settings.useProxy;
+      if (debugInput) debugInput.checked = !!settings.debugPrompts;
       if (statusDiv) {
         statusDiv.className = 'oc-dialog-status' + (message ? ' error' : '');
         statusDiv.textContent = message || '';
@@ -1334,6 +1395,7 @@
           var mInput = document.getElementById('oc-setting-model');
           var lSelect = document.getElementById('oc-setting-lang');
           var pCheck = document.getElementById('oc-setting-use-proxy');
+          var dCheck = document.getElementById('oc-setting-debug-prompts');
 
           if (reviewSession) {
             reviewSession.updateSettings({
@@ -1341,7 +1403,8 @@
               apiKey: kInput ? kInput.value.trim() : '',
               model: mInput ? mInput.value.trim() : 'gpt-4o-mini',
               language: lSelect ? lSelect.value : 'en',
-              useProxy: pCheck ? pCheck.checked : false
+              useProxy: pCheck ? pCheck.checked : false,
+              debugPrompts: dCheck ? dCheck.checked : false
             });
           }
           closeSettingsDialog();
@@ -1580,6 +1643,18 @@
     return {
       handleSquareClick: handleSquareClick,
       getState: function () { return appState; },
+      // `app.getLastAiExchange()` in the console: the prompt, the reply and
+      // how the move was resolved, kept whether or not logging was on when it
+      // happened. `app.logLastAiExchange()` prints that same record.
+      getLastAiExchange: function () {
+        return OukOpponent && OukOpponent.getLastExchange ? OukOpponent.getLastExchange() : null;
+      },
+      logLastAiExchange: function () {
+        var record = OukOpponent && OukOpponent.getLastExchange ? OukOpponent.getLastExchange() : null;
+        if (record) logOpponentExchange(record, true);
+        else if (typeof console !== 'undefined') console.log('No vs AI request has been made yet.');
+        return record;
+      },
       undoMove: undoMove,
       requestHint: requestHint,
       explainMoveAtIndex: explainMoveAtIndex,
